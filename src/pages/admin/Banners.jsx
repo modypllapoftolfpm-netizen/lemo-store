@@ -1,65 +1,139 @@
 import { useState, useEffect } from "react";
 import Navbar from "../../components/layout/Navbar";
-import { subscribeToBanners, addBanner, deleteBanner, uploadBannerImage } from "../../firebase/settings";
+import { subscribeToBanners, addBanner, deleteBanner, updateBanner, uploadBannerImage } from "../../firebase/settings";
+
+const SECTIONS = [
+  { key: "hero", label: "البانر الرئيسي", desc: "الصورة الكبيرة في أعلى الصفحة الرئيسية", preview: "🖼️ [ صورة كاملة العرض - Hero ]", fields: ["titleAr", "titleEn", "subtitleAr"] },
+  { key: "bestSellers", label: "قسم الأكثر مبيعاً", desc: "خلفية قسم Best Sellers", preview: "⭐ [ Best Sellers Section ]", fields: [] },
+  { key: "newArrivals", label: "قسم وصل حديثاً", desc: "خلفية قسم New Arrivals", preview: "✨ [ New Arrivals Section ]", fields: [] },
+  { key: "categories", label: "قسم التصنيفات", desc: "صور الأقسام الأربعة", preview: "🎁🕯️✨🧴 [ Categories ]", fields: [] },
+];
 
 export default function AdminBanners() {
   const [banners, setBanners] = useState([]);
-  const [form, setForm] = useState({ titleAr: "", titleEn: "", subtitleAr: "", subtitleEn: "", order: 0 });
-  const [imageFile, setImageFile] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState({});
+  const [formData, setFormData] = useState({});
 
   useEffect(() => {
     const unsub = subscribeToBanners(setBanners);
     return unsub;
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!imageFile) return alert("اختر صورة");
-    setLoading(true);
+  const getBanner = (key) => banners.find((b) => b.sectionKey === key);
+
+  const handleUpload = async (sectionKey, file) => {
+    if (!file) return;
+    setUploading((prev) => ({ ...prev, [sectionKey]: true }));
     try {
-      const { url, path } = await uploadBannerImage(imageFile);
-      await addBanner({ ...form, imageUrl: url, imagePath: path, order: Number(form.order) });
-      setForm({ titleAr: "", titleEn: "", subtitleAr: "", subtitleEn: "", order: 0 });
-      setImageFile(null);
-    } catch { alert("حدث خطأ"); }
-    setLoading(false);
+      const { url, path } = await uploadBannerImage(file);
+      const existing = getBanner(sectionKey);
+      const data = formData[sectionKey] || {};
+      if (existing) {
+        await updateBanner(existing.id, { imageUrl: url, imagePath: path, ...data });
+      } else {
+        await addBanner({ sectionKey, imageUrl: url, imagePath: path, order: 0, ...data });
+      }
+    } catch { alert("حدث خطأ في الرفع"); }
+    setUploading((prev) => ({ ...prev, [sectionKey]: false }));
   };
 
-  const inputStyle = { width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #E8DDD0", outline: "none", boxSizing: "border-box", marginBottom: "10px" };
+  const handleFieldChange = (sectionKey, field, value) => {
+    setFormData((prev) => ({ ...prev, [sectionKey]: { ...prev[sectionKey], [field]: value } }));
+  };
+
+  const handleSaveText = async (sectionKey) => {
+    const existing = getBanner(sectionKey);
+    const data = formData[sectionKey] || {};
+    if (existing) await updateBanner(existing.id, data);
+    else await addBanner({ sectionKey, imageUrl: "", order: 0, ...data });
+    alert("تم الحفظ ✅");
+  };
+
+  const handleDelete = async (sectionKey) => {
+    const existing = getBanner(sectionKey);
+    if (!existing) return;
+    if (!window.confirm("هل أنت متأكد؟")) return;
+    await deleteBanner(existing.id, existing.imagePath);
+  };
+
+  const fieldLabels = {
+    titleAr: "العنوان (عربي)",
+    titleEn: "Title (English)",
+    subtitleAr: "النص الفرعي (عربي)",
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#FAF7F2" }}>
       <Navbar />
-      <div style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem" }}>
-        <h1 style={{ color: "#3D2B1F", marginBottom: "2rem" }}>🖼️ إدارة البانرات</h1>
+      <div style={{ maxWidth: "900px", margin: "0 auto", padding: "2rem" }}>
+        <h1 style={{ color: "#3D2B1F", marginBottom: "0.5rem" }}>🖼️ إدارة صور الموقع</h1>
+        <p style={{ color: "#8B7355", marginBottom: "2rem" }}>غيّر صور أي قسم في الموقع بسهولة</p>
 
-        <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", marginBottom: "2rem", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-          <h2 style={{ color: "#3D2B1F", marginBottom: "1rem" }}>إضافة بانر جديد</h2>
-          <form onSubmit={handleSubmit}>
-            <input name="titleAr" value={form.titleAr} onChange={(e) => setForm({ ...form, titleAr: e.target.value })} placeholder="العنوان (عربي)" style={inputStyle} />
-            <input name="titleEn" value={form.titleEn} onChange={(e) => setForm({ ...form, titleEn: e.target.value })} placeholder="Title (English)" style={inputStyle} />
-            <input name="subtitleAr" value={form.subtitleAr} onChange={(e) => setForm({ ...form, subtitleAr: e.target.value })} placeholder="العنوان الفرعي (عربي)" style={inputStyle} />
-            <input name="order" type="number" value={form.order} onChange={(e) => setForm({ ...form, order: e.target.value })} placeholder="الترتيب" style={inputStyle} />
-            <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} style={inputStyle} />
-            <button type="submit" disabled={loading} style={{ background: "#C9A96E", color: "#fff", border: "none", borderRadius: "10px", padding: "10px 24px", cursor: "pointer", fontWeight: "700" }}>
-              {loading ? "جاري الرفع..." : "إضافة البانر"}
-            </button>
-          </form>
-        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          {SECTIONS.map((section) => {
+            const banner = getBanner(section.key);
+            const isUploading = uploading[section.key];
+            return (
+              <div key={section.key} style={{ background: "#fff", borderRadius: "20px", padding: "1.5rem", boxShadow: "0 4px 20px rgba(0,0,0,0.06)", display: "flex", gap: "1.5rem", alignItems: "flex-start", flexWrap: "wrap" }}>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {banners.map((b) => (
-            <div key={b.id} style={{ background: "#fff", borderRadius: "16px", overflow: "hidden", boxShadow: "0 2px 10px rgba(0,0,0,0.05)", display: "flex", alignItems: "center", gap: "1rem", padding: "1rem" }}>
-              <img src={b.imageUrl} alt="" style={{ width: "120px", height: "70px", objectFit: "cover", borderRadius: "10px" }} />
-              <div style={{ flex: 1 }}>
-                <p style={{ margin: "0 0 4px", fontWeight: "700", color: "#3D2B1F" }}>{b.titleAr}</p>
-                <p style={{ margin: 0, color: "#8B7355", fontSize: "0.9rem" }}>ترتيب: {b.order}</p>
+                {/* Preview */}
+                <div style={{ width: "180px", flexShrink: 0 }}>
+                  <div style={{ background: "#FAF7F2", border: "2px dashed #E8DDD0", borderRadius: "12px", height: "120px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", overflow: "hidden", marginBottom: "8px" }}>
+                    {banner?.imageUrl ? (
+                      <img src={banner.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px" }} />
+                    ) : (
+                      <div style={{ textAlign: "center", padding: "1rem" }}>
+                        <div style={{ fontSize: "1.5rem", marginBottom: "4px" }}>📷</div>
+                        <p style={{ fontSize: "0.75rem", color: "#8B7355", margin: 0 }}>{section.preview}</p>
+                      </div>
+                    )}
+                  </div>
+                  <p style={{ fontSize: "0.75rem", color: "#8B7355", textAlign: "center", margin: 0 }}>{section.desc}</p>
+                </div>
+
+                {/* Controls */}
+                <div style={{ flex: 1, minWidth: "250px" }}>
+                  <h3 style={{ color: "#3D2B1F", margin: "0 0 12px", fontSize: "1.1rem", fontWeight: "700" }}>{section.label}</h3>
+
+                  {/* Text Fields */}
+                  {section.fields.map((f) => (
+                    <div key={f} style={{ marginBottom: "10px" }}>
+                      <label style={{ display: "block", fontSize: "0.85rem", color: "#3D2B1F", fontWeight: "600", marginBottom: "4px" }}>{fieldLabels[f]}</label>
+                      <input
+                        defaultValue={banner?.[f] || ""}
+                        onChange={(e) => handleFieldChange(section.key, f, e.target.value)}
+                        style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #E8DDD0", outline: "none", boxSizing: "border-box", fontSize: "0.9rem" }}
+                      />
+                    </div>
+                  ))}
+
+                  {section.fields.length > 0 && (
+                    <button onClick={() => handleSaveText(section.key)} style={{ background: "#FAF7F2", border: "1px solid #C9A96E", color: "#C9A96E", borderRadius: "8px", padding: "6px 14px", cursor: "pointer", fontWeight: "600", fontSize: "0.85rem", marginBottom: "12px" }}>
+                      💾 حفظ النصوص
+                    </button>
+                  )}
+
+                  {/* Upload */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", background: "linear-gradient(135deg, #C9A96E, #b8925a)", color: "#fff", padding: "10px 18px", borderRadius: "10px", cursor: "pointer", fontWeight: "700", fontSize: "0.9rem", boxShadow: "0 4px 15px rgba(201,169,110,0.3)" }}>
+                      {isUploading ? "⏳ جاري الرفع..." : "📤 رفع صورة"}
+                      <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleUpload(section.key, e.target.files[0])} disabled={isUploading} />
+                    </label>
+
+                    {banner?.imageUrl && (
+                      <button onClick={() => handleDelete(section.key)} style={{ background: "#fff0f0", color: "#cc0000", border: "1px solid #ffcccc", borderRadius: "10px", padding: "10px 14px", cursor: "pointer", fontWeight: "600", fontSize: "0.85rem" }}>
+                        🗑️ حذف
+                      </button>
+                    )}
+
+                    {banner?.imageUrl && (
+                      <span style={{ color: "#4CAF50", fontWeight: "600", fontSize: "0.85rem" }}>✅ مرفوعة</span>
+                    )}
+                  </div>
+                </div>
               </div>
-              <button onClick={() => deleteBanner(b.id, b.imagePath)} style={{ background: "#fff0f0", color: "#cc0000", border: "1px solid #ffcccc", borderRadius: "8px", padding: "6px 12px", cursor: "pointer" }}>حذف</button>
-            </div>
-          ))}
-          {banners.length === 0 && <p style={{ textAlign: "center", color: "#8B7355" }}>لا توجد بانرات بعد</p>}
+            );
+          })}
         </div>
       </div>
     </div>
