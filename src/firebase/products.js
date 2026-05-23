@@ -3,24 +3,26 @@ import {
   getDoc, getDocs, onSnapshot, query, where,
   orderBy, serverTimestamp,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import { db, storage } from "./config";
+import { db } from "./config";
 
 const COL = "products";
 
-export const uploadProductImage = async (file, productId) => {
-  const path = `products/${productId}_${Date.now()}`;
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, file);
-  const url = await getDownloadURL(storageRef);
-  return { url, path };
+const CLOUDINARY_CLOUD = "dakjxjp0l";
+const CLOUDINARY_PRESET = "yhabgqv3";
+
+export const uploadProductImage = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", CLOUDINARY_PRESET);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+    method: "POST",
+    body: formData,
+  });
+  const data = await res.json();
+  return { url: data.secure_url, path: data.public_id };
 };
 
-export const deleteProductImage = async (imagePath) => {
-  if (!imagePath) return;
-  const storageRef = ref(storage, imagePath);
-  await deleteObject(storageRef).catch(() => {});
-};
+export const deleteProductImage = async () => {};
 
 export const addProduct = async (data) => {
   return await addDoc(collection(db, COL), {
@@ -35,8 +37,7 @@ export const updateProduct = async (id, data) => {
   return await updateDoc(r, { ...data, updatedAt: serverTimestamp() });
 };
 
-export const deleteProduct = async (id, imagePath) => {
-  await deleteProductImage(imagePath);
+export const deleteProduct = async (id) => {
   return await deleteDoc(doc(db, COL, id));
 };
 

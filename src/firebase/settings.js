@@ -2,8 +2,22 @@ import {
   doc, setDoc, updateDoc, onSnapshot,
   collection, addDoc, deleteDoc, getDoc, serverTimestamp,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import { db, storage } from "./config";
+import { db } from "./config";
+
+const CLOUDINARY_CLOUD = "dakjxjp0l";
+const CLOUDINARY_PRESET = "yhabgqv3";
+
+export const uploadBannerImage = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", CLOUDINARY_PRESET);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+    method: "POST",
+    body: formData,
+  });
+  const data = await res.json();
+  return { url: data.secure_url, path: data.public_id };
+};
 
 export const getSettings = async () => {
   const snap = await getDoc(doc(db, "settings", "main"));
@@ -23,14 +37,6 @@ export const subscribeToSettings = (callback) => {
   });
 };
 
-export const uploadBannerImage = async (file) => {
-  const path = `banners/${Date.now()}_${file.name}`;
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, file);
-  const url = await getDownloadURL(storageRef);
-  return { url, path };
-};
-
 export const addBanner = async (data) => {
   return await addDoc(collection(db, "banners"), {
     ...data,
@@ -43,10 +49,7 @@ export const updateBanner = async (id, data) => {
   return await updateDoc(doc(db, "banners", id), data);
 };
 
-export const deleteBanner = async (id, imagePath) => {
-  if (imagePath) {
-    await deleteObject(ref(storage, imagePath)).catch(() => {});
-  }
+export const deleteBanner = async (id) => {
   return await deleteDoc(doc(db, "banners", id));
 };
 
