@@ -14,15 +14,14 @@ export default function Checkout() {
   const location = useLocation();
   const discount = location.state?.discount || 0;
   const { subtotal, total } = getTotal(discount);
-
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     name: profile?.name || "",
     email: user?.email || "",
     phone: profile?.phone || "",
     address: "",
-    paymentMethod: "card",
   });
-  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -47,15 +46,12 @@ export default function Checkout() {
         subtotal,
         discount: subtotal - total,
         total,
-        paymentMethod: form.paymentMethod,
-        fawryRef: form.paymentMethod === "fawry" ? `FAWRY-${Date.now()}` : null,
+        paymentMethod: "contact",
       };
       const ref = await createOrder(orderData);
       clearCart();
       navigate(`/order-confirm/${ref.id}`);
-    } catch (err) {
-      alert("حدث خطأ، حاول مجدداً");
-    }
+    } catch { alert("حدث خطأ، حاول مجدداً"); }
     setLoading(false);
   };
 
@@ -71,59 +67,77 @@ export default function Checkout() {
       <div style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem" }}>
         <h1 style={{ color: "#3D2B1F", marginBottom: "2rem" }}>💳 {t.checkout.title}</h1>
 
-        <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
-          {/* Form */}
-          <div style={{ flex: 2, minWidth: "300px" }}>
-            <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-              <h3 style={{ color: "#3D2B1F", marginBottom: "1rem" }}>{t.checkout.personalInfo}</h3>
-              <form onSubmit={handleOrder}>
-                <label style={{ display: "block", marginBottom: "6px", color: "#3D2B1F", fontWeight: "600" }}>{t.checkout.name}</label>
-                <input name="name" value={form.name} onChange={handleChange} required style={inputStyle} />
-
-                <label style={{ display: "block", marginBottom: "6px", color: "#3D2B1F", fontWeight: "600" }}>{t.checkout.email}</label>
-                <input name="email" type="email" value={form.email} onChange={handleChange} required style={inputStyle} />
-
-                <label style={{ display: "block", marginBottom: "6px", color: "#3D2B1F", fontWeight: "600" }}>{t.checkout.phone}</label>
-                <input name="phone" value={form.phone} onChange={handleChange} required style={inputStyle} />
-
-                <label style={{ display: "block", marginBottom: "6px", color: "#3D2B1F", fontWeight: "600" }}>{t.checkout.address}</label>
-                <input name="address" value={form.address} onChange={handleChange} required style={inputStyle} />
-
-                {/* Payment Method */}
-                <h3 style={{ color: "#3D2B1F", margin: "1rem 0" }}>{t.checkout.paymentMethod}</h3>
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "1.5rem" }}>
-                  {[
-                    { value: "card", label: "💳 " + t.checkout.card },
-                    { value: "wallet", label: "📱 " + t.checkout.wallet },
-                    { value: "fawry", label: "🏪 " + t.checkout.fawry },
-                  ].map((method) => (
-                    <label key={method.value} style={{
-                      display: "flex", alignItems: "center", gap: "8px",
-                      padding: "10px 16px", borderRadius: "10px", cursor: "pointer",
-                      border: form.paymentMethod === method.value ? "2px solid #C9A96E" : "2px solid #E8DDD0",
-                      background: form.paymentMethod === method.value ? "#FFF8F0" : "#fff",
-                      fontWeight: "600"
-                    }}>
-                      <input
-                        type="radio" name="paymentMethod" value={method.value}
-                        checked={form.paymentMethod === method.value}
-                        onChange={handleChange}
-                        style={{ display: "none" }}
-                      />
-                      {method.label}
-                    </label>
-                  ))}
-                </div>
-
-                <button type="submit" disabled={loading} style={{
-                  width: "100%", background: "#C9A96E", color: "#fff",
-                  border: "none", borderRadius: "10px", padding: "14px",
-                  fontSize: "1rem", fontWeight: "700", cursor: "pointer"
-                }}>
-                  {loading ? "جاري الإرسال..." : t.checkout.placeOrder}
-                </button>
-              </form>
+        {/* Steps */}
+        <div style={{ display: "flex", gap: "0", marginBottom: "2rem", background: "#fff", borderRadius: "12px", overflow: "hidden", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
+          {["بياناتك", "تأكيد الطلب", "طريقة الدفع"].map((s, i) => (
+            <div key={i} style={{ flex: 1, padding: "12px", textAlign: "center", background: step === i + 1 ? "#C9A96E" : step > i + 1 ? "#FAF7F2" : "#fff", color: step === i + 1 ? "#fff" : "#8B7355", fontWeight: "700", fontSize: "0.9rem", transition: "all 0.3s" }}>
+              {step > i + 1 ? "✅" : `${i + 1}.`} {s}
             </div>
+          ))}
+        </div>
+
+        <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
+          <div style={{ flex: 2, minWidth: "300px" }}>
+
+            {/* Step 1 — Personal Info */}
+            {step === 1 && (
+              <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
+                <h3 style={{ color: "#3D2B1F", marginBottom: "1.5rem" }}>👤 بياناتك الشخصية</h3>
+                <label style={{ display: "block", marginBottom: "6px", color: "#3D2B1F", fontWeight: "600" }}>الاسم الكامل</label>
+                <input name="name" value={form.name} onChange={handleChange} style={inputStyle} />
+                <label style={{ display: "block", marginBottom: "6px", color: "#3D2B1F", fontWeight: "600" }}>البريد الإلكتروني</label>
+                <input name="email" type="email" value={form.email} onChange={handleChange} style={inputStyle} />
+                <label style={{ display: "block", marginBottom: "6px", color: "#3D2B1F", fontWeight: "600" }}>رقم الهاتف</label>
+                <input name="phone" value={form.phone} onChange={handleChange} style={inputStyle} />
+                <label style={{ display: "block", marginBottom: "6px", color: "#3D2B1F", fontWeight: "600" }}>عنوان التوصيل</label>
+                <input name="address" value={form.address} onChange={handleChange} style={inputStyle} />
+                <button onClick={() => { if (!form.name || !form.phone || !form.address) { alert("برجاء ملء كل البيانات"); return; } setStep(2); }} style={{ width: "100%", background: "linear-gradient(135deg, #C9A96E, #b8925a)", color: "#fff", border: "none", borderRadius: "10px", padding: "14px", fontSize: "1rem", fontWeight: "700", cursor: "pointer" }}>
+                  التالي ←
+                </button>
+              </div>
+            )}
+
+            {/* Step 2 — Confirm */}
+            {step === 2 && (
+              <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
+                <h3 style={{ color: "#3D2B1F", marginBottom: "1.5rem" }}>📋 تأكيد بياناتك</h3>
+                {[
+                  { label: "الاسم", value: form.name },
+                  { label: "الهاتف", value: form.phone },
+                  { label: "العنوان", value: form.address },
+                  { label: "الإجمالي", value: `${total} ج.م` },
+                ].map((f) => (
+                  <div key={f.label} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #F0E8DF" }}>
+                    <span style={{ color: "#8B7355" }}>{f.label}</span>
+                    <span style={{ color: "#3D2B1F", fontWeight: "700" }}>{f.value}</span>
+                  </div>
+                ))}
+                <div style={{ display: "flex", gap: "10px", marginTop: "1.5rem" }}>
+                  <button onClick={() => setStep(1)} style={{ flex: 1, background: "#FAF7F2", border: "1px solid #E8DDD0", color: "#3D2B1F", borderRadius: "10px", padding: "12px", cursor: "pointer", fontWeight: "600" }}>← رجوع</button>
+                  <button onClick={(e) => { handleOrder(e); }} disabled={loading} style={{ flex: 2, background: "linear-gradient(135deg, #C9A96E, #b8925a)", color: "#fff", border: "none", borderRadius: "10px", padding: "12px", cursor: "pointer", fontWeight: "700" }}>
+                    {loading ? "جاري الإرسال..." : "تأكيد الطلب ✓"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3 — Payment Contact */}
+            {step === 3 && (
+              <div style={{ background: "#fff", borderRadius: "16px", padding: "2rem", boxShadow: "0 2px 10px rgba(0,0,0,0.05)", textAlign: "center" }}>
+                <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>📞</div>
+                <h3 style={{ color: "#3D2B1F", marginBottom: "1rem", fontSize: "1.3rem" }}>برجاء التواصل معنا لإتمام الطلب</h3>
+                <div style={{ background: "#FFF8F0", border: "2px solid #C9A96E", borderRadius: "16px", padding: "1.5rem", marginBottom: "1.5rem" }}>
+                  <p style={{ color: "#8B7355", margin: "0 0 8px" }}>تواصل معنا على</p>
+                  <p style={{ color: "#C9A96E", fontSize: "1.8rem", fontWeight: "800", margin: 0 }}>01009633100</p>
+                </div>
+                <p style={{ color: "#8B7355", fontSize: "0.9rem", lineHeight: "1.6" }}>
+                  سيتم التواصل معك خلال 24 ساعة لتأكيد طلبك وترتيب الدفع والتوصيل
+                </p>
+                <a href="https://wa.me/201009633100" target="_blank" rel="noreferrer" style={{ display: "inline-block", marginTop: "1rem", background: "#25D366", color: "#fff", padding: "12px 30px", borderRadius: "25px", textDecoration: "none", fontWeight: "700" }}>
+                  💬 تواصل على واتساب
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Order Summary */}
@@ -133,13 +147,13 @@ export default function Checkout() {
               {items.map((item) => (
                 <div key={item.id} style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "0.9rem" }}>
                   <span style={{ color: "#3D2B1F" }}>{item.nameAr} × {item.qty}</span>
-                  <span style={{ color: "#C9A96E", fontWeight: "600" }}>{item.price * item.qty} {t.currency}</span>
+                  <span style={{ color: "#C9A96E", fontWeight: "600" }}>{item.price * item.qty} ج.م</span>
                 </div>
               ))}
               <div style={{ borderTop: "1px solid #E8DDD0", paddingTop: "1rem", marginTop: "1rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "700", fontSize: "1.1rem" }}>
-                  <span>{t.cart.total}</span>
-                  <span style={{ color: "#C9A96E" }}>{total} {t.currency}</span>
+                  <span>الإجمالي</span>
+                  <span style={{ color: "#C9A96E" }}>{total} ج.م</span>
                 </div>
               </div>
             </div>
