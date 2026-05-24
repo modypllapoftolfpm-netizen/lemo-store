@@ -10,26 +10,51 @@ const SECTIONS = [
   { key: "backgrounds", label: "خلفيات وتنسيقات المتجر العامة", desc: "الصور الخلفية لواجهة التصفح وعرض الهدايا", preview: "✨ [ Layout Assets ]", fields: [] },
 ];
 
+const DEFAULT_CATEGORIES = [
+  { id: "scented_default", nameAr: "شموع معطرة", nameEn: "Scented Candles", slug: "scented", isDefault: true },
+  { id: "decorative_default", nameAr: "شموع ديكورية", nameEn: "Decorative Candles", slug: "decorative", isDefault: true },
+  { id: "gifts_default", nameAr: "هدايا فخمة", nameEn: "Luxury Gifts", slug: "gifts", isDefault: true },
+  { id: "body_default", nameAr: "مرطبات الجسم", nameEn: "Body Lotions", slug: "body", isDefault: true },
+];
+
 export default function AdminBanners() {
-  // ─── كود الفئات (Categories State) ──────────────────────────────────────
-  const [categories, setCategories] = useState([]);
+  const [dbCategories, setDbCategories] = useState([]);
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const [catForm, setCatForm] = useState({ nameAr: "", nameEn: "", slug: "" });
   const [catEditId, setCatEditId] = useState(null);
   const [catImage, setCatImage] = useState(null);
   const [catUploading, setCatUploading] = useState(false);
 
-  // ─── كود صور الموقع (Banners State) ─────────────────────────────────────
   const [banners, setBanners] = useState([]);
   const [uploading, setUploading] = useState({});
   const [formData, setFormData] = useState({});
 
   useEffect(() => {
     const unsubBanners = subscribeToBanners(setBanners);
-    const unsubCategories = subscribeToCategories(setCategories);
+    
+    const unsubCategories = subscribeToCategories((data) => {
+      setDbCategories(data);
+      
+      const merged = DEFAULT_CATEGORIES.map(defCat => {
+        const foundInDb = data.find(c => c.slug === defCat.slug || c.id === defCat.id);
+        if (foundInDb) {
+          return { ...defCat, ...foundInDb, isDefault: false };
+        }
+        return defCat;
+      });
+
+      data.forEach(dbCat => {
+        if (!merged.some(m => m.slug === dbCat.slug || m.id === dbCat.id)) {
+          merged.push({ ...dbCat, isDefault: false });
+        }
+      });
+
+      setCategories(merged);
+    });
+
     return () => { unsubBanners(); unsubCategories(); };
   }, []);
 
-  // ─── عمليات إدارة الفئات ────────────────────────────────────────────────
   const handleCatSubmit = async (e) => {
     e.preventDefault();
     setCatUploading(true);
@@ -39,13 +64,15 @@ export default function AdminBanners() {
 
       if (catEditId) {
         let updateData = { ...data };
+        const currentCat = categories.find(c => c.id === catEditId);
+        
         if (catImage) {
-          const currentCat = categories.find(c => c.id === catEditId);
           if (currentCat?.imagePath) await deleteCategory(catEditId, currentCat.imagePath);
           const uploaded = await uploadCategoryImage(catImage, catEditId);
           updateData.imageUrl = uploaded.url;
           updateData.imagePath = uploaded.path;
         }
+
         await updateCategory(catEditId, updateData);
         setCatEditId(null);
       } else {
@@ -56,7 +83,7 @@ export default function AdminBanners() {
       }
       setCatForm({ nameAr: "", nameEn: "", slug: "" });
       setCatImage(null);
-      alert("تم حفظ الفئة بنجاح ✅");
+      alert("تم حفظ خصائص الفئة بنجاح ✅");
     } catch { alert("حدث خطأ أثناء حفظ الفئة"); }
     setCatUploading(false);
   };
@@ -66,7 +93,6 @@ export default function AdminBanners() {
     setCatForm({ nameAr: cat.nameAr || "", nameEn: cat.nameEn || "", slug: cat.slug || "" });
   };
 
-  // ─── عمليات إدارة صور الموقع ─────────────────────────────────────────────
   const getBanner = (key) => banners.find((b) => b.sectionKey === key);
 
   const handleUpload = async (sectionKey, file) => {
@@ -102,7 +128,6 @@ export default function AdminBanners() {
       <Navbar />
       <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "2rem" }}>
         
-        {/* هيدر اللوحة */}
         <h1 style={{ color: "#3D2B1F", marginBottom: "0.5rem" }}>🖼️ لوحة إدارة الفئات وصور ليمو لوكس</h1>
         <p style={{ color: "#8B7355", marginBottom: "2rem" }}>تحكم كامل في هيكلة تصنيفات الشموع الفاخرة وخلفيات الموقع</p>
 
@@ -121,18 +146,17 @@ export default function AdminBanners() {
             </div>
             <div style={{ flex: 1, minWidth: "150px" }}>
               <label style={{ fontSize: "13px", fontWeight: "bold", color: "#3D2B1F" }}>رابط الفئة (Slug)</label>
-              <input type="text" placeholder="scented-candles" value={catForm.slug} onChange={(e) => setCatForm({...catForm, slug: e.target.value})} required style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #E8DDD0", marginTop: "4px" }} />
+              <input type="text" placeholder="scented" value={catForm.slug} onChange={(e) => setCatForm({...catForm, slug: e.target.value})} required style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #E8DDD0", marginTop: "4px" }} />
             </div>
             <div>
               <label style={{ fontSize: "13px", fontWeight: "bold", color: "#3D2B1F", display: "block" }}>غلاف الفئة</label>
               <input type="file" accept="image/*" onChange={(e) => setCatImage(e.target.files[0])} style={{ fontSize: "12px", marginTop: "8px" }} />
             </div>
             <button type="submit" disabled={catUploading} style={{ padding: "10px 20px", backgroundColor: "#3D2B1F", color: "white", border: "none", borderRadius: "8px", fontWeight: "bold", cursor: "pointer" }}>
-              {catUploading ? "جاري الحفظ..." : catEditId ? "تحديث الفئة" : "إضافة فئة"}
+              {catUploading ? "جاري الحفظ..." : catEditId ? "تحديث الفئة" : "إضافة فئة مخصصة"}
             </button>
           </form>
 
-          {/* جدول عرض الفئات الحالية */}
           <div style={{ marginTop: "20px", overflowX: "auto" }}>
             <table width="100%" cellPadding="10" style={{ borderCollapse: "collapse", textAlign: "right" }}>
               <thead>
@@ -147,13 +171,21 @@ export default function AdminBanners() {
               <tbody>
                 {categories.map((cat) => (
                   <tr key={cat.id} style={{ borderBottom: "1px solid #FAF7F2" }}>
-                    <td><img src={cat.imageUrl || "https://via.placeholder.com/60"} width="60" height="40" style={{ objectFit: "cover", borderRadius: "6px" }} alt="" /></td>
+                    <td>
+                      {cat.imageUrl ? (
+                        <img src={cat.imageUrl} width="60" height="40" style={{ objectFit: "cover", borderRadius: "6px" }} alt="" />
+                      ) : (
+                        <span style={{ fontSize: "11px", color: "#8B7355", background: "#FAF7F2", padding: "4px 8px", borderRadius: "4px", border: "1px dashed #E8DDD0" }}>📷 بلا صورة</span>
+                      )}
+                    </td>
                     <td style={{ fontWeight: "bold" }}>{cat.nameAr}</td>
                     <td>{cat.nameEn}</td>
                     <td><code>{cat.slug}</code></td>
                     <td style={{ textAlign: "center" }}>
-                      <button onClick={() => handleCatEdit(cat)} style={{ border: "none", background: "none", color: "#C9A96E", cursor: "pointer", fontWeight: "bold", marginLeft: "10px" }}>تعديل</button>
-                      <button onClick={async () => { if(confirm("هل تود حذف هذه الفئة نهائياً؟")) await deleteCategory(cat.id, cat.imagePath) }} style={{ border: "none", background: "none", color: "red", cursor: "pointer", fontWeight: "bold" }}>حذف</button>
+                      <button onClick={() => handleCatEdit(cat)} style={{ border: "none", background: "none", color: "#C9A96E", cursor: "pointer", fontWeight: "bold", marginLeft: "10px" }}>تعديل وصورة</button>
+                      {!cat.isDefault && (
+                        <button onClick={async () => { if(confirm("هل تود حذف هذه الفئة نهائياً؟")) await deleteCategory(cat.id, cat.imagePath) }} style={{ border: "none", background: "none", color: "red", cursor: "pointer", fontWeight: "bold" }}>حذف</button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -162,7 +194,7 @@ export default function AdminBanners() {
           </div>
         </div>
 
-        {/* ─── 2) لوحة التحكم في خلفيات وصور الموقع العميقة ─── */}
+        {/* ─── 2) لوحة التحكم في خلفيات وصور الموقع ─── */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           <h2 style={{ color: "#3D2B1F", margin: "0 0 5px 0" }}>🖼️ صور وتنسيقات الموقع الخلفية</h2>
           {SECTIONS.map((section) => {
@@ -171,7 +203,6 @@ export default function AdminBanners() {
             return (
               <div key={section.key} style={{ background: "#fff", borderRadius: "20px", padding: "1.5rem", boxShadow: "0 4px 20px rgba(0,0,0,0.06)", display: "flex", gap: "1.5rem", alignItems: "flex-start", flexWrap: "wrap" }}>
                 
-                {/* Preview */}
                 <div style={{ width: "180px", flexShrink: 0 }}>
                   <div style={{ background: "#FAF7F2", border: "2px dashed #E8DDD0", borderRadius: "12px", height: "120px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", overflow: "hidden", marginBottom: "8px" }}>
                     {banner?.imageUrl ? (
@@ -186,7 +217,6 @@ export default function AdminBanners() {
                   <p style={{ fontSize: "0.75rem", color: "#8B7355", textAlign: "center", margin: 0 }}>{section.desc}</p>
                 </div>
 
-                {/* Controls */}
                 <div style={{ flex: 1, minWidth: "250px" }}>
                   <h3 style={{ color: "#3D2B1F", margin: "0 0 12px", fontSize: "1.1rem", fontWeight: "700" }}>{section.label}</h3>
 
@@ -216,7 +246,7 @@ export default function AdminBanners() {
                     </label>
 
                     {banner?.imageUrl && (
-                      <button onClick={async () => { if(confirm("حذف؟")) await deleteBanner(existing.id, existing.imagePath) }} style={{ background: "#fff0f0", color: "#cc0000", border: "1px solid #ffcccc", borderRadius: "10px", padding: "10px 14px", cursor: "pointer", fontWeight: "600", fontSize: "0.85rem" }}>
+                      <button onClick={async () => { if(confirm("حذف؟")) await deleteBanner(banner.id, banner.imagePath) }} style={{ background: "#fff0f0", color: "#cc0000", border: "1px solid #ffcccc", borderRadius: "10px", padding: "10px 14px", cursor: "pointer", fontWeight: "600", fontSize: "0.85rem" }}>
                         🗑️ حذف
                       </button>
                     )}
