@@ -7,8 +7,8 @@ import Home from "./pages/Home";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
-import Checkout from "./pages/Checkout";
-import OrderConfirm from "./pages/OrderConfirm";
+import Checkout from "./pages/CheckoutPage"
+;import OrderConfirm from "./pages/OrderConfirm";
 import Orders from "./pages/Orders";
 import Wishlist from "./pages/Wishlist";
 import Login from "./pages/Login";
