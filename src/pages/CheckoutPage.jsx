@@ -56,7 +56,7 @@ const CheckoutPage = () => {
         discount,
         total,
         promoCode: null,
-        paymentMethod: "contact_vendor", // نظام مخصص للتواصل المباشر
+        paymentMethod: "contact_vendor",
         paymentStatus: "pending",
         fawryRef: null,
         paymobOrderId: null,
@@ -74,42 +74,41 @@ const CheckoutPage = () => {
     }
   };
 
-  // شاشة نجاح الطلب مع رسالة التوجيه للرقم الخاص بك
+  // شاشة نجاح أنيقة ودافئة (Minimalist Style)
   if (isSuccess) {
     return (
-      <div className="max-w-md mx-auto my-16 bg-white p-8 rounded-2xl shadow-md border border-lemo-beige/40 text-center animate-fadeUp">
-        <div className="text-5xl mb-4">🎉</div>
-        <h2 className="text-2xl font-display text-lemo-dark font-bold mb-3">
-          {isRTL ? "تم تسجيل طلبك بنجاح!" : "Order Placed Successfully!"}
+      <div className="max-w-xl mx-auto my-16 bg-white px-8 py-12 rounded-3xl shadow-sm border border-lemo-beige/40 text-center animate-fadeUp">
+        <div className="w-16 h-16 bg-lemo-cream rounded-full flex items-center justify-center mx-auto mb-6">
+          <span className="text-2xl text-lemo-muted">✓</span>
+        </div>
+        <h2 className="text-3xl font-display text-lemo-dark font-normal mb-3 tracking-wide">
+          {isRTL ? "تمت مراجعة طلبك" : "Order Received"}
         </h2>
-        <p className="text-sm text-lemo-muted mb-2">
-          {isRTL ? `رقم الطلب: #${lastOrderId}` : `Order ID: #${lastOrderId}`}
+        <p className="text-sm text-lemo-muted font-sans tracking-widest mb-2 uppercase">
+          {isRTL ? `رقم الأوردر: #${lastOrderId.substring(0,6)}` : `Order Number: #${lastOrderId.substring(0,6)}`}
         </p>
         
-        <div className="bg-lemo-cream/60 p-4 rounded-xl border border-lemo-gold/30 my-6 text-lemo-text">
-          <p className="font-medium text-base mb-2">
+        <div className="bg-lemo-cream/40 p-6 rounded-2xl border border-lemo-beige/50 my-8 text-lemo-text max-w-md mx-auto">
+          <p className="font-display text-base text-lemo-dark mb-4 leading-relaxed">
             {isRTL 
-              ? "برجاء التواصل على هذا الرقم لاستكمال طلبك وتأكيد التعديلات المخصصة للشموع:" 
-              : "Please contact us at this number to complete your order and confirm custom candle details:"}
+              ? "لأن شموعنا تُصنع يدوياً وبكل حب خصيصاً لك، يرجى الضغط أدناه للتواصل معنا لتأكيد أي تعديلات مخصصة (الروائح، الألوان، أو العبارات):" 
+              : "Since our candles are thoughtfully handcrafted just for you, please contact us below to confirm custom details (scents, colors, or lettering):"}
           </p>
           <a 
             href="https://wa.me/201009633100" 
             target="_blank" 
             rel="noreferrer" 
-            className="text-xl font-bold text-lemo-dark hover:text-lemo-gold block transition-colors mt-2 tracking-wide"
+            className="inline-flex items-center justify-center gap-2 bg-lemo-dark text-white px-8 py-3.5 rounded-full text-sm font-medium tracking-wider hover:bg-lemo-gold transition-all duration-300 w-full shadow-sm"
           >
-            📞 01009633100
+            <span>💬 WhatsApp: 01009633100</span>
           </a>
-          <span className="text-xs text-lemo-muted block mt-1">
-            {isRTL ? "(اضغط على الرقم لفتح واتساب مباشرة)" : "(Click the number to open WhatsApp directly)"}
-          </span>
         </div>
 
         <button 
           onClick={() => window.location.href = "/"} 
-          className="btn-primary text-sm py-2 px-6"
+          className="text-sm text-lemo-muted hover:text-lemo-dark underline underline-offset-4 font-medium transition-colors"
         >
-          {isRTL ? "العودة للرئيسية" : "Back to Home"}
+          {isRTL ? "متابعة التسوق للمزيد" : "Continue Shopping"}
         </button>
       </div>
     );
@@ -117,112 +116,136 @@ const CheckoutPage = () => {
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-20 bg-white rounded-2xl p-8 max-w-md mx-auto my-10 border border-lemo-beige/30 animate-fadeUp">
-        <p className="text-lemo-muted text-lg mb-4">{t.cart.empty}</p>
-        <p className="text-sm text-lemo-muted mb-6">{t.cart.emptyDesc}</p>
+      <div className="text-center py-24 bg-white rounded-3xl max-w-md mx-auto my-12 border border-lemo-beige/20 animate-fadeUp px-6">
+        <p className="font-display text-xl text-lemo-dark mb-2">{t.cart.empty}</p>
+        <p className="text-sm text-lemo-muted mb-8">{t.cart.emptyDesc}</p>
+        <button onClick={() => window.location.href = "/"} className="btn-outline text-sm px-8 py-2.5">
+          {t.cart.continueShopping}
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10 animate-fadeUp">
-      <h1 className="section-title">{t.checkout.title}</h1>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 animate-fadeUp">
+      {/* عنوان علوي هادئ وبسيط على ستايل الشموع الاسكندنافية */}
+      <div className="text-center mb-12">
+        <h1 className="font-display text-3xl md:text-4xl text-lemo-dark font-normal tracking-wide lowercase">
+          {isRTL ? "تفاصيل طلبك" : "checkout"}
+        </h1>
+        <div className="w-12 h-[1px] bg-lemo-nude mx-auto mt-3"></div>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
-        {/* استمارة البيانات */}
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow-sm border border-lemo-beige/20 flex flex-col gap-4">
-          <h2 className="text-xl font-display text-lemo-dark border-b border-lemo-cream pb-2 font-semibold">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+        {/* استمارة البيانات الشفيفة والأنيقة */}
+        <form onSubmit={handleSubmit} className="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-lemo-beige/30 flex flex-col gap-6">
+          <h2 className="font-display text-lg text-lemo-dark tracking-wide font-medium border-b border-lemo-cream pb-3">
             {t.checkout.personalInfo}
           </h2>
 
-          {error && <div className="bg-red-50 text-red-600 text-sm p-3 rounded-xl">{error}</div>}
+          {error && <div className="bg-red-50 text-red-600 text-xs p-3.5 rounded-xl border border-red-100">{error}</div>}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-lemo-muted uppercase tracking-wider mb-1.5">{t.checkout.name} *</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl border border-lemo-beige/60 focus:outline-none focus:border-lemo-nude bg-lemo-cream/20 text-sm transition-colors text-lemo-dark"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-lemo-muted uppercase tracking-wider mb-1.5">{t.checkout.phone} *</label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl border border-lemo-beige/60 focus:outline-none focus:border-lemo-nude bg-lemo-cream/20 text-sm transition-colors text-lemo-dark"
+                required
+              />
+            </div>
+          </div>
 
           <div>
-            <label className="block text-sm font-medium text-lemo-muted mb-1">{t.checkout.name} *</label>
+            <label className="block text-xs font-medium text-lemo-muted uppercase tracking-wider mb-1.5">{t.checkout.email}</label>
             <input
-              type="text"
-              name="name"
-              value={formData.name}
+              type="email"
+              name="email"
+              value={formData.email}
               onChange={handleChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-lemo-beige focus:outline-none focus:border-lemo-gold bg-lemo-cream/30"
-              required
+              className="w-full px-4 py-3 rounded-xl border border-lemo-beige/60 focus:outline-none focus:border-lemo-nude bg-lemo-cream/20 text-sm transition-colors text-lemo-dark"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-lemo-muted mb-1">{t.checkout.phone} *</label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-lemo-beige focus:outline-none focus:border-lemo-gold bg-lemo-cream/30"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-lemo-muted mb-1">{t.checkout.address} *</label>
+            <label className="block text-xs font-medium text-lemo-muted uppercase tracking-wider mb-1.5">{t.checkout.address} *</label>
             <textarea
               name="address"
               value={formData.address}
               onChange={handleChange}
               rows="3"
-              className="w-full px-4 py-2.5 rounded-xl border border-lemo-beige focus:outline-none focus:border-lemo-gold bg-lemo-cream/30"
+              className="w-full px-4 py-3 rounded-xl border border-lemo-beige/60 focus:outline-none focus:border-lemo-nude bg-lemo-cream/20 text-sm transition-colors text-lemo-dark resize-none"
               required
             />
           </div>
 
-          <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs p-3 rounded-xl mt-2 line-height-relaxed">
-            💡 {isRTL 
-              ? "بعد الضغط على تأكيد الطلب، سيظهر لك رقم الهاتف للتواصل معنا وتأكيد أي تعديلات خاصة بالشموع والديكور." 
-              : "After placing the order, our phone number will be displayed to confirm any customization regarding candles and decor."}
+          <div className="bg-lemo-cream/40 border border-lemo-beige/60 p-4 rounded-xl text-xs text-lemo-muted leading-relaxed">
+            ✨ {isRTL 
+              ? "ملحوظة: بمجرد إرسال طلبك، سنقوم بالتواصل معك مباشرة لمراجعة التخصيص اليدوي للشموع وضمان تنفيذها بدقة." 
+              : "Note: Upon clicking place order, you can initiate a WhatsApp chat with us to review custom candle adjustments."}
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary w-full mt-2 flex items-center justify-center disabled:opacity-50"
+            className="w-full bg-lemo-dark text-white py-3.5 rounded-full text-sm font-medium tracking-widest uppercase transition-all duration-300 hover:bg-lemo-gold hover:shadow-sm active:scale-[0.98] disabled:opacity-50 mt-2"
           >
             {loading ? t.loading : t.checkout.placeOrder}
           </button>
         </form>
 
-        {/* ملخص الطلب */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-lemo-beige/20 h-fit">
-          <h2 className="text-xl font-display text-lemo-dark border-b border-lemo-cream pb-2 mb-4 font-semibold">
+        {/* كارت ملخص المنتجات المستوحى من تفاصيل Bohouse */}
+        <div className="lg:col-span-5 bg-white p-6 rounded-3xl border border-lemo-beige/30 h-fit sticky top-28">
+          <h2 className="font-display text-lg text-lemo-dark tracking-wide font-medium border-b border-lemo-cream pb-3 mb-4">
             {t.cart.title}
           </h2>
           
-          <div className="flex flex-col gap-3 max-h-60 overflow-y-auto mb-4 pr-1">
+          <div className="flex flex-col gap-4 max-h-[280px] overflow-y-auto mb-6 pr-2 scrollbar-thin">
             {items.map((item) => (
-              <div key={item.id} className="flex items-center justify-between text-sm border-b border-lemo-cream pb-2">
-                <div className="flex items-center gap-3">
-                  <img src={item.imageUrl} alt={item.nameAr} className="w-12 h-12 rounded-lg object-cover" />
+              <div key={item.id} className="flex items-center justify-between text-sm border-b border-lemo-cream/50 pb-3">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-lemo-cream flex-shrink-0 border border-lemo-beige/20">
+                    <img src={item.imageUrl} alt={item.nameAr} className="w-full h-full object-cover" />
+                  </div>
                   <div>
-                    <p className="font-medium text-lemo-dark line-clamp-1">{isRTL ? item.nameAr : item.nameEn}</p>
-                    <p className="text-xs text-lemo-muted">x{item.qty}</p>
+                    <p className="font-display text-sm text-lemo-dark line-clamp-1 font-medium">{isRTL ? item.nameAr : item.nameEn}</p>
+                    <p className="text-xs text-lemo-muted mt-0.5">qty: {item.qty}</p>
                   </div>
                 </div>
-                <span className="font-semibold text-lemo-text">{item.price * item.qty} {t.currency}</span>
+                <span className="font-medium text-lemo-text">{item.price * item.qty} {t.currency}</span>
               </div>
             ))}
           </div>
 
-          <div className="flex flex-col gap-2 pt-2 border-t border-lemo-beige/30 text-sm">
-            <div className="flex justify-between text-lemo-muted">
-              <span>{t.cart.subtotal}</span>
-              <span>{subtotal} {t.currency}</span>
+          <div className="flex flex-col gap-3 pt-2 text-sm text-lemo-muted">
+            <div className="flex justify-between">
+              <span className="font-sans text-xs uppercase tracking-wider">{t.cart.subtotal}</span>
+              <span className="text-lemo-dark font-medium">{subtotal} {t.currency}</span>
             </div>
             {discount > 0 && (
               <div className="flex justify-between text-green-600">
-                <span>{t.cart.discount}</span>
-                <span>-{discount} {t.currency}</span>
+                <span className="font-sans text-xs uppercase tracking-wider">{t.cart.discount}</span>
+                <span className="font-medium">-{discount} {t.currency}</span>
               </div>
             )}
-            <div className="flex justify-between text-base font-bold text-lemo-dark pt-2 border-t border-dashed border-lemo-beige">
-              <span>{t.cart.total}</span>
-              <span>{total} {t.currency}</span>
+            <div className="flex justify-between text-base font-medium text-lemo-dark pt-3 border-t border-dashed border-lemo-beige mt-2">
+              <span className="font-display tracking-wide">{t.cart.total}</span>
+              <span className="font-bold text-lg">{total} {t.currency}</span>
             </div>
           </div>
         </div>
