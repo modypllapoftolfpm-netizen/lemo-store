@@ -18,11 +18,11 @@ const DEFAULT_CATEGORIES = [
 ];
 
 export default function AdminBanners() {
-  const [dbCategories, setDbCategories] = useState([]);
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const [catForm, setCatForm] = useState({ nameAr: "", nameEn: "", slug: "" });
   const [catEditId, setCatEditId] = useState(null);
   const [catImage, setCatImage] = useState(null);
+  const [catPreview, setCatPreview] = useState("");
   const [catUploading, setCatUploading] = useState(false);
 
   const [banners, setBanners] = useState([]);
@@ -33,8 +33,6 @@ export default function AdminBanners() {
     const unsubBanners = subscribeToBanners(setBanners);
     
     const unsubCategories = subscribeToCategories((data) => {
-      setDbCategories(data);
-      
       const merged = DEFAULT_CATEGORIES.map(defCat => {
         const foundInDb = data.find(c => c.slug === defCat.slug || c.id === defCat.id);
         if (foundInDb) {
@@ -60,37 +58,52 @@ export default function AdminBanners() {
     setCatUploading(true);
     try {
       const cleanSlug = catForm.slug.toLowerCase().replace(/\s+/g, "-");
-      const data = { nameAr: catForm.nameAr, nameEn: catForm.nameEn, slug: cleanSlug };
+      const currentCat = categories.find(c => c.id === catEditId);
+      
+      let updateData = { 
+        nameAr: catForm.nameAr, 
+        nameEn: catForm.nameEn, 
+        slug: cleanSlug,
+        imageUrl: currentCat?.imageUrl || "",
+        imagePath: currentCat?.imagePath || ""
+      };
+
+      if (catImage) {
+        if (currentCat?.imagePath) {
+          await deleteCategory(catEditId, currentCat.imagePath).catch(() => {});
+        }
+        const uploaded = await uploadCategoryImage(catImage, catEditId || "cat_" + Date.now());
+        updateData.imageUrl = uploaded.url;
+        updateData.imagePath = uploaded.path;
+      }
 
       if (catEditId) {
-        let updateData = { ...data };
-        const currentCat = categories.find(c => c.id === catEditId);
-        
-        if (catImage) {
-          if (currentCat?.imagePath) await deleteCategory(catEditId, currentCat.imagePath);
-          const uploaded = await uploadCategoryImage(catImage, catEditId);
-          updateData.imageUrl = uploaded.url;
-          updateData.imagePath = uploaded.path;
-        }
-
         await updateCategory(catEditId, updateData);
         setCatEditId(null);
       } else {
-        if (!catImage) { alert("برجاء اختيار صورة غلاف للفئة"); setCatUploading(false); return; }
-        const docRef = await addCategory({ ...data, imageUrl: "", imagePath: "" });
-        const uploaded = await uploadCategoryImage(catImage, docRef.id);
-        await updateCategory(docRef.id, { imageUrl: uploaded.url, imagePath: uploaded.path });
+        const docRef = await addCategory(updateData);
+        if (catImage) {
+          const uploaded = await uploadCategoryImage(catImage, docRef.id);
+          await updateCategory(docRef.id, { imageUrl: uploaded.url, imagePath: uploaded.path });
+        }
       }
+      
       setCatForm({ nameAr: "", nameEn: "", slug: "" });
       setCatImage(null);
+      setCatPreview("");
       alert("تم حفظ خصائص الفئة بنجاح ✅");
-    } catch { alert("حدث خطأ أثناء حفظ الفئة"); }
+    } catch (err) { 
+      alert("حدث خطأ أثناء حفظ الفئة"); 
+    }
     setCatUploading(false);
   };
 
   const handleCatEdit = (cat) => {
     setCatEditId(cat.id);
     setCatForm({ nameAr: cat.nameAr || "", nameEn: cat.nameEn || "", slug: cat.slug || "" });
+    setCatPreview(cat.imageUrl || "");
+    setCatImage(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const getBanner = (key) => banners.find((b) => b.sectionKey === key);
@@ -103,10 +116,14 @@ export default function AdminBanners() {
       const existing = getBanner(sectionKey);
       const data = formData[sectionKey] || {};
       if (existing) {
+        if (existing.imagePath) {
+          await deleteBanner(existing.id, existing.imagePath).catch(() => {});
+        }
         await updateBanner(existing.id, { imageUrl: url, imagePath: path, ...data });
       } else {
         await addBanner({ sectionKey, imageUrl: url, imagePath: path, order: 0, ...data });
       }
+      alert("تم رفع الصورة بنجاح ✅");
     } catch { alert("حدث خطأ في الرفع"); }
     setUploading((prev) => ({ ...prev, [sectionKey]: false }));
   };
@@ -120,7 +137,7 @@ export default function AdminBanners() {
     const data = formData[sectionKey] || {};
     if (existing) await updateBanner(existing.id, data);
     else await addBanner({ sectionKey, imageUrl: "", order: 0, ...data });
-    alert("تم الحفظ ✅");
+    alert("تم حفظ النص بنجاح ✅");
   };
 
   return (
@@ -128,40 +145,59 @@ export default function AdminBanners() {
       <Navbar />
       <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "2rem" }}>
         
-        <h1 style={{ color: "#3D2B1F", marginBottom: "0.5rem" }}>🖼️ لوحة إدارة الفئات وصور ليمو لوكس</h1>
+        <h1 style={{ color: "#3D2B1F", marginBottom: "0.5rem", fontWeight: "800" }}>🖼️ لوحة إدارة الفئات وصور ليمو لوكس</h1>
         <p style={{ color: "#8B7355", marginBottom: "2rem" }}>تحكم كامل في هيكلة تصنيفات الشموع الفاخرة وخلفيات الموقع</p>
 
-        {/* ─── 1) لوحة التحكم في الفئات ─── */}
-        <div style={{ background: "#fff", borderRadius: "20px", padding: "2rem", boxShadow: "0 4px 20px rgba(0,0,0,0.06)", marginBottom: "2.5rem" }}>
-          <h2 style={{ color: "#3D2B1F", marginTop: 0, borderBottom: "2px solid #FAF7F2", paddingBottom: "10px" }}>🏷️ إضافة وإدارة فئات الموقع</h2>
+        {/* ─── 1) لوحة التحكم في الفئات الاحترافية ─── */}
+        <div style={{ background: "#fff", borderRadius: "24px", padding: "2rem", boxShadow: "0 4px 25px rgba(0,0,0,0.04)", marginBottom: "2.5rem", border: "1px solid #E8DDD0" }}>
+          <h2 style={{ color: "#3D2B1F", marginTop: 0, borderBottom: "2px solid #FAF7F2", paddingBottom: "12px", fontWeight: "700" }}>🏷️ {catEditId ? "📝 تعديل بيانات وصورة الفئة" : "➕ إضافة فئة مخصصة جديدة"}</h2>
           
-          <form onSubmit={handleCatSubmit} style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "flex-end", marginTop: "15px" }}>
-            <div style={{ flex: 1, minWidth: "150px" }}>
-              <label style={{ fontSize: "13px", fontWeight: "bold", color: "#3D2B1F" }}>الاسم بالعربي</label>
-              <input type="text" value={catForm.nameAr} onChange={(e) => setCatForm({...catForm, nameAr: e.target.value})} required style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #E8DDD0", marginTop: "4px" }} />
+          <form onSubmit={handleCatSubmit} style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginTop: "20px" }}>
+            <div style={{ flex: "1 1 200px" }}>
+              <div style={{ marginBottom: "12px" }}>
+                <label style={{ fontSize: "13px", fontWeight: "bold", color: "#3D2B1F" }}>الاسم بالعربي *</label>
+                <input type="text" value={catForm.nameAr} onChange={(e) => setCatForm({...catForm, nameAr: e.target.value})} required style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #E8DDD0", marginTop: "6px", outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div style={{ marginBottom: "12px" }}>
+                <label style={{ fontSize: "13px", fontWeight: "bold", color: "#3D2B1F" }}>الاسم بالإنجليزي *</label>
+                <input type="text" value={catForm.nameEn} onChange={(e) => setCatForm({...catForm, nameEn: e.target.value})} required style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #E8DDD0", marginTop: "6px", outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div style={{ marginBottom: "12px" }}>
+                <label style={{ fontSize: "13px", fontWeight: "bold", color: "#3D2B1F" }}>رابط الفئة فرعي (Slug) *</label>
+                <input type="text" placeholder="scented" value={catForm.slug} onChange={(e) => setCatForm({...catForm, slug: e.target.value})} required style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #E8DDD0", marginTop: "6px", outline: "none", boxSizing: "border-box" }} />
+              </div>
             </div>
-            <div style={{ flex: 1, minWidth: "150px" }}>
-              <label style={{ fontSize: "13px", fontWeight: "bold", color: "#3D2B1F" }}>الاسم بالإنجليزي</label>
-              <input type="text" value={catForm.nameEn} onChange={(e) => setCatForm({...catForm, nameEn: e.target.value})} required style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #E8DDD0", marginTop: "4px" }} />
+
+            {/* صندوق الرفع الاحترافي المطور (Drop/Click Zone) */}
+            <div style={{ flex: "1 1 250px", display: "flex", flexDirection: "column" }}>
+              <label style={{ fontSize: "13px", fontWeight: "bold", color: "#3D2B1F", marginBottom: "6px" }}>غلاف الفئة الفخم</label>
+              <label style={{ flex: 1, minHeight: "140px", background: "#FAF7F2", border: "2px dashed #C9A96E", borderRadius: "14px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", overflow: "hidden", padding: "10px" }}>
+                {catPreview ? (
+                  <img src={catPreview} style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }} alt="" />
+                ) : (
+                  <div style={{ textAlign: "center" }}>
+                    <span style={{ fontSize: "2rem" }}>📸</span>
+                    <p style={{ margin: "5px 0 0", fontSize: "12px", color: "#8B7355", fontWeight: "600" }}>اضغط لرفع صورة الغلاف</p>
+                  </div>
+                )}
+                <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => {
+                  const file = e.target.files[0];
+                  if(file) { setCatImage(file); setCatPreview(URL.createObjectURL(file)); }
+                }} />
+              </label>
+              
+              <button type="submit" disabled={catUploading} style={{ width: "100%", padding: "14px", backgroundColor: "#3D2B1F", color: "white", border: "none", borderRadius: "12px", fontWeight: "bold", cursor: "pointer", marginTop: "12px", boxShadow: "0 4px 12px rgba(61,43,31,0.15)", transition: "all 0.2s" }}>
+                {catUploading ? "⏳ جاري الحفظ والرفع..." : catEditId ? "💾 حفظ التعديلات الفخمة" : "✨ إضافة الفئة للمتجر"}
+              </button>
             </div>
-            <div style={{ flex: 1, minWidth: "150px" }}>
-              <label style={{ fontSize: "13px", fontWeight: "bold", color: "#3D2B1F" }}>رابط الفئة (Slug)</label>
-              <input type="text" placeholder="scented" value={catForm.slug} onChange={(e) => setCatForm({...catForm, slug: e.target.value})} required style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #E8DDD0", marginTop: "4px" }} />
-            </div>
-            <div>
-              <label style={{ fontSize: "13px", fontWeight: "bold", color: "#3D2B1F", display: "block" }}>غلاف الفئة</label>
-              <input type="file" accept="image/*" onChange={(e) => setCatImage(e.target.files[0])} style={{ fontSize: "12px", marginTop: "8px" }} />
-            </div>
-            <button type="submit" disabled={catUploading} style={{ padding: "10px 20px", backgroundColor: "#3D2B1F", color: "white", border: "none", borderRadius: "8px", fontWeight: "bold", cursor: "pointer" }}>
-              {catUploading ? "جاري الحفظ..." : catEditId ? "تحديث الفئة" : "إضافة فئة مخصصة"}
-            </button>
           </form>
 
-          <div style={{ marginTop: "20px", overflowX: "auto" }}>
-            <table width="100%" cellPadding="10" style={{ borderCollapse: "collapse", textAlign: "right" }}>
+          {/* الجدول */}
+          <div style={{ marginTop: "25px", overflowX: "auto" }}>
+            <table width="100%" cellPadding="12" style={{ borderCollapse: "collapse", textAlign: "right" }}>
               <thead>
-                <tr style={{ backgroundColor: "#FAF7F2", color: "#8B7355" }}>
-                  <th width="100">غلاف الفئة</th>
+                <tr style={{ backgroundColor: "#FAF7F2", color: "#8B7355", borderBottom: "1px solid #E8DDD0" }}>
+                  <th width="110">غلاف الفئة</th>
                   <th>الاسم بالعربي</th>
                   <th>الاسم بالإنجليزي</th>
                   <th>الرابط (Slug)</th>
@@ -173,18 +209,18 @@ export default function AdminBanners() {
                   <tr key={cat.id} style={{ borderBottom: "1px solid #FAF7F2" }}>
                     <td>
                       {cat.imageUrl ? (
-                        <img src={cat.imageUrl} width="60" height="40" style={{ objectFit: "cover", borderRadius: "6px" }} alt="" />
+                        <img src={cat.imageUrl} width="70" height="45" style={{ objectFit: "cover", borderRadius: "8px", border: "1px solid #E8DDD0" }} alt="" />
                       ) : (
-                        <span style={{ fontSize: "11px", color: "#8B7355", background: "#FAF7F2", padding: "4px 8px", borderRadius: "4px", border: "1px dashed #E8DDD0" }}>📷 بلا صورة</span>
+                        <span style={{ fontSize: "11px", color: "#8B7355", background: "#FAF7F2", padding: "4px 8px", borderRadius: "6px", border: "1px dashed #E8DDD0" }}>📷 بلا صورة</span>
                       )}
                     </td>
-                    <td style={{ fontWeight: "bold" }}>{cat.nameAr}</td>
-                    <td>{cat.nameEn}</td>
+                    <td style={{ fontWeight: "bold", color: "#3D2B1F" }}>{cat.nameAr}</td>
+                    <td style={{ color: "#8B7355" }}>{cat.nameEn}</td>
                     <td><code>{cat.slug}</code></td>
                     <td style={{ textAlign: "center" }}>
-                      <button onClick={() => handleCatEdit(cat)} style={{ border: "none", background: "none", color: "#C9A96E", cursor: "pointer", fontWeight: "bold", marginLeft: "10px" }}>تعديل وصورة</button>
+                      <button onClick={() => handleCatEdit(cat)} style={{ border: "none", background: "none", color: "#C9A96E", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}>تعديل وصورة</button>
                       {!cat.isDefault && (
-                        <button onClick={async () => { if(confirm("هل تود حذف هذه الفئة نهائياً؟")) await deleteCategory(cat.id, cat.imagePath) }} style={{ border: "none", background: "none", color: "red", cursor: "pointer", fontWeight: "bold" }}>حذف</button>
+                        <button onClick={async () => { if(confirm("هل تود حذف هذه الفئة نهائياً؟")) await deleteCategory(cat.id, cat.imagePath) }} style={{ border: "none", background: "none", color: "red", cursor: "pointer", fontWeight: "bold", marginRight: "10px" }}>حذف</button>
                       )}
                     </td>
                   </tr>
@@ -196,17 +232,17 @@ export default function AdminBanners() {
 
         {/* ─── 2) لوحة التحكم في خلفيات وصور الموقع ─── */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-          <h2 style={{ color: "#3D2B1F", margin: "0 0 5px 0" }}>🖼️ صور وتنسيقات الموقع الخلفية</h2>
+          <h2 style={{ color: "#3D2B1F", margin: "0 0 5px 0", fontWeight: "800" }}>实用 صور وتنسيقات الموقع الخلفية</h2>
           {SECTIONS.map((section) => {
             const banner = getBanner(section.key);
             const isUploading = uploading[section.key];
             return (
-              <div key={section.key} style={{ background: "#fff", borderRadius: "20px", padding: "1.5rem", boxShadow: "0 4px 20px rgba(0,0,0,0.06)", display: "flex", gap: "1.5rem", alignItems: "flex-start", flexWrap: "wrap" }}>
+              <div key={section.key} style={{ background: "#fff", borderRadius: "24px", padding: "1.5rem", boxShadow: "0 4px 25px rgba(0,0,0,0.04)", display: "flex", gap: "1.5rem", alignItems: "flex-start", flexWrap: "wrap", border: "1px solid #E8DDD0" }}>
                 
                 <div style={{ width: "180px", flexShrink: 0 }}>
-                  <div style={{ background: "#FAF7F2", border: "2px dashed #E8DDD0", borderRadius: "12px", height: "120px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", overflow: "hidden", marginBottom: "8px" }}>
+                  <div style={{ background: "#FAF7F2", border: "2px dashed #E8DDD0", borderRadius: "14px", height: "120px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", overflow: "hidden", marginBottom: "8px" }}>
                     {banner?.imageUrl ? (
-                      <img src={banner.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px" }} />
+                      <img src={banner.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     ) : (
                       <div style={{ textAlign: "center", padding: "1rem" }}>
                         <div style={{ fontSize: "1.5rem", marginBottom: "4px" }}>📷</div>
@@ -228,7 +264,7 @@ export default function AdminBanners() {
                       <input
                         defaultValue={banner?.[f] || ""}
                         onChange={(e) => handleFieldChange(section.key, f, e.target.value)}
-                        style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #E8DDD0", outline: "none", boxSizing: "border-box", fontSize: "0.9rem" }}
+                        style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #E8DDD0", outline: "none", boxSizing: "border-box", fontSize: "0.9rem" }}
                       />
                     </div>
                   ))}
