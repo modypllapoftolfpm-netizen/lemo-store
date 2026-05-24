@@ -1,132 +1,349 @@
-import { useState, useEffect } from "react";
-import Navbar from "../../components/layout/Navbar";
-import { subscribeToProducts, addProduct, updateProduct, deleteProduct, uploadProductImage } from "../../firebase/products";
+import React, { useState, useEffect } from "react";
+import { useLang } from "../../context/LangContext";
+import { 
+  subscribeToProducts, 
+  addProduct, 
+  updateProduct, 
+  deleteProduct, 
+  uploadProductImages, 
+  deleteProductImages 
+} from "../../firebase/products";
 
-const empty = { nameAr: "", nameEn: "", descAr: "", descEn: "", price: "", stock: "", category: "scented", isNew: false, isBestSeller: false };
-
-export default function AdminProducts() {
+const AdminProducts = () => {
+  const { t, isRTL } = useLang();
   const [products, setProducts] = useState([]);
-  const [form, setForm] = useState(empty);
-  const [editId, setEditId] = useState(null);
-  const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [showForm, setShowForm] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [error, setError] = useState("");
 
+  // ─── State الفورم ──────────────────────────────────────────────────────────
+  const [showModal, setShowModal] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [formData, setFormData] = useState({
+    nameAr: "", nameEn: "",
+    descAr: "", descEn: "",
+    price: "", stock: "",
+    category: "scented",
+    isNew: false, isBestSeller: false
+  });
+
+  // تخزين ملفات الصور المختارة والمعاينة
+  const [imageFiles, setImageFiles] = useState([]);
+  const [previews, setPreviews] = useState([]);
+  const [existingImages, setExistingImages] = useState([]); // للصور القديمة في حالة التعديل
+
+  // ─── جلب المنتجات في الوقت الفعلي ──────────────────────────────────────────
   useEffect(() => {
-    const unsub = subscribeToProducts(setProducts);
+    setLoading(true);
+    const unsub = subscribeToProducts((data) => {
+      setProducts(data);
+      setLoading(false);
+    });
     return unsub;
   }, []);
 
-  const handleChange = (e) => {
-    const val = e.target.type === "checkbox" ? e.target.checked : e.target.value;
-    setForm({ ...form, [e.target.name]: val });
+  // ─── التعامل مع اختيار الصور المتعددة ───────────────────────────────────────
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    // إضافة الملفات الجديدة للـ State
+    setImageFiles((prev) => [...prev, ...files]);
+
+    // توليد روابط للمعاينة فوراً قبل الرفع
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setPreviews((prev) => [...prev, ...newPreviews]);
   };
 
+  // إزالة صورة من قائمة المعاينة قبل الرفع
+  const removePreview = (index) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // إزالة صورة مرفوعة بالفعل من الـ Database (عند التعديل)
+  const removeExistingImage = (index) => {
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  // ─── فتح المودال للإضافة أو التعديل ─────────────────────────────────────────
+  const openModal = (product = null) => {
+    setError("");
+    setImageFiles([]);
+    setPreviews([]);
+    
+    if (product) {
+      setEditId(product.id);
+      setFormData({
+        nameAr: product.nameAr || "", nameEn: product.nameEn || "",
+        descAr: product.descAr || "", descEn: product.descEn || "",
+        price: product.price || "", stock: product.stock || "",
+        category: product.category || "scented",
+        isNew: product.isNew || false, isBestSeller: product.isBestSeller || false
+      });
+      setExistingImages(product.images || []); // تحميل الصور القديمة إن وجدت
+    } else {
+      setEditId(null);
+      setFormData({
+        nameAr: "", nameEn: "",
+        descAr: "", descEn: "",
+        price: "", stock: "",
+        category: "scented",
+        isNew: false, isBestSeller: false
+      });
+      setExistingImages([]);
+    }
+    setShowModal(true);
+  };
+
+  // ─── دالة حفظ وإرسال البيانات لحساب Firebase ──────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setActionLoading(true);
+    setError("");
+
     try {
-      let imageUrl = form.imageUrl || "";
-      let imagePath = form.imagePath || "";
-      if (imageFile) {
-        const uploaded = await uploadProductImage(imageFile, editId || Date.now().toString());
-        imageUrl = uploaded.url;
-        imagePath = uploaded.path;
+      const productData = {
+        nameAr: formData.nameAr,
+        nameEn: formData.nameEn,
+        descAr: formData.descAr,
+        descEn: formData.descEn,
+        price: Number(formData.price),
+        stock: Number(formData.stock),
+        category: formData.category,
+        isNew: formData.isNew,
+        isBestSeller: formData.isBestSeller,
+      };
+
+      if (editId) {
+        // أ) حالة التعديل على منتج موجود
+        let updatedImages = [...existingImages];
+
+        // لو الأدمن اختار صور جديدة يرفعها ويزودها على المصفوفة
+        if (imageFiles.length > 0) {
+          const newUploaded = await uploadProductImages(imageFiles, editId);
+          updatedImages = [...updatedImages, ...newUploaded];
+        }
+
+        await updateProduct(editId, { ...productData, images: updatedImages });
+      } else {
+        // ب) حالة إضافة منتج جديد تماماً
+        if (imageFiles.length === 0) {
+          throw new Error(isRTL ? "برجاء اختيار صورة واحدة على الأقل للمنتج" : "Please select at least one image");
+        }
+
+        // 1. نعمل المنتج الأول بدون صور لنحصل على الـ ID
+        const docRef = await addProduct({ ...productData, images: [] });
+        
+        // 2. نرفع الصور اللانهائية داخل مجلد الـ ID الخاص بالمنتج
+        const uploadedImages = await uploadProductImages(imageFiles, docRef.id);
+        
+        // 3. نحدث المنتج بمصفوفة الصور الكاملة
+        await updateProduct(docRef.id, { images: uploadedImages });
       }
-      const data = { ...form, price: Number(form.price), stock: Number(form.stock), imageUrl, imagePath };
-      if (editId) await updateProduct(editId, data);
-      else await addProduct(data);
-      setForm(empty); setEditId(null); setImageFile(null); setShowForm(false);
-    } catch (err) { alert("حدث خطأ"); }
-    setLoading(false);
+
+      setShowModal(false);
+    } catch (err) {
+      console.error(err);
+      setError(err.message || t.error);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleEdit = (p) => { setForm(p); setEditId(p.id); setShowForm(true); };
-  const handleDelete = async (p) => {
-    if (!window.confirm("هل أنت متأكد؟")) return;
-    await deleteProduct(p.id, p.imagePath);
+  // ─── دالة الحذف الكامل للمنتج وصوره ────────────────────────────────────────
+  const handleDelete = async (product) => {
+    if (window.confirm(t.admin.deleteConfirm)) {
+      try {
+        await deleteProduct(product.id, product.images || []);
+      } catch (err) {
+        console.error(err);
+        alert(t.error);
+      }
+    }
   };
-
-  const inputStyle = { width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #E8DDD0", outline: "none", boxSizing: "border-box", marginBottom: "10px" };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#FAF7F2" }}>
-      <Navbar />
-      <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "2rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-          <h1 style={{ color: "#3D2B1F" }}>📦 إدارة المنتجات</h1>
-          <button onClick={() => { setShowForm(!showForm); setForm(empty); setEditId(null); }} style={{
-            background: "#C9A96E", color: "#fff", border: "none",
-            borderRadius: "10px", padding: "10px 20px", cursor: "pointer", fontWeight: "700"
-          }}>+ إضافة منتج</button>
-        </div>
+    <div className="p-6 max-w-7xl mx-auto animate-fadeUp">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-lemo-dark">{t.admin.products}</h1>
+        <button onClick={() => openModal()} className="btn-primary py-2 px-6 text-sm">
+          + {t.admin.addProduct}
+        </button>
+      </div>
 
-        {/* Form */}
-        {showForm && (
-          <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", marginBottom: "2rem", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-            <h2 style={{ color: "#3D2B1F", marginBottom: "1rem" }}>{editId ? "تعديل المنتج" : "إضافة منتج جديد"}</h2>
-            <form onSubmit={handleSubmit}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                <div><label style={{ fontSize: "0.9rem", color: "#3D2B1F", fontWeight: "600" }}>الاسم (عربي)</label><input name="nameAr" value={form.nameAr} onChange={handleChange} required style={inputStyle} /></div>
-                <div><label style={{ fontSize: "0.9rem", color: "#3D2B1F", fontWeight: "600" }}>الاسم (إنجليزي)</label><input name="nameEn" value={form.nameEn} onChange={handleChange} style={inputStyle} /></div>
-                <div><label style={{ fontSize: "0.9rem", color: "#3D2B1F", fontWeight: "600" }}>الوصف (عربي)</label><input name="descAr" value={form.descAr} onChange={handleChange} style={inputStyle} /></div>
-                <div><label style={{ fontSize: "0.9rem", color: "#3D2B1F", fontWeight: "600" }}>الوصف (إنجليزي)</label><input name="descEn" value={form.descEn} onChange={handleChange} style={inputStyle} /></div>
-                <div><label style={{ fontSize: "0.9rem", color: "#3D2B1F", fontWeight: "600" }}>السعر (ج.م)</label><input name="price" type="number" value={form.price} onChange={handleChange} required style={inputStyle} /></div>
-                <div><label style={{ fontSize: "0.9rem", color: "#3D2B1F", fontWeight: "600" }}>الكمية</label><input name="stock" type="number" value={form.stock} onChange={handleChange} required style={inputStyle} /></div>
-                <div><label style={{ fontSize: "0.9rem", color: "#3D2B1F", fontWeight: "600" }}>التصنيف</label>
-                  <select name="category" value={form.category} onChange={handleChange} style={inputStyle}>
-                    <option value="gifts">الهدايا</option>
-                    <option value="scented">الشموع المعطرة</option>
-                    <option value="decorative">الشموع الديكورية</option>
-                    <option value="body">مرطبات الجسم</option>
+      {loading ? (
+        <div className="text-center py-10 text-lemo-muted">{t.loading}</div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-lemo-beige/30 overflow-hidden shadow-sm">
+          <table className="w-full text-right border-collapse">
+            <thead>
+              <tr className="bg-lemo-cream border-b border-lemo-beige/40 text-sm text-lemo-muted">
+                <th className="p-4">{t.admin.image}</th>
+                <th className="p-4">{t.admin.productName}</th>
+                <th className="p-4">{t.admin.category}</th>
+                <th className="p-4">{t.admin.price}</th>
+                <th className="p-4">{t.admin.stock}</th>
+                <th className="p-4 text-center">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm text-lemo-dark divide-y divide-lemo-cream">
+              {products.map((p) => (
+                <tr key={p.id} className="hover:bg-lemo-cream/30 transition-colors">
+                  <td className="p-4">
+                    <img 
+                      src={p.images && p.images[0] ? p.images[0].url : "https://via.placeholder.com/50"} 
+                      alt={p.nameAr} 
+                      className="w-12 h-12 object-cover rounded-xl border border-lemo-beige/30"
+                    />
+                    {p.images && p.images.length > 1 && (
+                      <span className="text-[10px] text-lemo-muted block mt-1">+{p.images.length - 1} صور أخرى</span>
+                    )}
+                  </td>
+                  <td className="p-4 font-medium">{isRTL ? p.nameAr : p.nameEn}</td>
+                  <td className="p-4 text-lemo-muted">{t.categories[p.category] || p.category}</td>
+                  <td className="p-4 font-bold">{p.price} {t.currency}</td>
+                  <td className="p-4">{p.stock}</td>
+                  <td className="p-4 text-center">
+                    <button onClick={() => openModal(p)} className="text-blue-600 hover:underline mx-2">{t.edit}</button>
+                    <button onClick={() => handleDelete(p)} className="text-red-600 hover:underline mx-2">{t.delete}</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* ─── نافذة (Modal) إضافة وتعديل المنتج ───────────────────────────────── */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto shadow-xl border border-lemo-beige/20 animate-fadeUp">
+            <h2 className="text-xl font-bold text-lemo-dark border-b pb-3 mb-4">
+              {editId ? t.edit : t.admin.addProduct}
+            </h2>
+
+            {error && <div className="bg-red-50 text-red-600 text-xs p-3 rounded-xl mb-4">{error}</div>}
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-lemo-muted mb-1">{t.admin.productNameAr} *</label>
+                  <input type="text" name="nameAr" value={formData.nameAr} onChange={handleChange} className="w-full px-4 py-2.5 rounded-xl border text-sm" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-lemo-muted mb-1">{t.admin.productNameEn} *</label>
+                  <input type="text" name="nameEn" value={formData.nameEn} onChange={handleChange} className="w-full px-4 py-2.5 rounded-xl border text-sm" required />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-lemo-muted mb-1">{t.admin.descAr} *</label>
+                  <textarea name="descAr" value={formData.descAr} onChange={handleChange} rows="2" className="w-full px-4 py-2.5 rounded-xl border text-sm resize-none" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-lemo-muted mb-1">{t.admin.descEn} *</label>
+                  <textarea name="descEn" value={formData.descEn} onChange={handleChange} rows="2" className="w-full px-4 py-2.5 rounded-xl border text-sm resize-none" required />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-lemo-muted mb-1">{t.admin.price} *</label>
+                  <input type="number" name="price" value={formData.price} onChange={handleChange} className="w-full px-4 py-2.5 rounded-xl border text-sm" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-lemo-muted mb-1">{t.admin.stock} *</label>
+                  <input type="number" name="stock" value={formData.stock} onChange={handleChange} className="w-full px-4 py-2.5 rounded-xl border text-sm" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-lemo-muted mb-1">{t.admin.category} *</label>
+                  <select name="category" value={formData.category} onChange={handleChange} className="w-full px-4 py-2.5 rounded-xl border text-sm bg-white">
+                    <option value="scented">{t.categories.scented}</option>
+                    <option value="decorative">{t.categories.decorative}</option>
+                    <option value="gifts">{t.categories.gifts}</option>
+                    <option value="body">{t.categories.body}</option>
                   </select>
                 </div>
-                <div><label style={{ fontSize: "0.9rem", color: "#3D2B1F", fontWeight: "600" }}>صورة المنتج</label><input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} style={inputStyle} /></div>
               </div>
-              <div style={{ display: "flex", gap: "1rem", margin: "10px 0" }}>
-                <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
-                  <input type="checkbox" name="isNew" checked={form.isNew} onChange={handleChange} />
-                  <span style={{ color: "#3D2B1F", fontWeight: "600" }}>منتج جديد</span>
+
+              {/* ─── رفع الصور المتعددة اللانهائية ─── */}
+              <div className="border-t border-dashed border-lemo-beige/60 pt-4">
+                <label className="block text-xs font-bold text-lemo-dark mb-2">إلبوم صور المنتج (يمكنك اختيار عدد لا نهائي من الصور) *</label>
+                
+                <input 
+                  type="file" 
+                  multiple 
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full text-xs text-lemo-muted file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-lemo-cream file:text-lemo-muted hover:file:bg-lemo-beige/50 cursor-pointer"
+                />
+
+                {/* عرض الصور القديمة في حالة التعديل */}
+                {existingImages.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-[11px] text-lemo-muted mb-1.5">الصور الحالية المرفوعة على الموقع:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {existingImages.map((img, idx) => (
+                        <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-lemo-beige">
+                          <img src={img.url} alt="" className="w-full h-full object-cover" />
+                          <button type="button" onClick={() => removeExistingImage(idx)} className="absolute top-0 right-0 bg-red-600 text-white rounded-bl-lg p-0.5 text-[10px] w-4 h-4 flex items-center justify-center hover:bg-red-700">×</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* عرض معاينة الصور الجديدة المحددة قبل الرفع */}
+                {previews.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-[11px] text-green-600 mb-1.5">صور جديدة مضافة (سيتم رفعها عند الضغط على حفظ):</p>
+                    <div className="flex flex-wrap gap-2">
+                      {previews.map((url, idx) => (
+                        <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-green-200">
+                          <img src={url} alt="" className="w-full h-full object-cover" />
+                          <button type="button" onClick={() => removePreview(idx)} className="absolute top-0 right-0 bg-gray-800 text-white rounded-bl-lg p-0.5 text-[10px] w-4 h-4 flex items-center justify-center hover:bg-black">×</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-4 mt-2">
+                <label className="flex items-center gap-2 text-xs text-lemo-dark font-medium cursor-pointer">
+                  <input type="checkbox" name="isNew" checked={formData.isNew} onChange={handleChange} className="rounded" />
+                  {t.admin.isNew}
                 </label>
-                <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
-                  <input type="checkbox" name="isBestSeller" checked={form.isBestSeller} onChange={handleChange} />
-                  <span style={{ color: "#3D2B1F", fontWeight: "600" }}>الأكثر مبيعاً</span>
+                <label className="flex items-center gap-2 text-xs text-lemo-dark font-medium cursor-pointer">
+                  <input type="checkbox" name="isBestSeller" checked={formData.isBestSeller} onChange={handleChange} className="rounded" />
+                  {t.admin.isBestSeller}
                 </label>
               </div>
-              <div style={{ display: "flex", gap: "10px" }}>
-                <button type="submit" disabled={loading} style={{ background: "#C9A96E", color: "#fff", border: "none", borderRadius: "10px", padding: "10px 24px", cursor: "pointer", fontWeight: "700" }}>
-                  {loading ? "جاري الحفظ..." : editId ? "تحديث" : "إضافة"}
+
+              <div className="flex justify-end gap-3 border-t pt-4 mt-2">
+                <button type="button" onClick={() => setShowModal(false)} className="px-5 py-2 rounded-full text-xs font-medium border border-lemo-beige text-lemo-muted hover:bg-lemo-cream" disabled={actionLoading}>
+                  {t.cancel}
                 </button>
-                <button type="button" onClick={() => { setShowForm(false); setForm(empty); setEditId(null); }} style={{ background: "#E8DDD0", color: "#3D2B1F", border: "none", borderRadius: "10px", padding: "10px 24px", cursor: "pointer" }}>إلغاء</button>
+                <button type="submit" className="btn-primary py-2 px-6 text-xs" disabled={actionLoading}>
+                  {actionLoading ? t.loading : t.save}
+                </button>
               </div>
             </form>
           </div>
-        )}
-
-        {/* Products Table */}
-        <div style={{ background: "#fff", borderRadius: "16px", overflow: "hidden", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-          {products.map((p) => (
-            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.5rem", borderBottom: "1px solid #E8DDD0" }}>
-              <div style={{ width: "50px", height: "50px", background: "#FAF7F2", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem", flexShrink: 0 }}>
-                {p.imageUrl ? <img src={p.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px" }} /> : "🕯️"}
-              </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ margin: "0 0 2px", fontWeight: "700", color: "#3D2B1F" }}>{p.nameAr}</p>
-                <p style={{ margin: 0, color: "#C9A96E", fontSize: "0.9rem" }}>{p.price} ج.م — الكمية: {p.stock}</p>
-              </div>
-              <div style={{ display: "flex", gap: "6px" }}>
-                {p.isNew && <span style={{ background: "#C9A96E", color: "#fff", padding: "2px 8px", borderRadius: "8px", fontSize: "0.75rem" }}>جديد</span>}
-                {p.isBestSeller && <span style={{ background: "#3D2B1F", color: "#fff", padding: "2px 8px", borderRadius: "8px", fontSize: "0.75rem" }}>⭐</span>}
-              </div>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button onClick={() => handleEdit(p)} style={{ background: "#FFF8F0", color: "#C9A96E", border: "1px solid #C9A96E", borderRadius: "8px", padding: "6px 12px", cursor: "pointer" }}>تعديل</button>
-                <button onClick={() => handleDelete(p)} style={{ background: "#fff0f0", color: "#cc0000", border: "1px solid #ffcccc", borderRadius: "8px", padding: "6px 12px", cursor: "pointer" }}>حذف</button>
-              </div>
-            </div>
-          ))}
-          {products.length === 0 && <p style={{ textAlign: "center", padding: "2rem", color: "#8B7355" }}>لا توجد منتجات بعد</p>}
         </div>
-      </div>
+      )}
     </div>
   );
-}
+};
+
+export default AdminProducts;
