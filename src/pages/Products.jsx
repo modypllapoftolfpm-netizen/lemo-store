@@ -12,11 +12,15 @@ export default function Products() {
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const category = searchParams.get("category") || "all";
 
   useEffect(() => {
-    const unsub = subscribeToProducts(setProducts);
+    const unsub = subscribeToProducts((data) => {
+      setProducts(data);
+      setLoading(false);
+    });
     return unsub;
   }, []);
 
@@ -25,6 +29,28 @@ export default function Products() {
     const matchSearch = field(p, "name").toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
+
+  const getDisplayImage = (imgField) => {
+    if (Array.isArray(imgField)) return imgField[0] || "";
+    return imgField || "";
+  };
+
+  // ─── لودر النبض الفاخر داخل صفحة المنتجات لتوحيد الهوية ────────────────────
+  if (loading) {
+    return (
+      <div style={{ 
+        position: "fixed", inset: 0, background: "#FAF7F2", 
+        display: "flex", flexDirection: "column", alignItems: "center", 
+        justifyContent: "center", zIndex: 99999 
+      }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", animation: "pulse 1.8s infinite ease-in-out" }}>
+          <img src="https://lemo-store-eg.vercel.app/assets/logo.png" alt="LEMO LUXE" style={{ width: "240px", height: "auto", marginBottom: "15px" }} />
+          <p style={{ color: "#C9A96E", fontSize: "0.85rem", fontWeight: "600", fontFamily: "Cairo, sans-serif", letterSpacing: "1px" }}>Handmade Home Decor & Candles</p>
+        </div>
+        <style>{`@keyframes pulse { 0% { transform: scale(0.97); opacity: 0.8; } 50% { transform: scale(1.02); opacity: 1; } 100% { transform: scale(0.97); opacity: 0.8; } }`}</style>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: "#FAF7F2" }}>
@@ -64,44 +90,75 @@ export default function Products() {
           </div>
         ) : (
           <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
-            {filtered.map((p) => (
-              <div key={p.id} style={{
-                background: "#fff", borderRadius: "16px",
-                boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-                width: "220px", overflow: "hidden"
-              }}>
-                <Link to={`/products/${p.id}`} style={{ textDecoration: "none" }}>
-                  <div style={{ position: "relative" }}>
-                    <div style={{
-                      height: "200px", background: "#FAF7F2",
-                      display: "flex", alignItems: "center", justifyContent: "center", fontSize: "3rem"
-                    }}>
-                      {p.imageUrl
-                        ? <img src={p.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                        : "🕯️"}
+            {filtered.map((p) => {
+              const hasDiscount = p.discount > 0;
+              const finalPrice = hasDiscount ? p.price - (p.price * (p.discount / 100)) : p.price;
+              const imageUrl = getDisplayImage(p.imageUrl);
+
+              return (
+                <div key={p.id} style={{
+                  background: "#fff", borderRadius: "16px",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+                  width: "220px", overflow: "hidden", position: "relative"
+                }}>
+                  <Link to={`/products/${p.id}`} style={{ textDecoration: "none" }}>
+                    <div style={{ position: "relative" }}>
+                      <div style={{
+                        height: "200px", background: "#FAF7F2",
+                        display: "flex", alignItems: "center", justifyContent: "center", fontSize: "3rem"
+                      }}>
+                        {imageUrl ? (
+                          <img src={imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                          "🕯️"
+                        )}
+                      </div>
+                      
+                      {hasDiscount && (
+                        <span style={{ position: "absolute", top: "10px", right: "10px", background: "#E74C3C", color: "#fff", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: "bold", boxShadow: "0 2px 10px rgba(231,76,60,0.3)" }}>
+                          خصم {p.discount}%
+                        </span>
+                      )}
+
+                      {p.isNew && !hasDiscount && <span style={{ position: "absolute", top: "10px", right: "10px", background: "#C9A96E", color: "#fff", padding: "2px 10px", borderRadius: "10px", fontSize: "0.8rem" }}>{t.products.new}</span>}
+                      {p.isBestSeller && <span style={{ position: "absolute", top: "10px", left: "10px", background: "#3D2B1F", color: "#fff", padding: "2px 10px", borderRadius: "10px", fontSize: "0.8rem" }}>⭐</span>}
                     </div>
-                    {p.isNew && <span style={{ position: "absolute", top: "10px", right: "10px", background: "#C9A96E", color: "#fff", padding: "2px 10px", borderRadius: "10px", fontSize: "0.8rem" }}>{t.products.new}</span>}
-                    {p.isBestSeller && <span style={{ position: "absolute", top: "10px", left: "10px", background: "#3D2B1F", color: "#fff", padding: "2px 10px", borderRadius: "10px", fontSize: "0.8rem" }}>⭐</span>}
+                    
+                    <div style={{ padding: "1rem" }}>
+                      <h3 style={{ margin: "0 0 8px", color: "#3D2B1F", fontSize: "0.95rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{field(p, "name")}</h3>
+                      
+                      {hasDiscount ? (
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ color: "#E74C3C", fontWeight: "700", fontSize: "1.1rem" }}>{finalPrice} {t.currency}</span>
+                          <span style={{ color: "#8B7355", textDecoration: "line-through", fontSize: "0.85rem" }}>{p.price}</span>
+                        </div>
+                      ) : (
+                        <p style={{ color: "#C9A96E", fontWeight: "700", margin: 0 }}>{p.price} {t.currency}</p>
+                      )}
+
+                      {p.showStock && p.stock > 0 && p.stock <= 10 && (
+                        <p style={{ color: "#E67E22", fontSize: "0.75rem", fontWeight: "bold", margin: "6px 0 0 0" }}>
+                          ⏳ متبقي {p.stock} قطع فقط في المخزن!
+                        </p>
+                      )}
+                    </div>
+                  </Link>
+
+                  <div style={{ padding: "0 1rem 1rem", display: "flex", gap: "8px" }}>
+                    <button onClick={() => addToCart(p)} disabled={p.stock === 0} style={{
+                      flex: 1, background: p.stock === 0 ? "#E8DDD0" : "#C9A96E",
+                      color: "#fff", border: "none", borderRadius: "10px",
+                      padding: "8px", cursor: p.stock === 0 ? "not-allowed" : "pointer",
+                      fontWeight: "600", fontSize: "0.85rem"
+                    }}>{p.stock === 0 ? t.products.outOfStock : t.products.addToCart}</button>
+                    <button onClick={() => toggleWishlist(p)} style={{
+                      background: "none", border: "1px solid #E8DDD0",
+                      borderRadius: "10px", padding: "8px 10px", cursor: "pointer", fontSize: "1rem"
+                    }}>{isInWishlist(p.id) ? "❤️" : "🤍"}</button>
                   </div>
-                  <div style={{ padding: "1rem" }}>
-                    <h3 style={{ margin: "0 0 8px", color: "#3D2B1F", fontSize: "0.95rem" }}>{field(p, "name")}</h3>
-                    <p style={{ color: "#C9A96E", fontWeight: "700", margin: 0 }}>{p.price} {t.currency}</p>
-                  </div>
-                </Link>
-                <div style={{ padding: "0 1rem 1rem", display: "flex", gap: "8px" }}>
-                  <button onClick={() => addToCart(p)} disabled={p.stock === 0} style={{
-                    flex: 1, background: p.stock === 0 ? "#E8DDD0" : "#C9A96E",
-                    color: "#fff", border: "none", borderRadius: "10px",
-                    padding: "8px", cursor: p.stock === 0 ? "not-allowed" : "pointer",
-                    fontWeight: "600", fontSize: "0.85rem"
-                  }}>{p.stock === 0 ? t.products.outOfStock : t.products.addToCart}</button>
-                  <button onClick={() => toggleWishlist(p)} style={{
-                    background: "none", border: "1px solid #E8DDD0",
-                    borderRadius: "10px", padding: "8px 10px", cursor: "pointer", fontSize: "1rem"
-                  }}>{isInWishlist(p.id) ? "❤️" : "🤍"}</button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
