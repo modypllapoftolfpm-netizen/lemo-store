@@ -5,10 +5,11 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { db, storage } from "./config";
+import imageCompression from "browser-image-compression"; // استيراد مكتبة الضغط
 
 const COL = "products";
 
-// ─── دالة رفع صورة واحدة (القديمة المضمونة) ──────────────────────────────────
+// ─── دالة رفع صورة واحدة ──────────────────────────────────────────────────
 export const uploadProductImage = async (file, productId) => {
   const path = `products/${productId}_${Date.now()}`;
   const storageRef = ref(storage, path);
@@ -17,22 +18,37 @@ export const uploadProductImage = async (file, productId) => {
   return { url, path };
 };
 
-// ─── الدالة الذكية لرفع عدد لا نهائي من الصور وتحويلها لنص مفصول بـ , ───────
+// ─── الدالة الذكية لرفع وضغط عدد لا نهائي من الصور بدون تهنيج ───────────────
 export const uploadMultipleImagesToText = async (files, productId) => {
   const urls = [];
   const paths = [];
+
+  // إعدادات الضغط (تقليل الحجم مع الحفاظ على الأبعاد والنقاء للشموع)
+  const options = {
+    maxSizeMB: 0.8,          // أقصى حجم للصورة 800 كيلوبايت فقط بدل الميجات
+    maxWidthOrHeight: 1024,  // أقصى عرض أو طول 1024 بكسل لضمان الأناقة
+    useWebWorker: true,
+  };
   
   for (let i = 0; i < files.length; i++) {
-    const file = files[i];
+    let file = files[i];
+    
+    // عملية الضغط السحرية قبل الرفع
+    try {
+      file = await imageCompression(file, options);
+    } catch (compressError) {
+      console.log("Image compression skipped:", compressError);
+    }
+
     const path = `products/${productId}_${Date.now()}_${i}`;
     const storageRef = ref(storage, path);
+    
     await uploadBytes(storageRef, file);
     const url = await getDownloadURL(storageRef);
     urls.push(url);
     paths.push(path);
   }
   
-  // بنرجع الروابط والمسارات مدموجة بنص يفصل بينهم الفاصلة ,
   return {
     imageUrl: urls.join(","),
     imagePath: paths.join(",")
@@ -42,7 +58,6 @@ export const uploadMultipleImagesToText = async (files, productId) => {
 // ─── Delete image from Storage ──────────────────────────────────────────────
 export const deleteProductImage = async (imagePath) => {
   if (!imagePath) return;
-  // لو فيه كذا مسار ممسوحين بالفاصلة بنلف عليهم ونحذفهم
   const paths = imagePath.split(",");
   for (const path of paths) {
     const storageRef = ref(storage, path.trim());
@@ -105,9 +120,4 @@ export const subscribeToBestSellers = (callback) => {
   });
 };
 
-export const subscribeToNewArrivals = (callback) => {
-  const q = query(collection(db, COL), where("isNew", "==", true));
-  return onSnapshot(q, (snap) => {
-    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-  });
-};
+export const subscribeToNewArrivals = (collection(db, COL), where("isNew", "==", true));
