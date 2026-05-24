@@ -1,8 +1,99 @@
-body {
-    margin: 0;
-    background-color: #FAF7F2;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── LEMO Brand CSS Variables ─────────────────────────────────────────── */
+:root {
+  --lemo-cream:   #FAF7F2;
+  --lemo-beige:   #E8DDD0;
+  --lemo-nude:    #D4B896;
+  --lemo-gold:    #C9A96E;
+  --lemo-dark:    #3D2B1F;
+  --lemo-text:    #2C1810;
+  --lemo-muted:   #8B7355;
 }
+
+/* ─── Base ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-    margin: 0;
-    background-color: #FAF7F2;
+  background-color: var(--lemo-cream);
+  color: var(--lemo-text);
+  margin: 0;
+}
+
+/* ─── Arabic font (RTL) ────────────────────────────────────────────────── */
+[dir="rtl"] body,
+[dir="rtl"] * {
+  font-family: 'Cairo', sans-serif;
+}
+
+/* ─── English font (LTR) ───────────────────────────────────────────────── */
+[dir="ltr"] body,
+[dir="ltr"] * {
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ─── Display headings (both languages) ────────────────────────────────── */
+h1, h2, h3, .font-display {
+  font-family: 'Playfair Display', serif;
+}
+
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] h3,
+[dir="rtl"] .font-display {
+  font-family: 'Cairo', sans-serif;
+  font-weight: 700;
+}
+
+/* ─── Scrollbar ────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--lemo-cream); }
+::-webkit-scrollbar-thumb { background: var(--lemo-nude); border-radius: 3px; }
+
+/* ─── Animations ───────────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+
+.animate-fadeUp { animation: fadeUp 0.5s ease forwards; }
+
+/* ─── Skeleton loader ──────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, var(--lemo-beige) 25%, var(--lemo-cream) 50%, var(--lemo-beige) 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* ─── Utility classes ──────────────────────────────────────────────────── */
+.btn-primary {
+  @apply bg-lemo-gold text-white px-6 py-3 rounded-full font-medium
+         transition-all duration-300 hover:bg-lemo-dark hover:shadow-lg
+         active:scale-95;
+}
+
+.btn-outline {
+  @apply border border-lemo-gold text-lemo-gold px-6 py-3 rounded-full font-medium
+         transition-all duration-300 hover:bg-lemo-gold hover:text-white
+         active:scale-95;
+}
+
+.card {
+  @apply bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300;
+}
+
+.section-title {
+  @apply text-2xl md:text-3xl font-display text-lemo-dark text-center mb-8;
 }
