@@ -8,55 +8,46 @@ import { db, storage } from "./config";
 
 const COL = "products";
 
-// ─── Schema الجديد للصور المتعددة ──────────────────────────────────────────
-// {
-//   id:          string  (auto)
-//   nameAr:      string
-//   nameEn:      string
-//   descAr:      string
-//   descEn:      string
-//   price:       number  (EGP)
-//   category:    "gifts" | "scented" | "decorative" | "body"
-//   images:      [ { url: string, path: string }, { url: string, path: string }, ... ] <-- مصفوفة الصور
-//   stock:       number
-//   isNew:       boolean
-//   isBestSeller:boolean
-//   createdAt:   timestamp
-//   updatedAt:   timestamp
-// }
-
-// ─── رفع مجموعة من الصور معاً إلى Storage ──────────────────────────────────
-export const uploadProductImages = async (files, productId) => {
-  const uploadedImages = [];
-  
-  // تحويل الـ FileList إلى Array واللف عليها لرفعها صورة صورة
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const path = `products/${productId}/${Date.now()}_${i}`;
-    const storageRef = ref(storage, path);
-    
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
-    
-    uploadedImages.push({ url, path });
-  }
-  
-  return uploadedImages; // هترجع Array فيها الـ url والـ path لكل صورة
+// ─── دالة رفع صورة واحدة (القديمة المضمونة) ──────────────────────────────────
+export const uploadProductImage = async (file, productId) => {
+  const path = `products/${productId}_${Date.now()}`;
+  const storageRef = ref(storage, path);
+  await uploadBytes(storageRef, file);
+  const url = await getDownloadURL(storageRef);
+  return { url, path };
 };
 
-// ─── حذف مجموعة من الصور من Storage ────────────────────────────────────────
-export const deleteProductImages = async (imagesArray) => {
-  if (!imagesArray || !Array.isArray(imagesArray)) return;
+// ─── الدالة الذكية لرفع عدد لا نهائي من الصور وتحويلها لنص مفصول بـ , ───────
+export const uploadMultipleImagesToText = async (files, productId) => {
+  const urls = [];
+  const paths = [];
   
-  const deletePromises = imagesArray.map((img) => {
-    if (img.path) {
-      const storageRef = ref(storage, img.path);
-      return deleteObject(storageRef).catch(() => {});
-    }
-    return Promise.resolve();
-  });
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const path = `products/${productId}_${Date.now()}_${i}`;
+    const storageRef = ref(storage, path);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+    urls.push(url);
+    paths.push(path);
+  }
   
-  await Promise.all(deletePromises);
+  // بنرجع الروابط والمسارات مدموجة بنص يفصل بينهم الفاصلة ,
+  return {
+    imageUrl: urls.join(","),
+    imagePath: paths.join(",")
+  };
+};
+
+// ─── Delete image from Storage ──────────────────────────────────────────────
+export const deleteProductImage = async (imagePath) => {
+  if (!imagePath) return;
+  // لو فيه كذا مسار ممسوحين بالفاصلة بنلف عليهم ونحذفهم
+  const paths = imagePath.split(",");
+  for (const path of paths) {
+    const storageRef = ref(storage, path.trim());
+    await deleteObject(storageRef).catch(() => {});
+  }
 };
 
 // ─── Add product ────────────────────────────────────────────────────────────
@@ -70,13 +61,13 @@ export const addProduct = async (data) => {
 
 // ─── Update product ─────────────────────────────────────────────────────────
 export const updateProduct = async (id, data) => {
-  const productRef = doc(db, COL, id);
-  return await updateDoc(productRef, { ...data, updatedAt: serverTimestamp() });
+  const ref = doc(db, COL, id);
+  return await updateDoc(ref, { ...data, updatedAt: serverTimestamp() });
 };
 
 // ─── Delete product ─────────────────────────────────────────────────────────
-export const deleteProduct = async (id, imagesArray) => {
-  await deleteProductImages(imagesArray);
+export const deleteProduct = async (id, imagePath) => {
+  await deleteProductImage(imagePath);
   return await deleteDoc(doc(db, COL, id));
 };
 
@@ -92,7 +83,7 @@ export const getAllProducts = async () => {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 };
 
-// ─── Real-time listener — all products ──────────────────────────────────────
+// ─── Real-time listeners ────────────────────────────────────────────────────
 export const subscribeToProducts = (callback) => {
   const q = query(collection(db, COL), orderBy("createdAt", "desc"));
   return onSnapshot(q, (snap) => {
@@ -100,19 +91,13 @@ export const subscribeToProducts = (callback) => {
   });
 };
 
-// ─── Real-time listener — by category ───────────────────────────────────────
 export const subscribeToCategory = (category, callback) => {
-  const q = query(
-    collection(db, COL),
-    where("category", "==", category),
-    orderBy("createdAt", "desc")
-  );
+  const q = query(collection(db, COL), where("category", "==", category), orderBy("createdAt", "desc"));
   return onSnapshot(q, (snap) => {
     callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
   });
 };
 
-// ─── Real-time listener — best sellers ──────────────────────────────────────
 export const subscribeToBestSellers = (callback) => {
   const q = query(collection(db, COL), where("isBestSeller", "==", true));
   return onSnapshot(q, (snap) => {
@@ -120,7 +105,6 @@ export const subscribeToBestSellers = (callback) => {
   });
 };
 
-// ─── Real-time listener — new arrivals ──────────────────────────────────────
 export const subscribeToNewArrivals = (callback) => {
   const q = query(collection(db, COL), where("isNew", "==", true));
   return onSnapshot(q, (snap) => {
