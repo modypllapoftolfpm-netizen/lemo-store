@@ -7,6 +7,7 @@ import { db, storage } from "./config";
 
 const COL = "products";
 
+// ─── دالة رفع صور متعددة ──────────────────────────────────────────────────
 export const uploadMultipleImages = async (files, productId) => {
   const urls = [];
   const paths = [];
@@ -22,6 +23,7 @@ export const uploadMultipleImages = async (files, productId) => {
   return { urls, paths };
 };
 
+// ─── دالة حذف الصور ───────────────────────────────────────────────────────
 export const deleteProductImages = async (imagePaths) => {
   if (!imagePaths) return;
   const pathsArray = Array.isArray(imagePaths) ? imagePaths : [imagePaths];
@@ -33,6 +35,7 @@ export const deleteProductImages = async (imagePaths) => {
   }
 };
 
+// ─── الدوال الأساسية للمنتجات ───────────────────────────────────────────────
 export const addProduct = async (data) => {
   return await addDoc(collection(db, COL), {
     ...data,
@@ -51,8 +54,41 @@ export const deleteProduct = async (id, imagePaths) => {
   return await deleteDoc(doc(db, COL, id));
 };
 
+// ─── دالة جلب منتج واحد (التي تسببت في الخطأ) ──────────────────────────────
+export const getProduct = async (id) => {
+  const snap = await getDoc(doc(db, COL, id));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+};
+
+// ─── باقي دوال الجلب والـ Listeners للموقع ──────────────────────────────────
+export const getAllProducts = async () => {
+  const snap = await getDocs(query(collection(db, COL), orderBy("createdAt", "desc")));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+};
+
 export const subscribeToProducts = (callback) => {
   const q = query(collection(db, COL), orderBy("createdAt", "desc"));
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  });
+};
+
+export const subscribeToCategory = (category, callback) => {
+  const q = query(collection(db, COL), where("category", "==", category), orderBy("createdAt", "desc"));
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  });
+};
+
+export const subscribeToBestSellers = (callback) => {
+  const q = query(collection(db, COL), where("isBestSeller", "==", true));
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  });
+};
+
+export const subscribeToNewArrivals = (callback) => {
+  const q = query(collection(db, COL), where("isNew", "==", true));
   return onSnapshot(q, (snap) => {
     callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
   });
