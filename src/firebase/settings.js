@@ -1,29 +1,17 @@
 import {
-  doc, setDoc, updateDoc, onSnapshot,
-  collection, addDoc, deleteDoc, getDoc, serverTimestamp,
+  doc, getDoc, setDoc, updateDoc, onSnapshot,
+  collection, addDoc, deleteDoc, getDocs, serverTimestamp,
 } from "firebase/firestore";
-import { db } from "./config";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { db, storage } from "./config";
 
-const CLOUDINARY_CLOUD = "dakjxjp0l";
-const CLOUDINARY_PRESET = "yhabgqv3";
-
-export const uploadBannerImage = async (file) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", CLOUDINARY_PRESET);
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
-    method: "POST",
-    body: formData,
-  });
-  const data = await res.json();
-  return { url: data.secure_url, path: data.public_id };
-};
-
+// ─── Get settings (one-time) ────────────────────────────────────────────────
 export const getSettings = async () => {
   const snap = await getDoc(doc(db, "settings", "main"));
   return snap.exists() ? snap.data() : {};
 };
 
+// ─── Update settings ────────────────────────────────────────────────────────
 export const updateSettings = async (data) => {
   return await setDoc(doc(db, "settings", "main"), {
     ...data,
@@ -31,12 +19,23 @@ export const updateSettings = async (data) => {
   }, { merge: true });
 };
 
+// ─── Real-time settings listener ─────────────────────────────────────────────
 export const subscribeToSettings = (callback) => {
   return onSnapshot(doc(db, "settings", "main"), (snap) => {
     callback(snap.exists() ? snap.data() : {});
   });
 };
 
+// ─── Upload banner image ─────────────────────────────────────────────────────
+export const uploadBannerImage = async (file) => {
+  const path = `banners/${Date.now()}_${file.name}`;
+  const storageRef = ref(storage, path);
+  await uploadBytes(storageRef, file);
+  const url = await getDownloadURL(storageRef);
+  return { url, path };
+};
+
+// ─── Add banner ──────────────────────────────────────────────────────────────
 export const addBanner = async (data) => {
   return await addDoc(collection(db, "banners"), {
     ...data,
@@ -45,14 +44,20 @@ export const addBanner = async (data) => {
   });
 };
 
+// ─── Update banner ───────────────────────────────────────────────────────────
 export const updateBanner = async (id, data) => {
   return await updateDoc(doc(db, "banners", id), data);
 };
 
-export const deleteBanner = async (id) => {
+// ─── Delete banner ───────────────────────────────────────────────────────────
+export const deleteBanner = async (id, imagePath) => {
+  if (imagePath) {
+    await deleteObject(ref(storage, imagePath)).catch(() => {});
+  }
   return await deleteDoc(doc(db, "banners", id));
 };
 
+// ─── Real-time banners listener ──────────────────────────────────────────────
 export const subscribeToBanners = (callback) => {
   return onSnapshot(collection(db, "banners"), (snap) => {
     const banners = snap.docs
@@ -63,6 +68,7 @@ export const subscribeToBanners = (callback) => {
   });
 };
 
+// ─── Validate promo code ─────────────────────────────────────────────────────
 export const validatePromoCode = async (code) => {
   const snap = await getDoc(doc(db, "promoCodes", code.toUpperCase()));
   if (!snap.exists()) return { valid: false, message: "Invalid promo code" };
@@ -73,4 +79,13 @@ export const validatePromoCode = async (code) => {
   if (data.usedCount >= data.maxUses)
     return { valid: false, message: "Promo code has been fully used" };
   return { valid: true, discount: data.discount };
+};
+
+// ─── Increment promo code usage ──────────────────────────────────────────────
+export const usePromoCode = async (code) => {
+  const ref = doc(db, "promoCodes", code.toUpperCase());
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    await updateDoc(ref, { usedCount: (snap.data().usedCount || 0) + 1 });
+  }
 };

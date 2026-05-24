@@ -6,6 +6,7 @@ import { db } from "./config";
 
 const COL = "orders";
 
+// ─── Create order ───────────────────────────────────────────────────────────
 export const createOrder = async (data) => {
   return await addDoc(collection(db, COL), {
     ...data,
@@ -16,6 +17,7 @@ export const createOrder = async (data) => {
   });
 };
 
+// ─── Update order status ────────────────────────────────────────────────────
 export const updateOrderStatus = async (id, orderStatus) => {
   return await updateDoc(doc(db, COL, id), {
     orderStatus,
@@ -23,6 +25,7 @@ export const updateOrderStatus = async (id, orderStatus) => {
   });
 };
 
+// ─── Update payment status ──────────────────────────────────────────────────
 export const updatePaymentStatus = async (id, paymentStatus, extra = {}) => {
   return await updateDoc(doc(db, COL, id), {
     paymentStatus,
@@ -31,11 +34,13 @@ export const updatePaymentStatus = async (id, paymentStatus, extra = {}) => {
   });
 };
 
+// ─── Get single order ───────────────────────────────────────────────────────
 export const getOrder = async (id) => {
   const snap = await getDoc(doc(db, COL, id));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 };
 
+// ─── Real-time — all orders (admin) ─────────────────────────────────────────
 export const subscribeToAllOrders = (callback) => {
   const q = query(collection(db, COL), orderBy("createdAt", "desc"));
   return onSnapshot(q, (snap) => {
@@ -43,6 +48,7 @@ export const subscribeToAllOrders = (callback) => {
   });
 };
 
+// ─── Real-time — user's own orders ──────────────────────────────────────────
 export const subscribeToUserOrders = (userId, callback) => {
   const q = query(
     collection(db, COL),

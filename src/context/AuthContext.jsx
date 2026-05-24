@@ -4,8 +4,8 @@ import { onAuthChange, getUserProfile } from "../firebase/auth";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const [user, setUser] = useState(null);       // Firebase Auth user
+  const [profile, setProfile] = useState(null); // Firestore user doc
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,4 +33,8 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
+  return ctx;
+};

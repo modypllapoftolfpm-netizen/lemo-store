@@ -9,19 +9,25 @@ export const WishlistProvider = ({ children }) => {
   const { user } = useAuth();
   const [items, setItems] = useState([]);
 
+  // ─── Sync wishlist from Firestore when user logs in ─────────────────────
   useEffect(() => {
-    if (!user) { setItems([]); return; }
+    if (!user) {
+      setItems([]);
+      return;
+    }
     const unsub = onSnapshot(doc(db, "wishlists", user.uid), (snap) => {
       setItems(snap.exists() ? snap.data().items || [] : []);
     });
     return unsub;
   }, [user]);
 
+  // ─── Save wishlist to Firestore ──────────────────────────────────────────
   const saveWishlist = async (newItems) => {
     if (!user) return;
     await setDoc(doc(db, "wishlists", user.uid), { items: newItems });
   };
 
+  // ─── Toggle product in wishlist ──────────────────────────────────────────
   const toggleWishlist = async (product) => {
     const exists = items.some((i) => i.id === product.id);
     const newItems = exists
@@ -40,4 +46,8 @@ export const WishlistProvider = ({ children }) => {
   );
 };
 
-export const useWishlist = () => useContext(WishlistContext);
+export const useWishlist = () => {
+  const ctx = useContext(WishlistContext);
+  if (!ctx) throw new Error("useWishlist must be used inside WishlistProvider");
+  return ctx;
+};
