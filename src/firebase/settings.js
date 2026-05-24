@@ -1,17 +1,50 @@
 import {
   doc, getDoc, setDoc, updateDoc, onSnapshot,
-  collection, addDoc, deleteDoc, getDocs, serverTimestamp,
+  collection, addDoc, deleteDoc, getDocs, serverTimestamp, query, orderBy
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { db, storage } from "./config";
 
-// ─── Get settings (one-time) ────────────────────────────────────────────────
+// ─── إدارة الفئات الجديدة (Categories) ───────────────────────────────────────
+export const uploadCategoryImage = async (file, categoryId) => {
+  const path = `categories/${categoryId}_${Date.now()}`;
+  const storageRef = ref(storage, path);
+  await uploadBytes(storageRef, file);
+  const url = await getDownloadURL(storageRef);
+  return { url, path };
+};
+
+export const addCategory = async (data) => {
+  return await addDoc(collection(db, "categories"), {
+    ...data,
+    createdAt: serverTimestamp(),
+  });
+};
+
+export const updateCategory = async (id, data) => {
+  return await updateDoc(doc(db, "categories", id), data);
+};
+
+export const deleteCategory = async (id, imagePath) => {
+  if (imagePath) {
+    await deleteObject(ref(storage, imagePath)).catch(() => {});
+  }
+  return await deleteDoc(doc(db, "categories", id));
+};
+
+export const subscribeToCategories = (callback) => {
+  const q = query(collection(db, "categories"), orderBy("createdAt", "desc"));
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  });
+};
+
+// ─── الدوال القديمة والمستقرة لصور الموقع والإعدادات ──────────────────────────
 export const getSettings = async () => {
   const snap = await getDoc(doc(db, "settings", "main"));
   return snap.exists() ? snap.data() : {};
 };
 
-// ─── Update settings ────────────────────────────────────────────────────────
 export const updateSettings = async (data) => {
   return await setDoc(doc(db, "settings", "main"), {
     ...data,
@@ -19,14 +52,12 @@ export const updateSettings = async (data) => {
   }, { merge: true });
 };
 
-// ─── Real-time settings listener ─────────────────────────────────────────────
 export const subscribeToSettings = (callback) => {
   return onSnapshot(doc(db, "settings", "main"), (snap) => {
     callback(snap.exists() ? snap.data() : {});
   });
 };
 
-// ─── Upload banner image ─────────────────────────────────────────────────────
 export const uploadBannerImage = async (file) => {
   const path = `banners/${Date.now()}_${file.name}`;
   const storageRef = ref(storage, path);
@@ -35,7 +66,6 @@ export const uploadBannerImage = async (file) => {
   return { url, path };
 };
 
-// ─── Add banner ──────────────────────────────────────────────────────────────
 export const addBanner = async (data) => {
   return await addDoc(collection(db, "banners"), {
     ...data,
@@ -44,12 +74,10 @@ export const addBanner = async (data) => {
   });
 };
 
-// ─── Update banner ───────────────────────────────────────────────────────────
 export const updateBanner = async (id, data) => {
   return await updateDoc(doc(db, "banners", id), data);
 };
 
-// ─── Delete banner ───────────────────────────────────────────────────────────
 export const deleteBanner = async (id, imagePath) => {
   if (imagePath) {
     await deleteObject(ref(storage, imagePath)).catch(() => {});
@@ -57,7 +85,6 @@ export const deleteBanner = async (id, imagePath) => {
   return await deleteDoc(doc(db, "banners", id));
 };
 
-// ─── Real-time banners listener ──────────────────────────────────────────────
 export const subscribeToBanners = (callback) => {
   return onSnapshot(collection(db, "banners"), (snap) => {
     const banners = snap.docs
@@ -68,7 +95,6 @@ export const subscribeToBanners = (callback) => {
   });
 };
 
-// ─── Validate promo code ─────────────────────────────────────────────────────
 export const validatePromoCode = async (code) => {
   const snap = await getDoc(doc(db, "promoCodes", code.toUpperCase()));
   if (!snap.exists()) return { valid: false, message: "Invalid promo code" };
@@ -81,7 +107,6 @@ export const validatePromoCode = async (code) => {
   return { valid: true, discount: data.discount };
 };
 
-// ─── Increment promo code usage ──────────────────────────────────────────────
 export const usePromoCode = async (code) => {
   const ref = doc(db, "promoCodes", code.toUpperCase());
   const snap = await getDoc(ref);
