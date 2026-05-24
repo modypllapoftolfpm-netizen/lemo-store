@@ -118,7 +118,7 @@ const AdminProducts = () => {
 
         await updateProduct(editId, { ...productData, imageUrl: finalUrls, imagePath: finalPaths });
       } else {
-        if (imageFiles.length === 0) throw new Error("برجاء اختيار صورة واحدة على الأثل للمنتج الجديد");
+        if (imageFiles.length === 0) throw new Error("برجاء اختيار صورة واحدة على الأقل للمنتج الجديد");
         const docRef = await addProduct({ ...productData, imageUrl: [], imagePath: [] });
         const uploaded = await uploadMultipleImages(imageFiles, docRef.id);
         await updateProduct(docRef.id, { imageUrl: uploaded.urls, imagePath: uploaded.paths });
@@ -266,4 +266,64 @@ const AdminProducts = () => {
                   <input type="number" name="stock" value={formData.stock} onChange={handleChange} className="w-full p-2.5 rounded-lg border border-[#E8DDD0] text-sm bg-white" required />
                 </div>
                 <div className="flex items-center pt-5">
-                  <label className="flex items-center gap-2 text-xs font-bold text-[#8B7355] cursor
+                  <label className="flex items-center gap-2 text-xs font-bold text-[#8B7355] cursor-pointer select-none">
+                    <input type="checkbox" name="showStock" checked={formData.showStock} onChange={handleChange} className="w-4 h-4 rounded text-[#C9A96E] focus:ring-0" />
+                    إظهار حجم المخزن للزبون
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#8B7355] mb-1">القسم المخصص *</label>
+                <select name="category" value={formData.category} onChange={handleChange} className="w-full p-3 rounded-xl border border-[#E8DDD0] bg-white text-sm h-[46px]">
+                  <option value="scented">شموع معطرة</option>
+                  <option value="decorative">شموع ديكورية</option>
+                  <option value="gifts">هدايا فخمة</option>
+                  <option value="body">مرطبات الجسم</option>
+                </select>
+              </div>
+
+              <div className="border-t border-dashed border-[#E8DDD0] pt-4">
+                <label className="block text-sm font-bold text-[#3D2B1F] mb-1">ألبوم صور الشموع (صور متعددة معا) *</label>
+                <input type="file" multiple accept="image/*" onChange={handleImageChange} className="text-xs text-[#8B7355]" />
+                
+                {previews.length > 0 && (
+                  <div className="flex gap-2 flex-wrap mt-3 bg-[#FAF7F2] p-3 rounded-xl border border-[#E8DDD0]">
+                    {previews.map((url, idx) => (
+                      <img key={idx} src={url} alt="" className="w-12 h-12 object-cover rounded-lg border border-[#C9A96E]" />
+                    ))}
+                  </div>
+                )}
+
+                {editId && existingUrls.length > 0 && previews.length === 0 && (
+                  <div className="mt-2">
+                    <span className="block text-[11px] text-[#8B7355] mb-1">الصور الحالية على السيرفر:</span>
+                    <div className="flex gap-2 flex-wrap bg-[#FAF7F2] p-3 rounded-xl border border-[#E8DDD0]">
+                      {existingUrls.map((url, idx) => (
+                        <img key={idx} src={url} alt="" className="w-12 h-12 object-cover rounded-lg opacity-80" />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-4 mt-2">
+                <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" name="isNew" checked={formData.isNew} onChange={handleChange} className="rounded text-[#C9A96E]" /> تمييز كمنتج جديد</label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" name="isBestSeller" checked={formData.isBestSeller} onChange={handleChange} className="rounded text-[#C9A96E]" /> تمييز كأكثر مبيعاً</label>
+              </div>
+
+              <div className="flex gap-3 justify-end border-t border-[#E8DDD0] pt-4 mt-4">
+                <button type="button" onClick={() => setShowModal(false)} className="px-5 py-2.5 rounded-xl border border-[#E8DDD0] bg-[#FAF7F2] text-[#8B7355] text-sm">إلغاء</button>
+                <button type="submit" className="px-6 py-2.5 rounded-xl bg-[#3D2B1F] hover:bg-[#2C1810] text-white font-bold text-sm shadow-sm" disabled={actionLoading}>
+                  {actionLoading ? "جاري الحفظ والرفع..." : "حفظ التعديلات الفخمة"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AdminProducts;
