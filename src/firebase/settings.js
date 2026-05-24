@@ -5,7 +5,7 @@ import {
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { db, storage } from "./config";
 
-// ─── إدارة الفئات الجديدة (Categories) ───────────────────────────────────────
+// ─── إدارَة الفئات الكاملة (Categories Database System) ────────────────────────
 export const uploadCategoryImage = async (file, categoryId) => {
   const path = `categories/${categoryId}_${Date.now()}`;
   const storageRef = ref(storage, path);
@@ -22,24 +22,26 @@ export const addCategory = async (data) => {
 };
 
 export const updateCategory = async (id, data) => {
-  return await updateDoc(doc(db, "categories", id), data);
+  // لو الفئة افتراضية وأول مرة ترفع لها صورة، بنستخدم setDoc بـ merge علشان ننشئ المستند في Firestore لو مش موجود
+  const docRef = doc(db, "categories", id);
+  return await setDoc(docRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
 };
 
 export const deleteCategory = async (id, imagePath) => {
   if (imagePath) {
-    await deleteObject(ref(storage, imagePath)).catch(() => {});
+    await deleteObject(ref(storage, imagePath)).catch((err) => console.log("Storage delete skipped:", err));
   }
   return await deleteDoc(doc(db, "categories", id));
 };
 
 export const subscribeToCategories = (callback) => {
-  const q = query(collection(db, "categories"), orderBy("createdAt", "desc"));
+  const q = query(collection(db, "categories"));
   return onSnapshot(q, (snap) => {
     callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
   });
 };
 
-// ─── الدوال القديمة والمستقرة لصور الموقع والإعدادات ──────────────────────────
+// ─── إدارَة البنرات وصور الموقع العامة المستقرة ───────────────────────────
 export const getSettings = async () => {
   const snap = await getDoc(doc(db, "settings", "main"));
   return snap.exists() ? snap.data() : {};
@@ -80,7 +82,7 @@ export const updateBanner = async (id, data) => {
 
 export const deleteBanner = async (id, imagePath) => {
   if (imagePath) {
-    await deleteObject(ref(storage, imagePath)).catch(() => {});
+    await deleteObject(ref(storage, imagePath)).catch((err) => console.log("Storage delete skipped:", err));
   }
   return await deleteDoc(doc(db, "banners", id));
 };
@@ -95,6 +97,7 @@ export const subscribeToBanners = (callback) => {
   });
 };
 
+// ─── كود البرومو كود التسويقي المستقر ────────────────────────────────────────
 export const validatePromoCode = async (code) => {
   const snap = await getDoc(doc(db, "promoCodes", code.toUpperCase()));
   if (!snap.exists()) return { valid: false, message: "Invalid promo code" };

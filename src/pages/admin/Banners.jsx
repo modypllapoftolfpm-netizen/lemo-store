@@ -68,11 +68,10 @@ export default function AdminBanners() {
         imagePath: currentCat?.imagePath || ""
       };
 
+      // إذا تم اختيار صورة جديدة
       if (catImage) {
-        if (currentCat?.imagePath) {
-          await deleteCategory(catEditId, currentCat.imagePath).catch(() => {});
-        }
-        const uploaded = await uploadCategoryImage(catImage, catEditId || "cat_" + Date.now());
+        const targetId = catEditId || "cat_" + Date.now();
+        const uploaded = await uploadCategoryImage(catImage, targetId);
         updateData.imageUrl = uploaded.url;
         updateData.imagePath = uploaded.path;
       }
@@ -116,9 +115,6 @@ export default function AdminBanners() {
       const existing = getBanner(sectionKey);
       const data = formData[sectionKey] || {};
       if (existing) {
-        if (existing.imagePath) {
-          await deleteBanner(existing.id, existing.imagePath).catch(() => {});
-        }
         await updateBanner(existing.id, { imageUrl: url, imagePath: path, ...data });
       } else {
         await addBanner({ sectionKey, imageUrl: url, imagePath: path, order: 0, ...data });
@@ -145,12 +141,12 @@ export default function AdminBanners() {
       <Navbar />
       <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "2rem" }}>
         
-        <h1 style={{ color: "#3D2B1F", marginBottom: "0.5rem", fontWeight: "800" }}>🖼️ لوحة إدارة الفئات وصور ليمو لوكس</h1>
+        <h1 style={{ color: "#3D2B1F", marginBottom: "0.5rem", fontWeight: "800" }}>🖼️ لوحة إدارة الفئات وصور LEMO Store</h1>
         <p style={{ color: "#8B7355", marginBottom: "2rem" }}>تحكم كامل في هيكلة تصنيفات الشموع الفاخرة وخلفيات الموقع</p>
 
         {/* ─── 1) لوحة التحكم في الفئات الاحترافية ─── */}
         <div style={{ background: "#fff", borderRadius: "24px", padding: "2rem", boxShadow: "0 4px 25px rgba(0,0,0,0.04)", marginBottom: "2.5rem", border: "1px solid #E8DDD0" }}>
-          <h2 style={{ color: "#3D2B1F", marginTop: 0, borderBottom: "2px solid #FAF7F2", paddingBottom: "12px", fontWeight: "700" }}>🏷️ {catEditId ? "📝 تعديل بيانات وصورة الفئة" : "➕ إضافة فئة مخصصة جديدة"}</h2>
+          <h2 style={{ color: "#3D2B1F", marginTop: 0, borderBottom: "2px solid #FAF7F2", paddingBottom: "12px", fontWeight: "700" }}>🏷 {catEditId ? "📝 تعديل بيانات وصورة الفئة" : "➕ إضافة فئة مخصصة جديدة"}</h2>
           
           <form onSubmit={handleCatSubmit} style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginTop: "20px" }}>
             <div style={{ flex: "1 1 200px" }}>
@@ -186,7 +182,7 @@ export default function AdminBanners() {
                 }} />
               </label>
               
-              <button type="submit" disabled={catUploading} style={{ width: "100%", padding: "14px", backgroundColor: "#3D2B1F", color: "white", border: "none", borderRadius: "12px", fontWeight: "bold", cursor: "pointer", marginTop: "12px", boxShadow: "0 4px 12px rgba(61,43,31,0.15)", transition: "all 0.2s" }}>
+              <button type="submit" disabled={catUploading} style={{ width: "100%", padding: "14px", backgroundColor: "#3D2B1F", color: "white", border: "none", borderRadius: "12px", fontWeight: "bold", cursor: "pointer", marginTop: "12px", boxShadow: "0 4px 12px rgba(61,43,31,0.15)" }}>
                 {catUploading ? "⏳ جاري الحفظ والرفع..." : catEditId ? "💾 حفظ التعديلات الفخمة" : "✨ إضافة الفئة للمتجر"}
               </button>
             </div>
@@ -232,7 +228,7 @@ export default function AdminBanners() {
 
         {/* ─── 2) لوحة التحكم في خلفيات وصور الموقع ─── */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-          <h2 style={{ color: "#3D2B1F", margin: "0 0 5px 0", fontWeight: "800" }}>实用 صور وتنسيقات الموقع الخلفية</h2>
+          <h2 style={{ color: "#3D2B1F", margin: "0 0 5px 0", fontWeight: "800" }}>🖼️ صور وتنسيقات الموقع الخلفية</h2>
           {SECTIONS.map((section) => {
             const banner = getBanner(section.key);
             const isUploading = uploading[section.key];
