@@ -7,12 +7,13 @@ import Home from "./pages/Home";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
-import Checkout from "./pages/CheckoutPage"
-;import OrderConfirm from "./pages/OrderConfirm";
+import Checkout from "./pages/CheckoutPage";
+import OrderConfirm from "./pages/OrderConfirm";
 import Orders from "./pages/Orders";
 import Wishlist from "./pages/Wishlist";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import LemoAi from "./pages/LemoAi"; // استدعاء واجهة الذكاء الاصطناعي الفخمة لـ Lemo Store
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminProducts from "./pages/admin/Products";
 import AdminOrders from "./pages/admin/Orders";
@@ -39,6 +40,7 @@ const AppRoutes = () => (
     <Route path="/products/:id" element={<ProductDetail />} />
     <Route path="/login" element={<Login />} />
     <Route path="/signup" element={<Signup />} />
+    <Route path="/lemo-ai" element={<LemoAi />} /> {/* الروت الجديد المخصص لواجهة الـ AI */}
     <Route path="/cart" element={<PrivateRoute><Cart /></PrivateRoute>} />
     <Route path="/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
     <Route path="/order-confirm/:id" element={<PrivateRoute><OrderConfirm /></PrivateRoute>} />
@@ -46,6 +48,7 @@ const AppRoutes = () => (
     <Route path="/wishlist" element={<PrivateRoute><Wishlist /></PrivateRoute>} />
     <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
     <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
+    <Route path="/admin/orders" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
     <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
     <Route path="/admin/banners" element={<AdminRoute><AdminBanners /></AdminRoute>} />
     <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
