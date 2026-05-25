@@ -47,6 +47,26 @@ export default function Home() {
   const bestSellers = products.filter((p) => p.isBestSeller).slice(0, 4);
   const featuredOffer = products.filter((p) => p.discount > 0).slice(0, 3);
 
+  // نصوص ثابتة مترجمة ديناميكياً للواجهة
+  const uiText = {
+    heroDesc: lang === "ar" ? "اكتشف مجموعتنا المميزة المصنوعة يدوياً من أجود الخامات العطرية الآمنة تماماً على منزلك وعائلتك." : "Discover our premium products, made with top-quality ingredients that are gentle, aromatic, and irritation-free!",
+    shopNow: lang === "ar" ? "تسوق الآن" : "Shop Now",
+    shippingBar: lang === "ar" ? "🚚 شحن مجاني على الطلبات فوق 500 ج.م | 🎁 تغليف هدايا مجاني فاخر" : "🚚 Free Shipping on orders over 500 EGP | 🎁 Luxury Gift Wrapping Included",
+    catsTitle: lang === "ar" ? "تصفح الأقسام" : "Our Categories",
+    catsSub: lang === "ar" ? "تسوق حسب" : "Shop By",
+    popularTitle: lang === "ar" ? "المنتجات الأكثر مبيعاً" : "Most Popular Products",
+    viewAll: lang === "ar" ? "عرض جميع المنتجات" : "View All Products",
+    featuredTitle: lang === "ar" ? "عروض حصرية وتوفيرية لك" : "Featured Offer For You",
+    featuredDesc: lang === "ar" ? "استفد من خصوماتنا الحصرية على باقات الشموع الديكورية الفاخرة ومنتجات العناية الطبيعية قبل نفاد الكمية." : "Take advantage of our exclusive discounts on premium candle bundles and organic skincare products before the quantity runs out.",
+    shopSale: lang === "ar" ? "تسوق العروض الحالية" : "Shop Sale Items",
+    footerDesc: lang === "ar" ? "شموع ديكورية فاخرة ومنتجات عناية طبيعية. منتجات مصنوعة يدوياً بكل حب لترتقي بجمال وأناقة منزلك." : "Luxury Candles & Wellness Essentials. Premium handmade products that elevate your home environment with pure scent and fine aesthetics.",
+    helpTitle: lang === "ar" ? "مساعدة" : "Help",
+    contactUs: lang === "ar" ? "اتصل بنا" : "Contact Us",
+    aboutUs: lang === "ar" ? "من نحن" : "About Us",
+    account: lang === "ar" ? "حسابي" : "Account",
+    rights: lang === "ar" ? "© 2026 Lemo Store — جميع الحقوق محفوظة — صُنع بحب في مصر" : "© 2026 Lemo Store — ALL RIGHTS RESERVED — MADE WITH ❤️ IN EGYPT"
+  };
+
   if (globalLoading) {
     return (
       <div style={{ position: "fixed", inset: 0, background: "#FAF8F5", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 99999, fontFamily: "Cairo, sans-serif" }}>
@@ -62,20 +82,21 @@ export default function Home() {
   const mainBanner = banners[0];
 
   return (
-    <div style={{ minHeight: "100vh", background: c.bg, color: c.d, fontFamily: "DM Sans, Cairo, sans-serif", overflowX: "hidden" }}>
+    <div style={{ minHeight: "100vh", background: c.bg, color: c.d, fontFamily: lang === "ar" ? "Cairo, sans-serif" : "DM Sans, sans-serif", overflowX: "hidden" }} dir={lang === "ar" ? "rtl" : "ltr"}>
       <Navbar />
       
-      {/* ─── 1) HERO SECTION الفاخر بالأقواس الفنية ─── */}
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "4rem 2rem", display: "flex", alignItems: "center", justifyContent: "between", gap: "4rem", flexWrap: "wrap-reverse" }}>
+      {/* ─── 1) HERO SECTION ─── */}
+      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "4rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "4rem", flexWrap: "wrap-reverse" }}>
         <div style={{ flex: "1 1 450px", textAlign: lang === "ar" ? "right" : "left" }}>
           <h1 style={{ fontSize: "3.8rem", fontWeight: "300", lineHeight: "1.1", color: c.d, margin: "0 0 1.5rem 0", textTransform: "uppercase", letterSpacing: "1px" }}>
-            Luxury <span style={{ fontWeight: "800", display: "block", color: "#2C1810" }}>Candles &</span> Wellness
+            <span style={{ fontWeight: "800", color: "#3D2B1F", display: "block", marginBottom: "0.5rem" }}>Lemo Store</span> 
+            {lang === "ar" ? "الشموع الفاخرة والديكور" : "Candles & Wellness"}
           </h1>
           <p style={{ fontSize: "1.1rem", color: "#666", lineHeight: "1.7", marginBottom: "2.5rem", maxWidth: "480px" }}>
-            Discover our premium products, made with top-quality ingredients that are gentle, aromatic, and irritation-free!
+            {uiText.heroDesc}
           </p>
           <Link to="/products" style={{ background: c.d, color: "#fff", padding: "14px 45px", borderRadius: "30px", textDecoration: "none", fontWeight: "600", fontSize: "1rem", display: "inline-block", transition: "all 0.3s", boxShadow: "0 4px 15px rgba(0,0,0,0.1)" }}>
-            shop now
+            {uiText.shopNow}
           </Link>
         </div>
 
@@ -92,12 +113,11 @@ export default function Home() {
               />
             </div>
           </div>
-          
           <div style={{ position: "absolute", bottom: "-30px", right: "-20px", width: "120px", height: "120px", opacity: 0.15, background: "repeating-conic-gradient(from 0deg, #000 0deg 10deg, transparent 10deg 20deg)", borderRadius: "50%" }}></div>
         </div>
       </div>
 
-      {/* ─── 2) MOVING MARQUEE الشريط المائل المتحرك ─── */}
+      {/* ─── 2) MOVING MARQUEE ─── */}
       <div style={{ background: "#fff", borderTop: "1px solid #E8DDD0", borderBottom: "1px solid #E8DDD0", padding: "16px 0", overflow: "hidden", whiteSpace: "nowrap", width: "100vw", display: "flex" }}>
         <div style={{ display: "inline-block", animation: "marquee 20s infinite linear", fontSize: "1.1rem", fontWeight: "700", letterSpacing: "4px", textTransform: "uppercase", color: "#3D2B1F" }}>
           ✦ PACKAGES ✦ OFFERS ✦ BUNDLES ✦ CANDLES ✦ HOME DECOR ✦ MERCHANDISE ✦ BODY ESSENTIALS ✦ SPECIAL GIFTS  
@@ -107,9 +127,15 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ─── 3) OUR CATEGORIES قسم الفئات المقوسة ─── */}
+      {/* شريط الشحن المجاني المترجم */}
+      <div style={{ background: `linear-gradient(135deg, ${c.p}, ${c.p}DD)`, padding: "12px", textAlign: "center", color: "#fff", fontSize: "0.95rem", fontWeight: "600" }}>
+        {uiText.shippingBar}
+      </div>
+
+      {/* ─── 3) OUR CATEGORIES ─── */}
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "5rem 2rem", textAlign: "center" }}>
-        <h2 style={{ fontSize: "2.5rem", fontWeight: "700", marginBottom: "3.5rem", color: c.d }}>Our Categories</h2>
+        <p style={{ color: c.p, fontWeight: "700", letterSpacing: "2px", fontSize: "0.85rem", marginBottom: "8px", textTransform: "uppercase" }}>{uiText.catsSub}</p>
+        <h2 style={{ fontSize: "2.5rem", fontWeight: "700", marginBottom: "3.5rem", color: c.d }}>{uiText.catsTitle}</h2>
         <div style={{ display: "flex", gap: "2rem", justifyContent: "center", flexWrap: "wrap" }}>
           {categories.map((cat) => (
             <Link key={cat.slug} to={`/products?category=${cat.slug}`} style={{ textDecoration: "none", color: "inherit", flex: "1 1 220px", maxWidth: "260px" }}>
@@ -136,12 +162,12 @@ export default function Home() {
       {bestSellers.length > 0 && (
         <div style={{ background: "#fff", padding: "5rem 2rem", borderTop: "1px solid #E8DDD0" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-            <div style={{ display: "flex", justifyContent: "between", alignItems: "center", marginBottom: "3rem", flexWrap: "wrap", gap: "1rem" }}>
-              <h2 style={{ fontSize: "2.4rem", fontWeight: "700", margin: 0 }}>Most Popular Products</h2>
-              <Link to="/products" style={{ color: c.d, fontWeight: "700", textDecoration: "underline", fontSize: "1rem" }}>View All Products ({products.length})</Link>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "3rem", flexWrap: "wrap", gap: "1rem" }}>
+              <h2 style={{ fontSize: "2.4rem", fontWeight: "700", margin: 0 }}>{uiText.popularTitle}</h2>
+              <Link to="/products" style={{ color: c.d, fontWeight: "700", textDecoration: "underline", fontSize: "1rem" }}>{uiText.viewAll} ({products.length})</Link>
             </div>
             <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap", justifyContent: "center" }}>
-              {bestSellers.map((p) => <ProductCard key={p.id} product={p} field={field} t={t} addToCart={addToCart} c={c} />)}
+              {bestSellers.map((p) => <ProductCard key={p.id} product={p} field={field} t={t} addToCart={addToCart} c={c} lang={lang} />)}
             </div>
           </div>
         </div>
@@ -151,21 +177,23 @@ export default function Home() {
       {featuredOffer.length > 0 && (
         <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "5rem 2rem" }}>
           <div style={{ display: "flex", gap: "4rem", flexWrap: "wrap" }}>
-            <div style={{ flex: "1 1 350px" }}>
-              <h2 style={{ fontSize: "2.6rem", fontWeight: "700", marginBottom: "1.5rem" }}>Featured Offer For You</h2>
-              <p style={{ color: "#666", lineHeight: "1.6", marginBottom: "2rem" }}>Take advantage of our exclusive discounts on premium candle bundles and organic skincare products before the quantity runs out.</p>
-              <Link to="/products" style={{ color: c.d, fontWeight: "700", textDecoration: "underline" }}>Shop Sale Items</Link>
+            <div style={{ flex: "1 1 350px", textAlign: lang === "ar" ? "right" : "left" }}>
+              <h2 style={{ fontSize: "2.6rem", fontWeight: "700", marginBottom: "1.5rem" }}>{uiText.featuredTitle}</h2>
+              <p style={{ color: "#666", lineHeight: "1.6", marginBottom: "2rem" }}>{uiText.featuredDesc}</p>
+              <Link to="/products" style={{ color: c.d, fontWeight: "700", textDecoration: "underline" }}>{uiText.shopSale}</Link>
             </div>
-            <div style={{ flex: "2 1 600px", display: "flex", gap: "1.5rem", flexWrap: "wrap", justifyContent: "center" }}>
+            <div style={{ flex: "2 1 600px", display: "flex", gap: "1.5rem", flexWrap: "wrap", shortcuts: "center", justifyContent: "center" }}>
               {featuredOffer.map((p) => (
                 <div key={p.id} style={{ flex: "1 1 200px", maxWidth: "240px", background: "#fff", border: "1px solid #E8DDD0", borderRadius: "16px", overflow: "hidden", position: "relative" }}>
                   <div style={{ height: "240px", position: "relative" }}>
                     <img src={Array.isArray(p.imageUrl) ? p.imageUrl[0] : p.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    <span style={{ position: "absolute", top: "10px", left: "10px", background: "#000", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "700" }}>{p.discount}% OFF</span>
+                    <span style={{ position: "absolute", top: "10px", left: lang === "ar" ? "auto" : "10px", right: lang === "ar" ? "10px" : "auto", background: "#000", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "700" }}>
+                      {lang === "ar" ? `خصم ${p.discount}%` : `${p.discount}% OFF`}
+                    </span>
                   </div>
-                  <div style={{ padding: "1rem" }}>
+                  <div style={{ padding: "1rem", textAlign: lang === "ar" ? "right" : "left" }}>
                     <h4 style={{ margin: "0 0 6px 0", fontSize: "0.95rem" }}>{field(p, "name")}</h4>
-                    <span style={{ fontWeight: "700", color: c.p }}>{p.price - (p.price * (p.discount/100))} ج.م</span>
+                    <span style={{ fontWeight: "700", color: c.p }}>{p.price - (p.price * (p.discount/100))} {t.currency}</span>
                   </div>
                 </div>
               ))}
@@ -176,26 +204,29 @@ export default function Home() {
 
       {/* ─── 6) FOOTER ─── */}
       <footer style={{ background: "#FAF8F5", borderTop: "1px solid #E8DDD0", padding: "5rem 2rem 2rem" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", justifyContent: "between", gap: "3rem", flexWrap: "wrap", borderBottom: "1px solid #E8DDD0", paddingBottom: "3rem" }}>
-          <div style={{ flex: "2 1 350px" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", justifyContent: "space-between", gap: "3rem", flexWrap: "wrap", borderBottom: "1px solid #E8DDD0", paddingBottom: "3rem" }}>
+          <div style={{ flex: "2 1 350px", textAlign: lang === "ar" ? "right" : "left" }}>
             <h3 style={{ fontSize: "1.8rem", fontWeight: "800", margin: "0 0 1rem 0", letterSpacing: "1px" }}>Lemo Store</h3>
-            <p style={{ color: "#666", fontSize: "0.95rem", maxWidth: "320px", lineHeight: "1.6" }}>Luxury Candles & Wellness Essentials. Premium handmade products that elevate your home environment with pure scent and fine aesthetics.</p>
+            <p style={{ color: "#666", fontSize: "0.95rem", maxWidth: "320px", lineHeight: "1.6" }}>{uiText.footerDesc}</p>
           </div>
-          <div style={{ flex: "1 1 150px" }}>
-            <h4 style={{ fontSize: "1rem", fontWeight: "700", margin: "0 0 1.2rem 0" }}>Help</h4>
+          <div style={{ flex: "1 1 150px", textAlign: lang === "ar" ? "right" : "left" }}>
+            <h4 style={{ fontSize: "1rem", fontWeight: "700", margin: "0 0 1.2rem 0" }}>{uiText.helpTitle}</h4>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.9rem", color: "#555" }}>
-              <span>Contact Us</span><span>About Us</span><span>Account</span>
+              <span>{uiText.contactUs}</span><span>{uiText.aboutUs}</span><span>{uiText.account}</span>
             </div>
           </div>
-          <div style={{ flex: "1 1 150px" }}>
-            <h4 style={{ fontSize: "1rem", fontWeight: "700", margin: "0 0 1.2rem 0" }}>Categories</h4>
+          <div style={{ flex: "1 1 150px", textAlign: lang === "ar" ? "right" : "left" }}>
+            <h4 style={{ fontSize: "1rem", fontWeight: "700", margin: "0 0 1.2rem 0" }}>{lang === "ar" ? "الأقسام" : "Categories"}</h4>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.9rem", color: "#555" }}>
-              <span>Candles</span><span>Body Essentials</span><span>Boxes</span><span>Offers</span>
+              <span>{lang === "ar" ? "شموع" : "Candles"}</span>
+              <span>{lang === "ar" ? "مرطبات الجسم" : "Body Essentials"}</span>
+              <span>{lang === "ar" ? "صناديق هدايا" : "Boxes"}</span>
+              <span>{lang === "ar" ? "العروض" : "Offers"}</span>
             </div>
           </div>
         </div>
         <div style={{ textAlign: "center", paddingTop: "2rem", color: "#8B7355", fontSize: "0.85rem", opacity: 0.8 }}>
-          © 2026 Lemo Store — ALL RIGHTS RESERVED — MADE WITH ❤️ IN EGYPT
+          {uiText.rights}
         </div>
       </footer>
 
@@ -209,7 +240,7 @@ export default function Home() {
   );
 }
 
-function ProductCard({ product, field, t, addToCart, c }) {
+function ProductCard({ product, field, t, addToCart, c, lang }) {
   const [added, setAdded] = useState(false);
   const handleAdd = () => { addToCart(product); setAdded(true); setTimeout(() => setAdded(false), 2000); };
 
@@ -218,29 +249,29 @@ function ProductCard({ product, field, t, addToCart, c }) {
   const imgUrl = Array.isArray(product.imageUrl) ? product.imageUrl[0] : product.imageUrl;
 
   return (
-    <div style={{ background: "#fff", borderRadius: "16px", border: "1px solid #E8DDD0", width: "250px", overflow: "hidden", transition: "transform 0.3s ease", position: "relative" }}>
+    <div style={{ background: "#fff", borderRadius: "16px", border: "1px solid #E8DDD0", width: "250px", overflow: "hidden", transition: "transform 0.3s ease", position: "relative", textAlign: lang === "ar" ? "right" : "left" }}>
       <Link to={`/products/${product.id}`} style={{ textDecoration: "none", color: "inherit" }}>
         <div style={{ height: "260px", background: "#FAF8F5", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
           {imgUrl ? <img src={imgUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "🕯️"}
           
           {hasDiscount && (
-            <span style={{ position: "absolute", top: "12px", left: "12px", background: "#000", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: "700" }}>
-              -{product.discount}%
+            <span style={{ position: "absolute", top: "12px", left: lang === "ar" ? "auto" : "12px", right: lang === "ar" ? "12px" : "auto", background: "#000", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: "700" }}>
+              {lang === "ar" ? `-${product.discount}%` : `-${product.discount}%`}
             </span>
           )}
-          {product.isNew && <span style={{ position: "absolute", top: "12px", right: "12px", background: "#C9A96E", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: "700" }}>NEW</span>}
+          {product.isNew && <span style={{ position: "absolute", top: "12px", left: lang === "ar" ? "12px" : "auto", right: lang === "ar" ? "auto" : "12px", background: "#C9A96E", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: "700" }}>{lang === "ar" ? "جديد" : "NEW"}</span>}
         </div>
         <div style={{ padding: "1.2rem 1.2rem 0.5rem 1.2rem" }}>
           <h3 style={{ margin: "0 0 8px 0", color: c.d, fontSize: "1.05rem", fontWeight: "700", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{field(product, "name")}</h3>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ color: c.d, fontWeight: "800", fontSize: "1.1rem" }}>{finalPrice} ج.م</span>
-            {hasDiscount && <span style={{ color: "#999", textDecoration: "line-through", fontSize: "0.85rem" }}>{product.price} ج.م</span>}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexDirection: lang === "ar" ? "row" : "row" }}>
+            <span style={{ color: c.d, fontWeight: "800", fontSize: "1.1rem" }}>{finalPrice} {t.currency}</span>
+            {hasDiscount && <span style={{ color: "#999", textDecoration: "line-through", fontSize: "0.85rem" }}>{product.price} {t.currency}</span>}
           </div>
         </div>
       </Link>
       <div style={{ padding: "0.5rem 1.2rem 1.2rem 1.2rem" }}>
         <button onClick={handleAdd} style={{ width: "100%", background: added ? "#4CAF50" : "#111", color: "#fff", border: "none", borderRadius: "20px", padding: "10px", cursor: "pointer", fontWeight: "600", fontSize: "0.85rem", transition: "all 0.3s" }}>
-          {added ? "✓ Added To Cart" : "Add to Cart"}
+          {added ? (lang === "ar" ? "✓ تمت الإضافة" : "✓ Added") : (lang === "ar" ? "إضافة للسلة" : "Add to Cart")}
         </button>
       </div>
     </div>
