@@ -47,7 +47,6 @@ export default function Home() {
   const bestSellers = products.filter((p) => p.isBestSeller).slice(0, 4);
   const featuredOffer = products.filter((p) => p.discount > 0).slice(0, 3);
 
-  // الفونيرات الديناميكية الشيك جداً حسب لغة المتصفح والواجهة الحالية
   const fFamily = lang === "ar" ? "'Alexandria', sans-serif" : "'DM Sans', sans-serif";
   const fTitleFamily = lang === "ar" ? "'Alexandria', sans-serif" : "'Playfair Display', serif";
 
@@ -56,7 +55,6 @@ export default function Home() {
     shopNow: lang === "ar" ? "تسوق الآن" : "Shop Now",
     shippingBar: lang === "ar" ? `🚚 شحن مجاني على الطلبات فوق ${settings.freeShippingLimit || 500} ج.م | 🎁 تغليف هدايا مجاني فاخر` : `🚚 Free Shipping on orders over ${settings.freeShippingLimit || 500} EGP | 🎁 Luxury Gift Wrapping Included`,
     catsTitle: lang === "ar" ? "تصفح الأقسام" : "Our Categories",
-    catsSub: lang === "ar" ? "تسوق حسب" : "Shop By",
     popularTitle: lang === "ar" ? "المنتجات الأكثر مبيعاً" : "Most Popular Products",
     viewAll: lang === "ar" ? "عرض جميع المنتجات" : "View All Products",
     featuredTitle: lang === "ar" ? "عروض حصرية وتوفيرية لك" : "Featured Offer For You",
@@ -138,14 +136,13 @@ export default function Home() {
 
       {/* ─── 3) OUR CATEGORIES ─── */}
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "5rem 2rem", textAlign: "center" }}>
-        <p style={{ color: c.p, fontWeight: "600", letterSpacing: "2px", fontSize: "0.85rem", marginBottom: "8px", textTransform: "uppercase" }}>{uiText.catsSub}</p>
         <h2 style={{ fontSize: "2.5rem", fontWeight: "700", marginBottom: "3.5rem", color: c.d, fontFamily: fTitleFamily }}>{uiText.catsTitle}</h2>
-        <div style={{ display: "flex", gap: "2.5rem", shortcuts: "center", justifyContent: "center", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "2.5rem", justifyContent: "center", flexWrap: "wrap" }}>
           {categories.map((cat) => (
             <Link key={cat.slug} to={`/products?category=${cat.slug}`} style={{ textDecoration: "none", color: "inherit", flex: "1 1 220px", maxWidth: "260px" }}>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                 
-                <div style={{ width: "100%", height: "340px", border: "1px solid #111111", borderRadius: "150px 150px 0 0", overflow: "hidden", position: "relative", marginBottom: "1.2rem", transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)" }} onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-5px)"} onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}>
+                <div style={{ width: "100%", height: "340px", border: "1px solid #111111", borderRadius: "150px 150px 0 0", overflow: "hidden", position: "relative", marginBottom: "1rem", transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)" }} onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-5px)"} onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}>
                   {cat.imageUrl ? (
                     <img src={cat.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   ) : (
@@ -153,7 +150,7 @@ export default function Home() {
                   )}
                 </div>
 
-                <span style={{ fontSize: "1.1rem", fontWeight: "600", color: c.d }}>
+                <span style={{ fontSize: "1.1rem", fontWeight: "600", color: c.d, marginTop: "0.5rem" }}>
                   {lang === "ar" ? cat.nameAr : cat.nameEn}
                 </span>
               </div>
@@ -171,7 +168,7 @@ export default function Home() {
               <Link to="/products" style={{ color: c.d, fontWeight: "600", textDecoration: "underline", fontSize: "0.95rem" }}>{uiText.viewAll} ({products.length})</Link>
             </div>
             <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap", justifyContent: "center" }}>
-              {bestSellers.map((p) => <ProductCard key={p.id} product={p} field={field} t={t} addToCart={addToCart} c={c} lang={lang} fTitleFamily={fTitleFamily} />)}
+              {bestSellers.map((p) => <ProductCard key={p.id} product={p} field={field} t={t} addToCart={addToCart} c={c} lang={lang} />)}
             </div>
           </div>
         </div>
@@ -270,7 +267,7 @@ export default function Home() {
   );
 }
 
-function ProductCard({ product, field, t, addToCart, c, lang, fTitleFamily }) {
+function ProductCard({ product, field, t, addToCart, c, lang }) {
   const [added, setAdded] = useState(false);
   const handleAdd = () => { addToCart(product); setAdded(true); setTimeout(() => setAdded(false), 2000); };
 
