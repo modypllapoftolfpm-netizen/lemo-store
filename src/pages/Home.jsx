@@ -15,25 +15,17 @@ export default function Home() {
   const [settings, setSettings] = useState({});
   const [globalLoading, setGlobalLoading] = useState(true);
 
-  // الفئات الافتراضية كحالة احتياطية لو الفايربيس لسه بيحمل
   const defaultCats = [
-    { id: "gifts_default", slug: "gifts", nameAr: "هدايا فخمة", icon: "🎁", bg: "#FFF8F0" },
-    { id: "scented_default", slug: "scented", nameAr: "شموع معطرة", icon: "🕯️", bg: "#F0F8FF" },
-    { id: "decorative_default", slug: "decorative", nameAr: "شموع ديكورية", icon: "✨", bg: "#FFF0F8" },
-    { id: "body_default", slug: "body", nameAr: "مرطبات الجسم", icon: "🧴", bg: "#F0FFF8" }
+    { id: "gifts_default", slug: "gifts", nameAr: "هدايا فخمة", nameEn: "Luxury Gifts", icon: "🎁" },
+    { id: "scented_default", slug: "scented", nameAr: "شموع معطرة", nameEn: "Scented Candles", icon: "🕯️" },
+    { id: "decorative_default", slug: "decorative", nameAr: "شموع ديكورية", nameEn: "Decorative Candles", icon: "✨" },
+    { id: "body_default", slug: "body", nameAr: "مرطبات الجسم", nameEn: "Body Essentials", icon: "🧴" }
   ];
 
   useEffect(() => {
-    const unsub1 = subscribeToProducts((data) => {
-      setProducts(data);
-    });
-    
-    const unsub2 = subscribeToBanners((data) => {
-      setBanners(data);
-    });
-
+    const unsub1 = subscribeToProducts((data) => { setProducts(data); });
+    const unsub2 = subscribeToBanners((data) => { setBanners(data); });
     const unsub3 = subscribeToCategories((data) => {
-      // دمج الفئات القادمة من قاعدة البيانات لضمان قراءة الصور المرفوعة
       const merged = defaultCats.map(def => {
         const found = data.find(c => c.slug === def.slug || c.id === def.id);
         return found ? { ...def, ...found } : def;
@@ -41,44 +33,28 @@ export default function Home() {
       setCategories(merged);
       setGlobalLoading(false);
     });
-
-    getSettings().then((set) => {
-      setSettings(set);
-    });
+    getSettings().then((set) => { setSettings(set); });
 
     return () => { unsub1(); unsub2(); unsub3(); };
   }, []);
 
   const c = { 
     p: settings.primaryColor || "#C9A96E", 
-    d: settings.darkColor || "#3D2B1F", 
-    bg: settings.bgColor || "#FAF7F2" 
+    d: settings.darkColor || "#111111", 
+    bg: settings.bgColor || "#FAF8F5" 
   };
   
-  const bestSellers = products.filter((p) => p.isBestSeller);
-  const newArrivals = products.filter((p) => p.isNew);
+  const bestSellers = products.filter((p) => p.isBestSeller).slice(0, 4);
+  const featuredOffer = products.filter((p) => p.discount > 0).slice(0, 3);
 
   if (globalLoading) {
     return (
-      <div style={{ 
-        position: "fixed", inset: 0, background: "#FAF7F2", 
-        display: "flex", flexDirection: "column", alignItems: "center", 
-        justifyContent: "center", zIndex: 99999, fontFamily: "Cairo, sans-serif" 
-      }}>
+      <div style={{ position: "fixed", inset: 0, background: "#FAF8F5", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 99999, fontFamily: "Cairo, sans-serif" }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", animation: "pulse 1.8s infinite ease-in-out" }}>
-          <img 
-            src="https://lemo-store-eg.vercel.app/assets/logo.png" 
-            alt="LEMO Store" 
-            style={{ width: "240px", height: "auto", marginBottom: "15px", filter: "drop-shadow(0 4px 15px rgba(0,0,0,0.04))" }}
-            onError={(e) => {
-              e.target.style.display = 'none';
-              document.getElementById('fallback-loader').style.display = 'block';
-            }}
-          />
-          <div id="fallback-loader" style={{ display: "none", fontSize: "4rem", marginBottom: "10px" }}>🕯️</div>
-          <p style={{ color: "#C9A96E", fontSize: "0.85rem", fontWeight: "600", marginTop: "5px", textTransform: "uppercase", letterSpacing: "1px" }}>Handmade Home Decor & Candles</p>
+          <img src="https://lemo-store-eg.vercel.app/assets/logo.png" alt="LEMO Store" style={{ width: "220px", height: "auto", marginBottom: "15px" }} />
+          <p style={{ color: "#C9A96E", fontSize: "0.85rem", fontWeight: "600", letterSpacing: "2px" }}>HANDMADE HOME DECOR & CANDLES</p>
         </div>
-        <style>{`@keyframes pulse { 0% { transform: scale(0.97); opacity: 0.8; } 50% { transform: scale(1.02); opacity: 1; } 100% { transform: scale(0.97); opacity: 0.8; } }`}</style>
+        <style>{`@keyframes pulse { 0% { transform: scale(0.97); opacity: 0.7; } 50% { transform: scale(1.01); opacity: 1; } 100% { transform: scale(0.97); opacity: 0.7; } }`}</style>
       </div>
     );
   }
@@ -86,110 +62,153 @@ export default function Home() {
   const mainBanner = banners[0];
 
   return (
-    <div style={{ minHeight: "100vh", background: c.bg, fontFamily: lang === "ar" ? "Cairo, sans-serif" : "DM Sans, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: c.bg, color: c.d, fontFamily: "DM Sans, Cairo, sans-serif", overflowX: "hidden" }}>
       <Navbar />
       
-      {mainBanner ? (
-        <div style={{ position: "relative", height: "520px", overflow: "hidden" }}>
-          <img src={mainBanner.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to bottom, rgba(0,0,0,0.15), ${c.d}E6)`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", paddingBottom: "4rem", color: "#fff", textAlign: "center" }}>
-            <h1 style={{ fontSize: "3.5rem", fontWeight: "800", margin: "0 0 1rem", textShadow: "0 2px 12px rgba(0,0,0,0.4)" }}>{mainBanner.titleAr || "🕯️ LEMO Store"}</h1>
-            <p style={{ fontSize: "1.2rem", opacity: 0.9, marginBottom: "2rem", maxWidth: "500px", textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>{mainBanner.subtitleAr || "شموع فاخرة وهدايا مميزة مصنوعة يدوياً"}</p>
-            <Link to="/products" style={{ background: `linear-gradient(135deg, ${c.p}, ${c.p}DD)`, color: "#fff", padding: "14px 40px", borderRadius: "30px", textDecoration: "none", fontWeight: "700", fontSize: "1.1rem", boxShadow: `0 8px 25px ${c.p}66` }}>{t.home.shopNow} ✨</Link>
-          </div>
+      {/* ─── 1) HERO SECTION الفاخر بالأقواس الفنية ─── */}
+      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "4rem 2rem", display: "flex", alignItems: "center", justifyContent: "between", gap: "4rem", flexWrap: "wrap-reverse" }}>
+        <div style={{ flex: "1 1 450px", textAlign: lang === "ar" ? "right" : "left" }}>
+          <h1 style={{ fontSize: "3.8rem", fontWeight: "300", lineHeight: "1.1", color: c.d, margin: "0 0 1.5rem 0", textTransform: "uppercase", letterSpacing: "1px" }}>
+            Luxury <span style={{ fontWeight: "800", display: "block", color: "#2C1810" }}>Candles &</span> Wellness
+          </h1>
+          <p style={{ fontSize: "1.1rem", color: "#666", lineHeight: "1.7", marginBottom: "2.5rem", maxWidth: "480px" }}>
+            Discover our premium products, made with top-quality ingredients that are gentle, aromatic, and irritation-free!
+          </p>
+          <Link to="/products" style={{ background: c.d, color: "#fff", padding: "14px 45px", borderRadius: "30px", textDecoration: "none", fontWeight: "600", fontSize: "1rem", display: "inline-block", transition: "all 0.3s", boxShadow: "0 4px 15px rgba(0,0,0,0.1)" }}>
+            shop now
+          </Link>
         </div>
-      ) : (
-        <div style={{ height: "520px", background: `linear-gradient(135deg, ${c.d} 0%, ${c.p} 100%)`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#fff", textAlign: "center", padding: "2rem" }}>
-          <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>🕯️</div>
-          <h1 style={{ fontSize: "3.5rem", fontWeight: "800", margin: "0 0 1rem" }}>LEMO Store</h1>
-          <p style={{ fontSize: "1.3rem", opacity: 0.85, marginBottom: "2rem" }}>شموع فاخرة وهدايا مميزة لكل مناسبة</p>
-          <Link to="/products" style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(10px)", border: "2px solid rgba(255,255,255,0.5)", color: "#fff", padding: "14px 40px", borderRadius: "30px", textDecoration: "none", fontWeight: "700", fontSize: "1.1rem" }}>{t.home.shopNow} ✨</Link>
-        </div>
-      )}
 
-      <div style={{ background: `linear-gradient(135deg, ${c.p}, ${c.p}DD)`, padding: "12px", textAlign: "center", color: "#fff", fontSize: "0.95rem", fontWeight: "600" }}>🚚 شحن مجاني على الطلبات فوق 500 ج.م | 🎁 تغليف هدايا مجاني</div>
-      
-      {/* ─── قسم عرض الفئات الذكي بالصور الحقيقية ─── */}
-      <div style={{ padding: "4rem 2rem", textAlign: "center" }}>
-        <p style={{ color: c.p, fontWeight: "700", letterSpacing: "2px", fontSize: "0.85rem", marginBottom: "8px", textTransform: "uppercase" }}>تسوقي حسب</p>
-        <h2 style={{ color: c.d, fontSize: "2.2rem", fontWeight: "800", marginBottom: "2.5rem", marginTop: 0 }}>{t.home.exploreCategories}</h2>
-        <div style={{ display: "flex", gap: "1.5rem", shortcuts: "center", justifyContent: "center", flexWrap: "wrap", maxWidth: "1000px", margin: "0 auto" }}>
+        <div style={{ flex: "1 1 450px", display: "flex", justifyContent: "center", position: "relative" }}>
+          {/* نجوم الديكور الفنية الجانبية */}
+          <div style={{ position: "absolute", top: "-20px", right: "20px", fontSize: "2rem", opacity: 0.8 }}>✦</div>
+          <div style={{ position: "absolute", bottom: "40px", left: "0px", fontSize: "1.5rem", opacity: 0.5 }}>✦</div>
+          
+          <div style={{ width: "380px", height: "480px", border: `1px solid ${c.d}`, borderRadius: "200px 200px 0 0", padding: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: "100%", height: "100%", borderRadius: "190px 190px 0 0", overflow: "hidden" }}>
+              <img 
+                src={mainBanner?.imageUrl || "https://images.unsplash.com/photo-1603006905003-be475563bc59?q=80&w=1887&auto=format&fit=cover"} 
+                alt="LEMO Premium Arch" 
+                style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+              />
+            </div>
+          </div>
+          
+          {/* عنصر الدائرة الشمسية المودرن في الأسفل */}
+          <div style={{ position: "absolute", bottom: "-30px", right: "-20px", width: "120px", height: "120px", opacity: 0.15, background: "repeating-conic-gradient(from 0deg, #000 0deg 10deg, transparent 10deg 20deg)", borderRadius: "50%" }}></div>
+        </div>
+      </div>
+
+      {/* ─── 2) MOVING MARQUEE الشريط المائل المتحرك ─── */}
+      <div style={{ background: "#fff", borderTop: "1px solid #E8DDD0", borderBottom: "1px solid #E8DDD0", padding: "16px 0", overflow: "hidden", whiteSpace: "nowrap", width: "100vw", display: "flex" }}>
+        <div style={{ display: "inline-block", animation: "marquee 20s infinite linear", fontSize: "1.1rem", fontWeight: "700", letterSpacing: "4px", textTransform: "uppercase", color: "#3D2B1F" }}>
+          ✦ PACKAGES ✦ OFFERS ✦ BUNDLES ✦ CANDLES ✦ HOME DECOR ✦ MERCHANDISE ✦ BODY ESSENTIALS ✦ SPECIAL GIFTS  
+        </div>
+        <div style={{ display: "inline-block", animation: "marquee 20s infinite linear", fontSize: "1.1rem", fontWeight: "700", letterSpacing: "4px", textTransform: "uppercase", color: "#3D2B1F" }}>
+          ✦ PACKAGES ✦ OFFERS ✦ BUNDLES ✦ CANDLES ✦ HOME DECOR ✦ MERCHANDISE ✦ BODY ESSENTIALS ✦ SPECIAL GIFTS  
+        </div>
+      </div>
+
+      {/* ─── 3) OUR CATEGORIES قسم الفئات المقوسة الاحترافي ─── */}
+      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "5rem 2rem", textAlign: "center" }}>
+        <h2 style={{ fontSize: "2.5rem", fontWeight: "700", marginBottom: "3.5rem", color: c.d }}>Our Categories</h2>
+        <div style={{ display: "flex", gap: "2rem", justifyContent: "center", flexWrap: "wrap" }}>
           {categories.map((cat) => (
-            <Link key={cat.slug} to={`/products?category=${cat.slug}`} style={{ textDecoration: "none", flex: "1", minWidth: "160px", maxWidth: "220px" }}>
-              <div style={{ 
-                background: "#fff", 
-                border: "1px solid #E8DDD0", 
-                borderRadius: "24px", 
-                overflow: "hidden",
-                boxShadow: "0 4px 15px rgba(0,0,0,0.03)",
-                cursor: "pointer", 
-                transition: "all 0.3s ease" 
-              }} 
-              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-6px)"; e.currentTarget.style.boxShadow = `0 12px 30px ${c.p}25`; }} 
-              onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 15px rgba(0,0,0,0.03)"; }}>
+            <Link key={cat.slug} to={`/products?category=${cat.slug}`} style={{ textDecoration: "none", color: "inherit", flex: "1 1 220px", maxWidth: "260px" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                 
-                {/* عرض غلاف الفئة المرفوع كـ Base64 أو رابط، وإذا لم يوجد يعرض الـ Icon الافتراضي */}
-                <div style={{ height: "140px", background: cat.bg || "#FAF7F2", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", position: "relative" }}>
+                {/* كادر القوس الفني المتناسق مع الهوية الجديدة بالملي */}
+                <div style={{ width: "100%", height: "320px", border: "1px solid #111", borderRadius: "150px 150px 0 0", overflow: "hidden", position: "relative", marginBottom: "1rem", transition: "transform 0.3s ease" }} onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.03)"} onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}>
                   {cat.imageUrl ? (
                     <img src={cat.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   ) : (
-                    <div style={{ fontSize: "3rem" }}>{cat.icon}</div>
+                    <div style={{ width: "100%", height: "100%", background: "#FAF2EA", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "4rem" }}>{cat.icon}</div>
                   )}
                 </div>
 
-                <div style={{ padding: "12px", background: "#fff", borderTop: "1px solid #FAF7F2" }}>
-                  <div style={{ color: c.d, fontWeight: "700", fontSize: "1rem" }}>
-                    {lang === "ar" ? cat.nameAr : cat.nameEn}
-                  </div>
-                </div>
-
+                <span style={{ fontSize: "1.2rem", fontWeight: "700", letterSpacing: "0.5px", color: c.d, textTransform: "capitalize" }}>
+                  {lang === "ar" ? cat.nameAr : cat.nameEn}
+                </span>
               </div>
             </Link>
           ))}
         </div>
       </div>
 
+      {/* ─── 4) MOST POPULAR PRODUCTS المنتجات الأكثر طلباً ─── */}
       {bestSellers.length > 0 && (
-        <div style={{ padding: "3rem 2rem", background: "#fff" }}>
-          <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-            <p style={{ color: c.p, fontWeight: "700", letterSpacing: "2px", fontSize: "0.85rem", marginBottom: "8px" }}>⭐ BEST SELLERS</p>
-            <h2 style={{ color: c.d, fontSize: "2.2rem", fontWeight: "800", margin: 0 }}>{t.home.bestSellers}</h2>
-          </div>
-          <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap", justifyContent: "center", maxWidth: "1100px", margin: "0 auto" }}>
-            {bestSellers.map((p) => <ProductCard key={p.id} product={p} field={field} t={t} addToCart={addToCart} c={c} />)}
-          </div>
-        </div>
-      )}
-
-      {newArrivals.length > 0 && (
-        <div style={{ padding: "3rem 2rem" }}>
-          <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-            <p style={{ color: c.p, fontWeight: "700", letterSpacing: "2px", fontSize: "0.85rem", marginBottom: "8px" }}>✨ NEW IN</p>
-            <h2 style={{ color: c.d, fontSize: "2.2rem", fontWeight: "800", margin: 0 }}>{t.home.newArrivals}</h2>
-          </div>
-          <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap", justifyContent: "center", maxWidth: "1100px", margin: "0 auto" }}>
-            {newArrivals.map((p) => <ProductCard key={p.id} product={p} field={field} t={t} addToCart={addToCart} c={c} />)}
-          </div>
-        </div>
-      )}
-
-      <div style={{ background: c.d, padding: "4rem 2rem", textAlign: "center" }}>
-        <h2 style={{ color: c.p, fontSize: "2rem", fontWeight: "800", marginBottom: "2.5rem" }}>ليه LEMO Store؟</h2>
-        <div style={{ display: "flex", gap: "2rem", justifyContent: "center", flexWrap: "wrap", maxWidth: "900px", margin: "0 auto" }}>
-          {[{ icon: "🕯️", title: "جودة فاخرة", desc: "منتجات مصنوعة بعناية من أجود الخامات" }, { icon: "🎁", title: "تغليف مميز", desc: "كل طلب يوصلك في تغليف هدايا أنيق" }, { icon: "🚚", title: "توصيل سريع", desc: "توصيل لكل أنحاء مصر" }, { icon: "💛", title: "ضمان الجودة", desc: "رضاكم أولويتنا دايماً" }].map((item) => (
-            <div key={item.title} style={{ flex: "1", minWidth: "180px", maxWidth: "200px" }}>
-              <div style={{ fontSize: "2.5rem", marginBottom: "12px" }}>{item.icon}</div>
-              <h3 style={{ color: "#fff", fontWeight: "700", margin: "0 0 8px" }}>{item.title}</h3>
-              <p style={{ color: "#D4B896", fontSize: "0.9rem", margin: 0, lineHeight: "1.6" }}>{item.desc}</p>
+        <div style={{ background: "#fff", padding: "5rem 2rem", borderTop: "1px solid #E8DDD0" }}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+            <div style={{ display: "flex", justifyContent: "between", alignItems: "center", marginBottom: "3rem", flexWrap: "wrap", gap: "1rem" }}>
+              <h2 style={{ fontSize: "2.4rem", fontWeight: "700", margin: 0 }}>Most Popular Products</h2>
+              <Link to="/products" style={{ color: c.d, fontWeight: "700", textDecoration: "underline", fontSize: "1rem" }}>View All Products ({products.length})</Link>
             </div>
-          ))}
+            <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap", justifyContent: "center" }}>
+              {bestSellers.map((p) => <ProductCard key={p.id} product={p} field={field} t={t} addToCart={addToCart} c={c} />)}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
-      <footer style={{ background: "#2C1810", color: "#E8DDD0", padding: "2rem", textAlign: "center" }}>
-        <p style={{ fontSize: "1.5rem", fontWeight: "800", marginBottom: "8px" }}>🕯️ LEMO Store</p>
-        <p style={{ opacity: 0.6, fontSize: "0.9rem", margin: 0 }}>© 2026 جميع الحقوق محفوظة — صُنع بـ ❤️ في مصر</p>
+      {/* ─── 5) FEATURED OFFER SECTION قسم عروض التوفير ─── */}
+      {featuredOffer.length > 0 && (
+        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "5rem 2rem" }}>
+          <div style={{ display: "flex", gap: "4rem", flexWrap: "wrap" }}>
+            <div style={{ flex: "1 1 350px" }}>
+              <h2 style={{ fontSize: "2.6rem", fontWeight: "700", marginBottom: "1.5rem" }}>Featured Offer For You</h2>
+              <p style={{ color: "#666", lineHeight: "1.6", marginBottom: "2rem" }}>Take advantage of our exclusive discounts on premium candle bundles and organic skincare products before the quantity runs out.</p>
+              <Link to="/products" style={{ color: c.d, fontWeight: "700", textDecoration: "underline" }}>Shop Sale Items</Link>
+            </div>
+            <div style={{ flex: "2 1 600px", display: "flex", gap: "1.5rem", flexWrap: "wrap", justifyContent: "center" }}>
+              {featuredOffer.map((p) => (
+                <div key={p.id} style={{ flex: "1 1 200px", maxWidth: "240px", background: "#fff", border: "1px solid #E8DDD0", borderRadius: "16px", overflow: "hidden", position: "relative" }}>
+                  <div style={{ height: "240px", position: "relative" }}>
+                    <img src={Array.isArray(p.imageUrl) ? p.imageUrl[0] : p.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <span style={{ position: "absolute", top: "10px", left: "10px", background: "#000", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "700" }}>{p.discount}% OFF</span>
+                  </div>
+                  <div style={{ padding: "1rem" }}>
+                    <h4 style={{ margin: "0 0 6px 0", fontSize: "0.95rem" }}>{field(p, "name")}</h4>
+                    <span style={{ fontWeight: "700", color: c.p }}>{p.price - (p.price * (p.discount/100))} ج.م</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── 6) FOOTER الفخم المتكامل بالهوية المودرن ─── */}
+      <footer style={{ background: "#FAF8F5", borderTop: "1px solid #E8DDD0", padding: "5rem 2rem 2rem" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", justifyContent: "between", gap: "3rem", flexWrap: "wrap", pb: "3rem", borderBottom: "1px solid #E8DDD0", paddingBottom: "3rem" }}>
+          <div style={{ flex: "2 1 350px" }}>
+            <h3 style={{ fontSize: "1.8rem", fontWeight: "800", margin: "0 0 1rem 0", letterSpacing: "1px" }}>LEMO Store</h3>
+            <p style={{ color: "#666", fontSize: "0.95rem", maxWidth: "320px", lineHeight: "1.6" }}>Luxury Candles & Wellness Essentials. Premium handmade products that elevate your home environment with pure scent and fine aesthetics.</p>
+          </div>
+          <div style={{ flex: "1 1 150px" }}>
+            <h4 style={{ fontSize: "1rem", fontWeight: "700", margin: "0 0 1.2rem 0" }}>Help</h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.9rem", color: "#555" }}>
+              <span>Contact Us</span><span>About Us</span><span>Account</span>
+            </div>
+          </div>
+          <div style={{ flex: "1 1 150px" }}>
+            <h4 style={{ fontSize: "1rem", fontWeight: "700", margin: "0 0 1.2rem 0" }}>Categories</h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.9rem", color: "#555" }}>
+              <span>Candles</span><span>Body Essentials</span><span>Boxes</span><span>Offers</span>
+            </div>
+          </div>
+        </div>
+        <div style={{ textAlign: "center", paddingTop: "2rem", color: "#8B7355", fontSize: "0.85rem", opacity: 0.8 }}>
+          © 2026 LEMO Store — ALL RIGHTS RESERVED — MADE WITH ❤️ IN EGYPT
+        </div>
       </footer>
+
+      {/* كود الأنيميشن المخصص لحركة الـ Marquee بنعومة فائقة */}
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(0%); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -200,43 +219,32 @@ function ProductCard({ product, field, t, addToCart, c }) {
 
   const hasDiscount = product.discount > 0;
   const finalPrice = hasDiscount ? product.price - (product.price * (product.discount / 100)) : product.price;
-  
-  const getDisplayImage = (imgField) => {
-    if (Array.isArray(imgField)) return imgField[0] || "";
-    return imgField || "";
-  };
+  const imgUrl = Array.isArray(product.imageUrl) ? product.imageUrl[0] : product.imageUrl;
 
   return (
-    <div style={{ background: "#fff", borderRadius: "20px", boxShadow: "0 4px 20px rgba(0,0,0,0.06)", width: "230px", overflow: "hidden", transition: "transform 0.3s, box-shadow 0.3s", position: "relative" }} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px)"; e.currentTarget.style.boxShadow = `0 15px 40px ${c.p}33`; }} onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.06)"; }}>
-      <Link to={`/products/${product.id}`} style={{ textDecoration: "none" }}>
-        <div style={{ height: "220px", background: c.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "4rem", position: "relative", overflow: "hidden" }}>
-          {getDisplayImage(product.imageUrl) ? <img src={getDisplayImage(product.imageUrl)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "🕯️"}
+    <div style={{ background: "#fff", borderRadius: "16px", border: "1px solid #E8DDD0", width: "250px", overflow: "hidden", transition: "transform 0.3s ease", position: "relative" }}>
+      <Link to={`/products/${product.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+        <div style={{ height: "260px", background: "#FAF8F5", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+          {imgUrl ? <img src={imgUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "🕯️"}
           
           {hasDiscount && (
-            <span style={{ position: "absolute", top: "12px", right: "12px", background: "#E74C3C", color: "#fff", padding: "4px 12px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: "700", boxShadow: "0 2px 8px rgba(231,76,60,0.3)" }}>
-              خصم {product.discount}%
+            <span style={{ position: "absolute", top: "12px", left: "12px", background: "#000", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: "700" }}>
+              -{product.discount}%
             </span>
           )}
-
-          {product.isNew && !hasDiscount && <span style={{ position: "absolute", top: "12px", right: "12px", background: `linear-gradient(135deg, ${c.p}, ${c.p}DD)`, color: "#fff", padding: "4px 12px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "700" }}>جديد</span>}
-          {product.isBestSeller && <span style={{ position: "absolute", top: "12px", left: "12px", background: c.d, color: c.p, padding: "4px 12px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "700" }}>⭐</span>}
+          {product.isNew && <span style={{ position: "absolute", top: "12px", right: "12px", background: "#C9A96E", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: "700" }}>NEW</span>}
         </div>
-        <div style={{ padding: "1rem 1.2rem 0.5rem" }}>
-          <h3 style={{ margin: "0 0 6px", color: c.d, fontSize: "1rem", fontWeight: "700", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{field(product, "name")}</h3>
-          
-          {hasDiscount ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ color: "#E74C3C", fontWeight: "800", fontSize: "1.1rem" }}>{finalPrice} {t.currency}</span>
-              <span style={{ color: "#8B7355", textDecoration: "line-through", fontSize: "0.85rem" }}>{product.price}</span>
-            </div>
-          ) : (
-            <p style={{ color: c.p, fontWeight: "800", margin: 0, fontSize: "1.1rem" }}>{product.price} {t.currency}</p>
-          )}
+        <div style={{ padding: "1.2rem 1.2rem 0.5rem 1.2rem" }}>
+          <h3 style={{ margin: "0 0 8px 0", color: c.d, fontSize: "1.05rem", fontWeight: "700", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{field(product, "name")}</h3>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ color: c.d,确: true, fontWeight: "800", fontSize: "1.1rem" }}>{finalPrice} ج.م</span>
+            {hasDiscount && <span style={{ color: "#999", textDecoration: "line-through", fontSize: "0.85rem" }}>{product.price} ج.م</span>}
+          </div>
         </div>
       </Link>
-      <div style={{ padding: "0.8rem 1.2rem 1.2rem" }}>
-        <button onClick={handleAdd} style={{ width: "100%", background: added ? "#4CAF50" : `linear-gradient(135deg, ${c.p}, ${c.p}DD)`, color: "#fff", border: "none", borderRadius: "12px", padding: "10px", cursor: "pointer", fontWeight: "700", fontSize: "0.9rem", transition: "all 0.3s", boxShadow: `0 4px 15px ${c.p}4D` }}>
-          {added ? "✓ تمت الإضافة" : t.products.addToCart}
+      <div style={{ padding: "0.5rem 1.2rem 1.2rem 1.2rem" }}>
+        <button onClick={handleAdd} style={{ width: "100%", background: added ? "#4CAF50" : "#111", color: "#fff", border: "none", borderRadius: "20px", padding: "10px", cursor: "pointer", fontWeight: "600", fontSize: "0.85rem", transition: "all 0.3s" }}>
+          {added ? "✓ Added To Cart" : "Add to Cart"}
         </button>
       </div>
     </div>
