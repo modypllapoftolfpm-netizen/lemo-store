@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../../components/layout/Navbar";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { 
   ResponsiveContainer, 
@@ -15,67 +15,108 @@ import {
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
-    totalProducts: 21,
-    totalOrders: 3,
+    totalProducts: 0,
+    totalOrders: 0,
     totalEarnings: 0,
-    pendingOrders: 2
+    pendingOrders: 0
   });
-  const [lastOrders, setLastOrders] = useState([
-    { id: "#8xPdgUq0", customer: "Mody hossam", price: 420, status: "pending" },
-    { id: "VNAy4YSK#", customer: "Mody hossam", price: 130, status: "pending" },
-    { id: "Mlv2Xzfh#", customer: "Mody hossam", price: 320, status: "cancelled" }
-  ]);
+  const [lastOrders, setLastOrders] = useState([]);
+  const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // داتا افتراضية فخمة للرسم البياني تعبر عن مبيعات الأشهر الأخيرة
-  const salesData = [
-    { name: "يناير", sales: 1200 },
-    { name: "فبراير", sales: 2100 },
-    { name: "مارس", sales: 1800 },
-    { name: "أبريل", sales: 3400 },
-    { name: "مايو", sales: 4500 }
-  ];
-
   useEffect(() => {
-    async function fetchDashboardData() {
+    async function fetchRealDashboardData() {
       try {
+        // 1) جلب المنتجات الحقيقية وحساب عددها
         const prodSnap = await getDocs(collection(db, "products"));
-        const orderSnap = await getDocs(collection(db, "orders"));
+        const productsCount = prodSnap.size;
+
+        // 2) جلب الطلبات الحقيقية مرتبة تنازلياً
+        const orderQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+        const orderSnap = await getDocs(orderQuery);
         
-        let productsCount = prodSnap.size || 21;
-        let ordersCount = orderSnap.size || 3;
+        const ordersCount = orderSnap.size;
         let earnings = 0;
         let pending = 0;
         let ordersList = [];
 
+        // هيكل الشهور الذكي لحساب الرسم البياني ديناميكياً من الواقع
+        const monthsNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+        const monthlyEarningsMap = {};
+
+        // تهيئة الشهور الـ 5 الأخيرة افتراضياً بقيمة 0 لضمان شكل الرسم البياني حتى لو الداتا جديدة
+        const currentMonth = new Date().getMonth();
+        for (let i = 4; i >= 0; i--) {
+          const mIndex = (currentMonth - i + 12) % 12;
+          monthlyEarningsMap[monthsNames[mIndex]] = 0;
+        }
+
         orderSnap.forEach((doc) => {
           const data = doc.data();
-          ordersList.push({ id: doc.id, customer: data.customerName || "عميل", price: data.totalPrice || 0, status: data.status || "pending" });
-          if (data.status === "completed") {
-            earnings += (data.totalPrice || 0);
-          }
-          if (data.status === "pending") {
+          const totalPrice = Number(data.totalPrice) || 0;
+          const status = data.status || "pending";
+
+          // إضافة الطلب لقائمة آخر الطلبات
+          ordersList.push({
+            id: doc.id.slice(0, 8) + "#", // عرض أول 8 رموز بشكل جمالي كالمعتاد
+            customer: data.customerName || data.customer?.name || "عميل LEMO",
+            price: totalPrice,
+            status: status
+          });
+
+          // حساب الطلبات المعلقة والإيرادات الحقيقية للطلبات المكتملة
+          if (status === "pending") {
             pending++;
           }
+          if (status === "completed") {
+            earnings += totalPrice;
+
+            // توزيع الأرباح الحقيقية على الشهور ديناميكياً حسب تاريخ الطلب المكتمل
+            if (data.createdAt) {
+              const orderDate = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+              const monthName = monthsNames[orderDate.getMonth()];
+              if (monthlyEarningsMap[monthName] !== undefined) {
+                monthlyEarningsMap[monthName] += totalPrice;
+              }
+            }
+          }
         });
+
+        // تحويل خريطة الشهور الحقيقية إلى مصفوفة يقبلها الرسم البياني (Recharts)
+        const formattedChartData = Object.keys(monthlyEarningsMap).map(month => ({
+          name: month,
+          sales: monthlyEarningsMap[month]
+        }));
 
         setStats({
           totalProducts: productsCount,
           totalOrders: ordersCount,
           totalEarnings: earnings,
-          pendingOrders: pending || 2
+          pendingOrders: pending
         });
 
-        if (ordersList.length > 0) {
-          setLastOrders(ordersList.slice(0, 5));
-        }
+        setLastOrders(ordersList.slice(0, 5)); // جلب آخر 5 طلبات حقيقية فقط للجدول
+        setChartData(formattedChartData);
+
       } catch (e) {
-        console.log("Using default fallback stats presentation");
+        console.error("Error calculating dashboard live matrix", e);
       }
       setLoading(false);
     }
-    fetchDashboardData();
+    
+    fetchRealDashboardData();
   }, []);
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#FAF8F5" }} dir="rtl">
+        <Navbar />
+        <div style={{ padding: "10rem 2rem", color: "#8B7355", textAlign: "center", fontSize: "1.2rem", fontWeight: "600" }}>
+          ⏳ جاري فحص قاعدة البيانات وحساب المبيعات والطلبات الحقيقية...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: "#FAF8F5", fontFamily: "Cairo, sans-serif" }} dir="rtl">
@@ -83,13 +124,12 @@ export default function AdminDashboard() {
       
       <div style={{ maxWidth: "1140px", margin: "0 auto", padding: "2.5rem 1.5rem" }}>
         
-        {/* هيدر اللوحة */}
         <div style={{ marginBottom: "2rem", display: "flex", alignItems: "center", gap: "10px" }}>
           <span style={{ fontSize: "1.8rem" }}>📊</span>
-          <h1 style={{ color: "#111", margin: 0, fontSize: "1.8rem", fontWeight: "800" }}>لوحة التحكم</h1>
+          <h1 style={{ color: "#111", margin: 0, fontSize: "1.8rem", fontWeight: "800" }}>لوحة التحكم الحية</h1>
         </div>
 
-        {/* ─── 1) كروت الإحصائيات الأربعة السريعة ─── */}
+        {/* ─── 1) كروت الإحصائيات الأربعة الحقيقية 100% ─── */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.5rem", marginBottom: "2.5rem" }}>
           
           <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", textAlign: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.02)", border: "1px solid #E8DDD0" }}>
@@ -106,19 +146,19 @@ export default function AdminDashboard() {
 
           <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", textAlign: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.02)", border: "1px solid #E8DDD0" }}>
             <div style={{ fontSize: "2rem", marginBottom: "8px" }}>💰</div>
-            <div style={{ color: "#8B7355", fontSize: "0.9rem", fontWeight: "600" }}>إجمالي الإيرادات</div>
+            <div style={{ color: "#8B7355", fontSize: "0.9rem", fontWeight: "600" }}>إجمالي الإيرادات (المكتملة)</div>
             <div style={{ fontSize: "2rem", fontWeight: "800", color: "#3D2B1F", marginTop: "4px" }}>{stats.totalEarnings} ج.م</div>
           </div>
 
           <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", textAlign: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.02)", border: "1px solid #E8DDD0" }}>
             <div style={{ fontSize: "2rem", marginBottom: "8px" }}>⏳</div>
-            <div style={{ color: "#8B7355", fontSize: "0.9rem", fontWeight: "600" }}>طلبات معلقة</div>
+            <div style={{ color: "#8B7355", fontSize: "0.9rem", fontWeight: "600" }}>طلبات معلقة بحاجة لشحن</div>
             <div style={{ fontSize: "2rem", fontWeight: "800", color: "#C9A96E", marginTop: "4px" }}>{stats.pendingOrders}</div>
           </div>
 
         </div>
 
-        {/* ─── 2) أزرار التنقل السريع الكبيرة ─── */}
+        {/* ─── 2) أزرار التنقل السريع ─── */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.5rem", marginBottom: "2.5rem" }}>
           <Link to="/admin/products" style={{ textDecoration: "none", background: "#3D2B1F", color: "#fff", padding: "1.5rem", borderRadius: "16px", textAlign: "center", fontWeight: "700", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
             <span style={{ fontSize: "1.8rem" }}>📦</span> إدارة المنتجات
@@ -134,16 +174,16 @@ export default function AdminDashboard() {
           </Link>
         </div>
 
-        {/* ─── 3) قسم الرسم البياني الفخم للمبيعات (Sales Analytics Chart) ─── */}
+        {/* ─── 3) الرسم البياني الحقيقي المتصل بالمبيعات الفعليّة ─── */}
         <div style={{ background: "#fff", borderRadius: "24px", padding: "2rem", boxShadow: "0 4px 25px rgba(0,0,0,0.03)", border: "1px solid #E8DDD0", marginBottom: "2.5rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.5rem" }}>
             <span style={{ fontSize: "1.3rem" }}>📈</span>
-            <h3 style={{ color: "#3D2B1F", margin: 0, fontSize: "1.2rem", fontWeight: "700" }}>تحليلات المبيعات والأرباح الحالية</h3>
+            <h3 style={{ color: "#3D2B1F", margin: 0, fontSize: "1.2rem", fontWeight: "700" }}>تحليلات المبيعات والأرباح الحقيقية</h3>
           </div>
           
           <div style={{ width: "100%", height: 300, direction: "ltr" }}>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={salesData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#C9A96E" stopOpacity={0.4}/>
@@ -154,48 +194,52 @@ export default function AdminDashboard() {
                 <XAxis dataKey="name" stroke="#8B7355" style={{ fontSize: "12px", fontFamily: "Cairo" }} />
                 <YAxis stroke="#8B7355" style={{ fontSize: "12px" }} />
                 <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E8DDD0", borderRadius: "8px", fontFamily: "Cairo" }} />
-                <Area type="monotone" dataKey="sales" name="المبيعات (ج.م)" stroke="#C9A96E" strokeWidth={2} fillOpacity={1} fill="url(#colorSales)" />
+                <Area type="monotone" dataKey="sales" name="المبيعات الفعلية (ج.م)" stroke="#C9A96E" strokeWidth={2} fillOpacity={1} fill="url(#colorSales)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* ─── 4) جدول آخر الطلبات ─── */}
+        {/* ─── 4) جدول آخر الطلبات من قاعدة البيانات الحية ─── */}
         <div style={{ background: "#fff", borderRadius: "24px", padding: "2rem", boxShadow: "0 4px 25px rgba(0,0,0,0.03)", border: "1px solid #E8DDD0" }}>
-          <h3 style={{ color: "#3D2B1F", marginTop: 0, marginBottom: "1.5rem", fontSize: "1.2rem", fontWeight: "700" }}>آخر الطلبات</h3>
+          <h3 style={{ color: "#3D2B1F", marginTop: 0, marginBottom: "1.5rem", fontSize: "1.2rem", fontWeight: "700" }}>آخر الطلبات المسجلة</h3>
           <div style={{ overflowX: "auto" }}>
-            <table width="100%" cellPadding="12" style={{ borderCollapse: "collapse", textAlign: "right" }}>
-              <thead>
-                <tr style={{ backgroundColor: "#FAF8F5", color: "#8B7355", borderBottom: "1px solid #E8DDD0" }}>
-                  <th>رقم الطلب</th>
-                  <th>العميل</th>
-                  <th>الإجمالي</th>
-                  <th>الحالة</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lastOrders.map((order, idx) => (
-                  <tr key={idx} style={{ borderBottom: "1px solid #FAF8F5" }}>
-                    <td style={{ fontWeight: "700", color: "#111" }}>{order.id}</td>
-                    <td style={{ color: "#555" }}>{order.customer}</td>
-                    <td style={{ fontWeight: "700" }}>{order.price} ج.م</td>
-                    <td>
-                      <span style={{ 
-                        padding: "4px 12px", 
-                        borderRadius: "20px", 
-                        fontSize: "0.8rem", 
-                        fontWeight: "700",
-                        background: order.status === "pending" ? "#FFF8F0" : "#FFF0F0",
-                        color: order.status === "pending" ? "#C9A96E" : "#E74C3C",
-                        border: order.status === "pending" ? "1px solid #E8DDD0" : "1px solid #FFCCCC"
-                      }}>
-                        {order.status}
-                      </span>
-                    </td>
+            {lastOrders.length > 0 ? (
+              <table width="100%" cellPadding="12" style={{ borderCollapse: "collapse", textAlign: "right" }}>
+                <thead>
+                  <tr style={{ backgroundColor: "#FAF8F5", color: "#8B7355", borderBottom: "1px solid #E8DDD0" }}>
+                    <th>رقم الطلب</th>
+                    <th>العميل</th>
+                    <th>الإجمالي</th>
+                    <th>الحالة</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {lastOrders.map((order, idx) => (
+                    <tr key={idx} style={{ borderBottom: "1px solid #FAF8F5" }}>
+                      <td style={{ fontWeight: "700", color: "#111" }}><code>{order.id}</code></td>
+                      <td style={{ color: "#555" }}>{order.customer}</td>
+                      <td style={{ fontWeight: "700" }}>{order.price} ج.م</td>
+                      <td>
+                        <span style={{ 
+                          padding: "4px 12px", 
+                          borderRadius: "20px", 
+                          fontSize: "0.8rem", 
+                          fontWeight: "700",
+                          background: order.status === "completed" ? "#F0FFF4" : order.status === "pending" ? "#FFF8F0" : "#FFF0F0",
+                          color: order.status === "completed" ? "#4CAF50" : order.status === "pending" ? "#C9A96E" : "#E74C3C",
+                          border: order.status === "completed" ? "1px solid #C2F0C2" : order.status === "pending" ? "1px solid #E8DDD0" : "1px solid #FFCCCC"
+                        }}>
+                          {order.status === "completed" ? "مكتمل" : order.status === "pending" ? "قيد الانتظار" : "ملغي"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div style={{ padding: "2rem", textAlign: "center", color: "#8B7355" }}>📦 لا توجد طلبات مسجلة في قاعدة البيانات حتى الآن.</div>
+            )}
           </div>
         </div>
 
