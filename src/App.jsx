@@ -13,13 +13,13 @@ import Orders from "./pages/Orders";
 import Wishlist from "./pages/Wishlist";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import LemoAi from "./pages/LemoAi"; 
+import LemoAi from "./pages/LemoAi";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminProducts from "./pages/admin/Products";
 import AdminOrders from "./pages/admin/Orders";
 import AdminBanners from "./pages/admin/Banners";
 import AdminSettings from "./pages/admin/Settings";
-import AdminReviews from "./pages/admin/AdminReviews"; // تأكد أن الملف بهذا الاسم تماماً داخل فولدر admin
+import AdminReviews from "./pages/admin/AdminReviews";
 import NotFound from "./pages/NotFound";
 
 const PrivateRoute = ({ children }) => {
@@ -41,7 +41,7 @@ const AppRoutes = () => (
     <Route path="/products/:id" element={<ProductDetail />} />
     <Route path="/login" element={<Login />} />
     <Route path="/signup" element={<Signup />} />
-    <Route path="/lemo-ai" element={<LemoAi />} /> 
+    <Route path="/lemo-ai" element={<LemoAi />} />
     <Route path="/cart" element={<PrivateRoute><Cart /></PrivateRoute>} />
     <Route path="/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
     <Route path="/order-confirm/:id" element={<PrivateRoute><OrderConfirm /></PrivateRoute>} />
