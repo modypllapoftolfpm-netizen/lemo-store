@@ -4,6 +4,25 @@ import {
 } from "firebase/firestore";
 import { db } from "./config";
 
+// ─── إدارة الإعدادات العامة للمتجر ──────────────────────────────────────────
+export const getSettings = async () => {
+  const snap = await getDoc(doc(db, "settings", "main"));
+  return snap.exists() ? snap.data() : {};
+};
+
+export const updateSettings = async (data) => {
+  return await setDoc(doc(db, "settings", "main"), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+};
+
+export const subscribeToSettings = (callback) => {
+  return onSnapshot(doc(db, "settings", "main"), (snap) => {
+    callback(snap.exists() ? snap.data() : {});
+  });
+};
+
 // ─── إدارة الفئات المباشرة والمستقرة بنسبة 100% ──────────────────────────────
 export const addCategory = async (data) => {
   return await addDoc(collection(db, "categories"), {
@@ -55,11 +74,7 @@ export const subscribeToBanners = (callback) => {
   });
 };
 
-export const getSettings = async () => {
-  const snap = await getDoc(doc(db, "settings", "main"));
-  return snap.exists() ? snap.data() : {};
-};
-
+// ─── كود البرومو كود التسويقي المستقر ────────────────────────────────────────
 export const validatePromoCode = async (code) => {
   const snap = await getDoc(doc(db, "promoCodes", code.toUpperCase()));
   if (!snap.exists()) return { valid: false, message: "Invalid promo code" };
