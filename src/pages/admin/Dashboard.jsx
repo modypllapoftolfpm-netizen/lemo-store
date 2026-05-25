@@ -157,18 +157,21 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* أزرار التنقل */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.5rem", marginBottom: "2.5rem" }}>
-          <Link to="/admin/products" style={{ textDecoration: "none", background: "#3D2B1F", color: "#fff", padding: "1.5rem", borderRadius: "16px", textAlign: "center", fontWeight: "700", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+        {/* أزرار التنقل (تمت إضافة زر إدارة التقييمات وتنسيق الـ Grid لـ 5 عناصر) */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1.2rem", marginBottom: "2.5rem" }}>
+          <Link to="/admin/products" style={{ textDecoration: "none", background: "#3D2B1F", color: "#fff", padding: "1.5rem", borderRadius: "16px", textAlign: "center", fontWeight: "700", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", transition: "transform 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.02)"} onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}>
             <span style={{ fontSize: "1.8rem" }}>📦</span> إدارة المنتجات
           </Link>
-          <Link to="/admin/orders" style={{ textDecoration: "none", background: "#3D2B1F", color: "#fff", padding: "1.5rem", borderRadius: "16px", textAlign: "center", fontWeight: "700", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+          <Link to="/admin/orders" style={{ textDecoration: "none", background: "#3D2B1F", color: "#fff", padding: "1.5rem", borderRadius: "16px", textAlign: "center", fontWeight: "700", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", transition: "transform 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.02)"} onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}>
             <span style={{ fontSize: "1.8rem" }}>📋</span> إدارة الطلبات
           </Link>
-          <Link to="/admin/banners" style={{ textDecoration: "none", background: "#3D2B1F", color: "#fff", padding: "1.5rem", borderRadius: "16px", textAlign: "center", fontWeight: "700", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+          <Link to="/admin/banners" style={{ textDecoration: "none", background: "#3D2B1F", color: "#fff", padding: "1.5rem", borderRadius: "16px", textAlign: "center", fontWeight: "700", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", transition: "transform 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.02)"} onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}>
             <span style={{ fontSize: "1.8rem" }}>🖼️</span> البانرات
           </Link>
-          <Link to="/admin/settings" style={{ textDecoration: "none", background: "#3D2B1F", color: "#fff", padding: "1.5rem", borderRadius: "16px", textAlign: "center", fontWeight: "700", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+          <Link to="/admin/reviews" style={{ textDecoration: "none", background: "#3D2B1F", color: "#fff", padding: "1.5rem", borderRadius: "16px", textAlign: "center", fontWeight: "700", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", transition: "transform 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.02)"} onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}>
+            <span style={{ fontSize: "1.8rem" }}>⭐</span> إدارة التقييمات
+          </Link>
+          <Link to="/admin/settings" style={{ textDecoration: "none", background: "#3D2B1F", color: "#fff", padding: "1.5rem", borderRadius: "16px", textAlign: "center", fontWeight: "700", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", transition: "transform 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.02)"} onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}>
             <span style={{ fontSize: "1.8rem" }}>⚙️</span> الإعدادات
           </Link>
         </div>
@@ -244,6 +247,36 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+      </div>
+    </div>
+  );
+}
+
+function ProductCard({ product, field, t, addToCart, c, lang }) {
+  const [added, setAdded] = useState(false);
+  const handleAdd = () => { addToCart(product); setAdded(true); setTimeout(() => setAdded(false), 2000); };
+  const imgUrl = Array.isArray(product.imageUrl) ? product.imageUrl[0] : product.imageUrl;
+
+  return (
+    <div style={{ background: "#fff", borderRadius: "16px", border: "1px solid #E8DDD0", width: "250px", overflow: "hidden", transition: "transform 0.3s ease", position: "relative", textAlign: lang === "ar" ? "right" : "left" }}>
+      <Link to={`/products/${product.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+        <div style={{ height: "260px", background: "#FAF8F5", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+          {imgUrl ? <img src={imgUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "🕯️"}
+          {product.discount > 0 && (
+            <span style={{ position: "absolute", top: "12px", right: "12px", background: "#000", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: "600" }}>
+              -{product.discount}%
+            </span>
+          )}
+        </div>
+        <div style={{ padding: "1.2rem 1.2rem 0.5rem 1.2rem" }}>
+          <h3 style={{ margin: "0 0 8px 0", color: c.d, fontSize: "1.05rem", fontWeight: "600" }}>{field(product, "name")}</h3>
+          <span style={{ color: c.d, fontWeight: "700" }}>{product.price} {t.currency}</span>
+        </div>
+      </Link>
+      <div style={{ padding: "0.5rem 1.2rem 1.2rem 1.2rem" }}>
+        <button onClick={handleAdd} style={{ width: "100%", background: added ? "#4CAF50" : "#111", color: "#fff", border: "none", borderRadius: "20px", padding: "10px", cursor: "pointer" }}>
+          {added ? "✓ تمت الإضافة" : "إضافة للسلة"}
+        </button>
       </div>
     </div>
   );

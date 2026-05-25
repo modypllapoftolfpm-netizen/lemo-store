@@ -19,7 +19,7 @@ import AdminProducts from "./pages/admin/Products";
 import AdminOrders from "./pages/admin/Orders";
 import AdminBanners from "./pages/admin/Banners";
 import AdminSettings from "./pages/admin/Settings";
-import AdminReviews from "./pages/admin/AdminReviews"; // الـ Import الجديد
+import AdminReviews from "./pages/admin/AdminReviews"; // تأكد أن الملف بهذا الاسم تماماً داخل فولدر admin
 import NotFound from "./pages/NotFound";
 
 const PrivateRoute = ({ children }) => {
@@ -48,13 +48,13 @@ const AppRoutes = () => (
     <Route path="/orders" element={<PrivateRoute><Orders /></PrivateRoute>} />
     <Route path="/wishlist" element={<PrivateRoute><Wishlist /></PrivateRoute>} />
     
-    {/* ─── رووتس لوحة التحكم للأدمن (مصلحة ومقفلّة بنسبة 100%) ─── */}
+    {/* ─── رووتس لوحة التحكم للأدمن ─── */}
     <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
     <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
     <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
     <Route path="/admin/banners" element={<AdminRoute><AdminBanners /></AdminRoute>} />
     <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
-    <Route path="/admin/reviews" element={<AdminRoute><AdminReviews /></AdminRoute>} /> {/* الـ Route الجديد */}
+    <Route path="/admin/reviews" element={<AdminRoute><AdminReviews /></AdminRoute>} />
     
     <Route path="*" element={<NotFound />} />
   </Routes>
