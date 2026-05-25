@@ -2,18 +2,30 @@ import {
   doc, getDoc, setDoc, updateDoc, onSnapshot,
   collection, addDoc, deleteDoc, getDocs, serverTimestamp, query, orderBy
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import { db, storage } from "./config";
+import { db } from "./config";
 
-// ─── إدارَة الفئات الكاملة (Categories Database System) ────────────────────────
-export const uploadCategoryImage = async (file, categoryId) => {
-  const path = `categories/${categoryId}_${Date.now()}`;
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, file);
-  const url = await getDownloadURL(storageRef);
-  return { url, path };
+// ─── دالة الرفع الحركي على الـ Cloudinary الخاص بحساب محمد ───────────────────────
+export const uploadCategoryImage = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  // بنستخدم الـ preset الافتراضي المفتوح للحساب ml_default لضمان الرفع بدون شروط حماية
+  formData.append("upload_preset", "ml_default"); 
+
+  const res = await fetch("https://api.cloudinary.com/v1_1/dakjxjp0l/image/upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) throw new Error("فشل رفع الصورة على Cloudinary");
+  
+  const data = await res.json();
+  return { 
+    url: data.secure_url, 
+    path: data.public_id 
+  };
 };
 
+// ─── إدارة الفئات في الـ Firestore ──────────────────────────────────────────
 export const addCategory = async (data) => {
   return await addDoc(collection(db, "categories"), {
     ...data,
@@ -22,15 +34,11 @@ export const addCategory = async (data) => {
 };
 
 export const updateCategory = async (id, data) => {
-  // لو الفئة افتراضية وأول مرة ترفع لها صورة، بنستخدم setDoc بـ merge علشان ننشئ المستند في Firestore لو مش موجود
   const docRef = doc(db, "categories", id);
   return await setDoc(docRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
 };
 
-export const deleteCategory = async (id, imagePath) => {
-  if (imagePath) {
-    await deleteObject(ref(storage, imagePath)).catch((err) => console.log("Storage delete skipped:", err));
-  }
+export const deleteCategory = async (id) => {
   return await deleteDoc(doc(db, "categories", id));
 };
 
@@ -61,11 +69,16 @@ export const subscribeToSettings = (callback) => {
 };
 
 export const uploadBannerImage = async (file) => {
-  const path = `banners/${Date.now()}_${file.name}`;
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, file);
-  const url = await getDownloadURL(storageRef);
-  return { url, path };
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "ml_default");
+  
+  const res = await fetch("https://api.cloudinary.com/v1_1/dakjxjp0l/image/upload", {
+    method: "POST",
+    body: formData,
+  });
+  const data = await res.json();
+  return { url: data.secure_url, path: data.public_id };
 };
 
 export const addBanner = async (data) => {
@@ -80,10 +93,7 @@ export const updateBanner = async (id, data) => {
   return await updateDoc(doc(db, "banners", id), data);
 };
 
-export const deleteBanner = async (id, imagePath) => {
-  if (imagePath) {
-    await deleteObject(ref(storage, imagePath)).catch((err) => console.log("Storage delete skipped:", err));
-  }
+export const deleteBanner = async (id) => {
   return await deleteDoc(doc(db, "banners", id));
 };
 

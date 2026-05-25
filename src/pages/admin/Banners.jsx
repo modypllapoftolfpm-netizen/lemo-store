@@ -68,10 +68,8 @@ export default function AdminBanners() {
         imagePath: currentCat?.imagePath || ""
       };
 
-      // إذا تم اختيار صورة جديدة
       if (catImage) {
-        const targetId = catEditId || "cat_" + Date.now();
-        const uploaded = await uploadCategoryImage(catImage, targetId);
+        const uploaded = await uploadCategoryImage(catImage);
         updateData.imageUrl = uploaded.url;
         updateData.imagePath = uploaded.path;
       }
@@ -82,7 +80,7 @@ export default function AdminBanners() {
       } else {
         const docRef = await addCategory(updateData);
         if (catImage) {
-          const uploaded = await uploadCategoryImage(catImage, docRef.id);
+          const uploaded = await uploadCategoryImage(catImage);
           await updateCategory(docRef.id, { imageUrl: uploaded.url, imagePath: uploaded.path });
         }
       }
@@ -90,7 +88,7 @@ export default function AdminBanners() {
       setCatForm({ nameAr: "", nameEn: "", slug: "" });
       setCatImage(null);
       setCatPreview("");
-      alert("تم حفظ خصائص الفئة بنجاح ✅");
+      alert("تم حفظ خصائص الفئة بنجاح وعبر Cloudinary ✅");
     } catch (err) { 
       alert("حدث خطأ أثناء حفظ الفئة"); 
     }
@@ -119,7 +117,7 @@ export default function AdminBanners() {
       } else {
         await addBanner({ sectionKey, imageUrl: url, imagePath: path, order: 0, ...data });
       }
-      alert("تم رفع الصورة بنجاح ✅");
+      alert("تم رفع صورة البانر بنجاح على Cloudinary ✅");
     } catch { alert("حدث خطأ في الرفع"); }
     setUploading((prev) => ({ ...prev, [sectionKey]: false }));
   };
@@ -142,11 +140,11 @@ export default function AdminBanners() {
       <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "2rem" }}>
         
         <h1 style={{ color: "#3D2B1F", marginBottom: "0.5rem", fontWeight: "800" }}>🖼️ لوحة إدارة الفئات وصور LEMO Store</h1>
-        <p style={{ color: "#8B7355", marginBottom: "2rem" }}>تحكم كامل في هيكلة تصنيفات الشموع الفاخرة وخلفيات الموقع</p>
+        <p style={{ color: "#8B7355", marginBottom: "2rem" }}>تحكم كامل في هيكلة تصنيفات الشموع الفاخرة وخلفيات الموقع عبر السحابة</p>
 
-        {/* ─── 1) لوحة التحكم في الفئات الاحترافية ─── */}
+        {/* ─── 1) لوحة التحكم في الفئات ─── */}
         <div style={{ background: "#fff", borderRadius: "24px", padding: "2rem", boxShadow: "0 4px 25px rgba(0,0,0,0.04)", marginBottom: "2.5rem", border: "1px solid #E8DDD0" }}>
-          <h2 style={{ color: "#3D2B1F", marginTop: 0, borderBottom: "2px solid #FAF7F2", paddingBottom: "12px", fontWeight: "700" }}>🏷 {catEditId ? "📝 تعديل بيانات وصورة الفئة" : "➕ إضافة فئة مخصصة جديدة"}</h2>
+          <h2 style={{ color: "#3D2B1F", marginTop: 0, borderBottom: "2px solid #FAF7F2", paddingBottom: "12px", fontWeight: "700" }}>🏷️ {catEditId ? "📝 تعديل بيانات وصورة الفئة" : "➕ إضافة فئة مخصصة جديدة"}</h2>
           
           <form onSubmit={handleCatSubmit} style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginTop: "20px" }}>
             <div style={{ flex: "1 1 200px" }}>
@@ -164,7 +162,6 @@ export default function AdminBanners() {
               </div>
             </div>
 
-            {/* صندوق الرفع الاحترافي المطور (Drop/Click Zone) */}
             <div style={{ flex: "1 1 250px", display: "flex", flexDirection: "column" }}>
               <label style={{ fontSize: "13px", fontWeight: "bold", color: "#3D2B1F", marginBottom: "6px" }}>غلاف الفئة الفخم</label>
               <label style={{ flex: 1, minHeight: "140px", background: "#FAF7F2", border: "2px dashed #C9A96E", borderRadius: "14px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", overflow: "hidden", padding: "10px" }}>
@@ -183,12 +180,11 @@ export default function AdminBanners() {
               </label>
               
               <button type="submit" disabled={catUploading} style={{ width: "100%", padding: "14px", backgroundColor: "#3D2B1F", color: "white", border: "none", borderRadius: "12px", fontWeight: "bold", cursor: "pointer", marginTop: "12px", boxShadow: "0 4px 12px rgba(61,43,31,0.15)" }}>
-                {catUploading ? "⏳ جاري الحفظ والرفع..." : catEditId ? "💾 حفظ التعديلات الفخمة" : "✨ إضافة الفئة للمتجر"}
+                {catUploading ? "⏳ جاري الحفظ والرفع لـ Cloudinary..." : catEditId ? "💾 حفظ التعديلات الفخمة" : "✨ إضافة الفئة للمتجر"}
               </button>
             </div>
           </form>
 
-          {/* الجدول */}
           <div style={{ marginTop: "25px", overflowX: "auto" }}>
             <table width="100%" cellPadding="12" style={{ borderCollapse: "collapse", textAlign: "right" }}>
               <thead>
@@ -216,7 +212,7 @@ export default function AdminBanners() {
                     <td style={{ textAlign: "center" }}>
                       <button onClick={() => handleCatEdit(cat)} style={{ border: "none", background: "none", color: "#C9A96E", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}>تعديل وصورة</button>
                       {!cat.isDefault && (
-                        <button onClick={async () => { if(confirm("هل تود حذف هذه الفئة نهائياً؟")) await deleteCategory(cat.id, cat.imagePath) }} style={{ border: "none", background: "none", color: "red", cursor: "pointer", fontWeight: "bold", marginRight: "10px" }}>حذف</button>
+                        <button onClick={async () => { if(confirm("هل تود حذف هذه الفئة نهائياً؟")) await deleteCategory(cat.id) }} style={{ border: "none", background: "none", color: "red", cursor: "pointer", fontWeight: "bold", marginRight: "10px" }}>حذف</button>
                       )}
                     </td>
                   </tr>
@@ -278,7 +274,7 @@ export default function AdminBanners() {
                     </label>
 
                     {banner?.imageUrl && (
-                      <button onClick={async () => { if(confirm("حذف؟")) await deleteBanner(banner.id, banner.imagePath) }} style={{ background: "#fff0f0", color: "#cc0000", border: "1px solid #ffcccc", borderRadius: "10px", padding: "10px 14px", cursor: "pointer", fontWeight: "600", fontSize: "0.85rem" }}>
+                      <button onClick={async () => { if(confirm("حذف؟")) await deleteBanner(banner.id) }} style={{ background: "#fff0f0", color: "#cc0000", border: "1px solid #ffcccc", borderRadius: "10px", padding: "10px 14px", cursor: "pointer", fontWeight: "600", fontSize: "0.85rem" }}>
                         🗑️ حذف
                       </button>
                     )}
