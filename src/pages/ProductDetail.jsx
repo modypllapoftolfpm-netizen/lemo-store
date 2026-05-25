@@ -19,7 +19,14 @@ export default function ProductDetail() {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [reviews, setReviews] = useState([]);
-  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: "" });
+  
+  // تحديث الـ state ليشمل خانات بوهاوس بالكامل
+  const [reviewForm, setReviewForm] = useState({ 
+    rating: 5, 
+    comment: "", 
+    customerName: "", 
+    email: "" 
+  });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -28,6 +35,17 @@ export default function ProductDetail() {
     const unsub = subscribeToProductReviews(id, setReviews);
     return unsub;
   }, [id]);
+
+  useEffect(() => {
+    // ملء بيانات العميل تلقائياً إذا كان مسجلاً للدخول تسهيلاً عليه
+    if (user && profile) {
+      setReviewForm(prev => ({
+        ...prev,
+        customerName: profile.name || "",
+        email: user.email || ""
+      }));
+    }
+  }, [user, profile]);
 
   if (!product) return (
     <div style={{ minHeight: "100vh", background: "#FAF7F2" }}>
@@ -44,16 +62,23 @@ export default function ProductDetail() {
 
   const handleReview = async (e) => {
     e.preventDefault();
-    if (!user) { navigate("/login"); return; }
+    if (!reviewForm.comment || !reviewForm.customerName || !reviewForm.email) {
+      alert("الرجاء ملء جميع الحقول المطلوبة! ⚠️");
+      return;
+    }
     setSubmitting(true);
     await addReview({
       productId: id,
-      userId: user.uid,
-      userName: profile?.name || "مستخدم",
+      userId: user?.uid || "guest",
+      userName: reviewForm.customerName,
+      email: reviewForm.email,
       rating: reviewForm.rating,
       comment: reviewForm.comment,
+      featured: false, // الأدمن يتحكم في عرضه بالرئيسية لاحقاً
+      imageUrl: "",    // الأدمن يضيف الصورة من لوحة التحكم
     });
-    setReviewForm({ rating: 5, comment: "" });
+    
+    setReviewForm({ rating: 5, comment: "", customerName: user ? profile?.name || "" : "", email: user ? user.email || "" : "" });
     setSubmitted(true);
     setSubmitting(false);
     setTimeout(() => setSubmitted(false), 3000);
@@ -64,7 +89,7 @@ export default function ProductDetail() {
     : null;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#FAF7F2" }}>
+    <div style={{ minHeight: "100vh", background: "#FAF7F2", fontFamily: "Cairo, sans-serif" }} dir="rtl">
       <Navbar />
       <div style={{ maxWidth: "900px", margin: "0 auto", padding: "2rem" }}>
         <button onClick={() => navigate(-1)} style={{ background: "none", border: "none", color: "#C9A96E", cursor: "pointer", fontSize: "1rem", marginBottom: "1rem", fontWeight: "600" }}>← رجوع</button>
@@ -116,61 +141,107 @@ export default function ProductDetail() {
           </div>
         </div>
 
-        {/* Reviews */}
-        <div style={{ background: "#fff", borderRadius: "20px", padding: "2rem", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
-          <h2 style={{ color: "#3D2B1F", marginBottom: "1.5rem", fontSize: "1.5rem" }}>
-            ⭐ التقييمات ({reviews.length})
-          </h2>
-
-          {/* Add Review */}
-          {user ? (
-            <form onSubmit={handleReview} style={{ background: "#FAF7F2", borderRadius: "12px", padding: "1.5rem", marginBottom: "2rem" }}>
-              <h3 style={{ color: "#3D2B1F", marginBottom: "1rem", fontSize: "1rem" }}>أضف تقييمك</h3>
-              <div style={{ display: "flex", gap: "8px", marginBottom: "1rem" }}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button key={star} type="button" onClick={() => setReviewForm({ ...reviewForm, rating: star })} style={{ fontSize: "1.8rem", background: "none", border: "none", cursor: "pointer", opacity: star <= reviewForm.rating ? 1 : 0.3 }}>⭐</button>
+        {/* Reviews Section */}
+        <div style={{ background: "#fff", borderRadius: "20px", padding: "2.5rem", boxShadow: "0 4px 20px rgba(0,0,0,0.04)", border: "1px solid #E8DDD0" }}>
+          
+          {/* عرض التقييمات الحالية فوق الـ Form */}
+          <div style={{ marginBottom: "3rem" }}>
+            <h3 style={{ color: "#3D2B1F", borderBottom: "1px solid #E8DDD0", paddingBottom: "12px", fontSize: "1.3rem", fontWeight: "700", marginBottom: "1.5rem" }}>
+              التقييمات ({reviews.length})
+            </h3>
+            {reviews.length === 0 ? (
+              <p style={{ color: "#777", fontSize: "0.95rem" }}>لا توجد مراجعات حتى الآن.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                {reviews.map((review) => (
+                  <div key={review.id} style={{ borderBottom: "1px solid #FAF8F5", paddingBottom: "1rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                      <div>
+                        <strong style={{ fontSize: "0.95rem", color: "#3D2B1F" }}>{review.userName}</strong>
+                        <span style={{ marginRight: "10px", color: "#C9A96E", fontSize: "1.1rem" }}>{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}</span>
+                      </div>
+                      <span style={{ color: "#8B7355", fontSize: "0.85rem" }}>
+                        {review.createdAt?.toDate?.()?.toLocaleDateString("ar-EG") || ""}
+                      </span>
+                    </div>
+                    <p style={{ margin: "5px 0 0 0", color: "#555", fontSize: "0.9rem", lineHeight: "1.6" }}>{review.comment}</p>
+                  </div>
                 ))}
               </div>
-              <textarea
+            )}
+          </div>
+
+          {/* فورم كتابة مراجعة جديدة متطابق تماماً مع ستايل BoHouse */}
+          <form onSubmit={handleReview} style={{ borderTop: "2px solid #FAF8F5", paddingTop: "2rem" }}>
+            <h3 style={{ color: "#3D2B1F", margin: "0 0 8px 0", fontSize: "1.2rem", fontWeight: "700" }}>
+              كن أول من يكتب مراجعة لـ "{field(product, 'name')}"
+            </h3>
+            <p style={{ color: "#666", fontSize: "0.85rem", marginBottom: "2rem" }}>
+              *الحقول المطلوبة مشار إليها بعلامة * لن يتم نشر عنوان بريدك الإلكتروني.
+            </p>
+
+            {/* النجوم بتصميم تفاعلي جذاب */}
+            <div style={{ marginBottom: "1.5rem" }}>
+              <label style={{ display: "block", fontWeight: "600", marginBottom: "8px", fontSize: "0.9rem", color: "#3D2B1F" }}>*تقييمك</label>
+              <div style={{ display: "flex", gap: "4px" }}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span 
+                    key={star} 
+                    onClick={() => setReviewForm({ ...reviewForm, rating: star })} 
+                    style={{ fontSize: "1.6rem", cursor: "pointer", color: star <= reviewForm.rating ? "#C9A96E" : "#ccc", transition: "color 0.15s" }}
+                  >
+                    {star <= reviewForm.rating ? "★" : "☆"}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* مربع نص المراجعة الكبير */}
+            <div style={{ marginBottom: "1.5rem" }}>
+              <label style={{ display: "block", fontWeight: "600", marginBottom: "8px", fontSize: "0.9rem", color: "#3D2B1F" }}>*مراجعتك</label>
+              <textarea 
+                rows="6"
+                required
                 value={reviewForm.comment}
                 onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
-                placeholder="شاركنا رأيك في المنتج..."
-                required
-                rows={3}
-                style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #E8DDD0", outline: "none", boxSizing: "border-box", resize: "none", fontSize: "0.95rem", marginBottom: "12px" }}
+                style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #E8DDD0", outline: "none", boxSizing: "border-box", resize: "vertical", fontFamily: "Cairo", fontSize: "0.95rem" }}
               />
-              <button type="submit" disabled={submitting} style={{ background: "linear-gradient(135deg, #C9A96E, #b8925a)", color: "#fff", border: "none", borderRadius: "10px", padding: "10px 24px", cursor: "pointer", fontWeight: "700" }}>
-                {submitted ? "✅ تم إرسال تقييمك!" : submitting ? "جاري الإرسال..." : "إرسال التقييم"}
-              </button>
-            </form>
-          ) : (
-            <div style={{ background: "#FAF7F2", borderRadius: "12px", padding: "1.5rem", marginBottom: "2rem", textAlign: "center" }}>
-              <p style={{ color: "#8B7355", margin: "0 0 12px" }}>سجّل دخولك لإضافة تقييم</p>
-              <button onClick={() => navigate("/login")} style={{ background: "linear-gradient(135deg, #C9A96E, #b8925a)", color: "#fff", border: "none", borderRadius: "10px", padding: "10px 24px", cursor: "pointer", fontWeight: "700" }}>تسجيل الدخول</button>
             </div>
-          )}
 
-          {/* Reviews List */}
-          {reviews.length === 0 ? (
-            <p style={{ color: "#8B7355", textAlign: "center", padding: "2rem" }}>لا توجد تقييمات بعد — كن أول من يقيّم!</p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              {reviews.map((review) => (
-                <div key={review.id} style={{ borderBottom: "1px solid #F0E8DF", paddingBottom: "1rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                    <div>
-                      <span style={{ fontWeight: "700", color: "#3D2B1F" }}>{review.userName}</span>
-                      <span style={{ marginRight: "10px", color: "#C9A96E" }}>{"⭐".repeat(review.rating)}</span>
-                    </div>
-                    <span style={{ color: "#8B7355", fontSize: "0.85rem" }}>
-                      {review.createdAt?.toDate?.()?.toLocaleDateString("ar-EG") || ""}
-                    </span>
-                  </div>
-                  <p style={{ color: "#8B7355", margin: 0, lineHeight: "1.6" }}>{review.comment}</p>
-                </div>
-              ))}
+            {/* خانات الاسم والإيميل المزدوجة */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem", marginBottom: "2rem" }}>
+              <div>
+                <label style={{ display: "block", fontWeight: "600", marginBottom: "8px", fontSize: "0.9rem", color: "#3D2B1F" }}>*الاسم</label>
+                <input 
+                  type="text" 
+                  required
+                  value={reviewForm.customerName}
+                  onChange={(e) => setReviewForm({ ...reviewForm, customerName: e.target.value })}
+                  style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #E8DDD0", outline: "none", boxSizing: "border-box", fontSize: "0.95rem" }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontWeight: "600", marginBottom: "8px", fontSize: "0.9rem", color: "#3D2B1F" }}>*البريد الإلكتروني</label>
+                <input 
+                  type="email" 
+                  required
+                  value={reviewForm.email}
+                  onChange={(e) => setReviewForm({ ...reviewForm, email: e.target.value })}
+                  style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #E8DDD0", outline: "none", boxSizing: "border-box", fontSize: "0.95rem" }}
+                />
+              </div>
             </div>
-          )}
+
+            {/* زرار الإرسال الفخم لـ LEMO */}
+            <button 
+              type="submit" 
+              disabled={submitting}
+              style={{ background: "#111", color: "#fff", border: "none", padding: "12px 35px", borderRadius: "8px", cursor: "pointer", fontWeight: "700", fontSize: "0.95rem", transition: "background 0.2s" }}
+            >
+              {submitted ? "✓ تم الإرسال!" : submitting ? "جاري الإرسال..." : "تقديم"}
+            </button>
+          </form>
+
         </div>
       </div>
     </div>
