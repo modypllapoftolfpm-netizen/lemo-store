@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/layout/Navbar";
 import { useLang } from "../context/LangContext";
 import { subscribeToProducts } from "../firebase/products";
-import { subscribeToBanners, getSettings } from "../firebase/settings";
+import { subscribeToBanners, getSettings, subscribeToCategories } from "../firebase/settings";
 import { useCart } from "../context/CartContext";
 
 export default function Home() {
@@ -11,8 +11,17 @@ export default function Home() {
   const { addToCart } = useCart();
   const [products, setProducts] = useState([]);
   const [banners, setBanners] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [settings, setSettings] = useState({});
   const [globalLoading, setGlobalLoading] = useState(true);
+
+  // الفئات الافتراضية كحالة احتياطية لو الفايربيس لسه بيحمل
+  const defaultCats = [
+    { id: "gifts_default", slug: "gifts", nameAr: "هدايا فخمة", icon: "🎁", bg: "#FFF8F0" },
+    { id: "scented_default", slug: "scented", nameAr: "شموع معطرة", icon: "🕯️", bg: "#F0F8FF" },
+    { id: "decorative_default", slug: "decorative", nameAr: "شموع ديكورية", icon: "✨", bg: "#FFF0F8" },
+    { id: "body_default", slug: "body", nameAr: "مرطبات الجسم", icon: "🧴", bg: "#F0FFF8" }
+  ];
 
   useEffect(() => {
     const unsub1 = subscribeToProducts((data) => {
@@ -21,6 +30,15 @@ export default function Home() {
     
     const unsub2 = subscribeToBanners((data) => {
       setBanners(data);
+    });
+
+    const unsub3 = subscribeToCategories((data) => {
+      // دمج الفئات القادمة من قاعدة البيانات لضمان قراءة الصور المرفوعة
+      const merged = defaultCats.map(def => {
+        const found = data.find(c => c.slug === def.slug || c.id === def.id);
+        return found ? { ...def, ...found } : def;
+      });
+      setCategories(merged);
       setGlobalLoading(false);
     });
 
@@ -28,7 +46,7 @@ export default function Home() {
       setSettings(set);
     });
 
-    return () => { unsub1(); unsub2(); };
+    return () => { unsub1(); unsub2(); unsub3(); };
   }, []);
 
   const c = { 
@@ -40,7 +58,6 @@ export default function Home() {
   const bestSellers = products.filter((p) => p.isBestSeller);
   const newArrivals = products.filter((p) => p.isNew);
 
-  // ─── شاشة التحميل الفاخرة المحدثة باللوجو الأصلي للبراند ──────────────────
   if (globalLoading) {
     return (
       <div style={{ 
@@ -48,17 +65,12 @@ export default function Home() {
         display: "flex", flexDirection: "column", alignItems: "center", 
         justifyContent: "center", zIndex: 99999, fontFamily: "Cairo, sans-serif" 
       }}>
-        <div style={{
-          display: "flex", flexDirection: "column", alignItems: "center",
-          animation: "pulse 1.8s infinite ease-in-out"
-        }}>
-          {/* استدعاء اللوجو الفخم الخاص بك مباشرة مع خلفية شفافة وحجم متناسق */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", animation: "pulse 1.8s infinite ease-in-out" }}>
           <img 
             src="https://lemo-store-eg.vercel.app/assets/logo.png" 
-            alt="LEMO LUXE" 
+            alt="LEMO Store" 
             style={{ width: "240px", height: "auto", marginBottom: "15px", filter: "drop-shadow(0 4px 15px rgba(0,0,0,0.04))" }}
             onError={(e) => {
-              // حل احتياطي ذكي لو السيرفر لسه ملقطش مسار الصورة يعرض الشمعة مؤقتا
               e.target.style.display = 'none';
               document.getElementById('fallback-loader').style.display = 'block';
             }}
@@ -66,14 +78,7 @@ export default function Home() {
           <div id="fallback-loader" style={{ display: "none", fontSize: "4rem", marginBottom: "10px" }}>🕯️</div>
           <p style={{ color: "#C9A96E", fontSize: "0.85rem", fontWeight: "600", marginTop: "5px", textTransform: "uppercase", letterSpacing: "1px" }}>Handmade Home Decor & Candles</p>
         </div>
-
-        <style>{`
-          @keyframes pulse {
-            0% { transform: scale(0.97); opacity: 0.8; }
-            50% { transform: scale(1.02); opacity: 1; }
-            100% { transform: scale(0.97); opacity: 0.8; }
-          }
-        `}</style>
+        <style>{`@keyframes pulse { 0% { transform: scale(0.97); opacity: 0.8; } 50% { transform: scale(1.02); opacity: 1; } 100% { transform: scale(0.97); opacity: 0.8; } }`}</style>
       </div>
     );
   }
@@ -88,7 +93,7 @@ export default function Home() {
         <div style={{ position: "relative", height: "520px", overflow: "hidden" }}>
           <img src={mainBanner.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to bottom, rgba(0,0,0,0.15), ${c.d}E6)`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", paddingBottom: "4rem", color: "#fff", textAlign: "center" }}>
-            <h1 style={{ fontSize: "3.5rem", fontWeight: "800", margin: "0 0 1rem", textShadow: "0 2px 12px rgba(0,0,0,0.4)" }}>{mainBanner.titleAr || "🕯️ LEMO LUXE"}</h1>
+            <h1 style={{ fontSize: "3.5rem", fontWeight: "800", margin: "0 0 1rem", textShadow: "0 2px 12px rgba(0,0,0,0.4)" }}>{mainBanner.titleAr || "🕯️ LEMO Store"}</h1>
             <p style={{ fontSize: "1.2rem", opacity: 0.9, marginBottom: "2rem", maxWidth: "500px", textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>{mainBanner.subtitleAr || "شموع فاخرة وهدايا مميزة مصنوعة يدوياً"}</p>
             <Link to="/products" style={{ background: `linear-gradient(135deg, ${c.p}, ${c.p}DD)`, color: "#fff", padding: "14px 40px", borderRadius: "30px", textDecoration: "none", fontWeight: "700", fontSize: "1.1rem", boxShadow: `0 8px 25px ${c.p}66` }}>{t.home.shopNow} ✨</Link>
           </div>
@@ -96,7 +101,7 @@ export default function Home() {
       ) : (
         <div style={{ height: "520px", background: `linear-gradient(135deg, ${c.d} 0%, ${c.p} 100%)`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#fff", textAlign: "center", padding: "2rem" }}>
           <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>🕯️</div>
-          <h1 style={{ fontSize: "3.5rem", fontWeight: "800", margin: "0 0 1rem" }}>LEMO LUXE</h1>
+          <h1 style={{ fontSize: "3.5rem", fontWeight: "800", margin: "0 0 1rem" }}>LEMO Store</h1>
           <p style={{ fontSize: "1.3rem", opacity: 0.85, marginBottom: "2rem" }}>شموع فاخرة وهدايا مميزة لكل مناسبة</p>
           <Link to="/products" style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(10px)", border: "2px solid rgba(255,255,255,0.5)", color: "#fff", padding: "14px 40px", borderRadius: "30px", textDecoration: "none", fontWeight: "700", fontSize: "1.1rem" }}>{t.home.shopNow} ✨</Link>
         </div>
@@ -104,15 +109,40 @@ export default function Home() {
 
       <div style={{ background: `linear-gradient(135deg, ${c.p}, ${c.p}DD)`, padding: "12px", textAlign: "center", color: "#fff", fontSize: "0.95rem", fontWeight: "600" }}>🚚 شحن مجاني على الطلبات فوق 500 ج.م | 🎁 تغليف هدايا مجاني</div>
       
+      {/* ─── قسم عرض الفئات الذكي بالصور الحقيقية ─── */}
       <div style={{ padding: "4rem 2rem", textAlign: "center" }}>
         <p style={{ color: c.p, fontWeight: "700", letterSpacing: "2px", fontSize: "0.85rem", marginBottom: "8px", textTransform: "uppercase" }}>تسوقي حسب</p>
         <h2 style={{ color: c.d, fontSize: "2.2rem", fontWeight: "800", marginBottom: "2.5rem", marginTop: 0 }}>{t.home.exploreCategories}</h2>
-        <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap", maxWidth: "900px", margin: "0 auto" }}>
-          {[{ key: "gifts", icon: "🎁", bg: "#FFF8F0" }, { key: "scented", icon: "🕯️", bg: "#F0F8FF" }, { key: "decorative", icon: "✨", bg: "#FFF0F8" }, { key: "body", icon: "🧴", bg: "#F0FFF8" }].map((cat) => (
-            <Link key={cat.key} to={`/products?category=${cat.key}`} style={{ textDecoration: "none", flex: "1", minWidth: "150px", maxWidth: "200px" }}>
-              <div style={{ background: cat.bg, border: "2px solid #E8DDD0", borderRadius: "20px", padding: "2rem 1rem", cursor: "pointer", transition: "all 0.3s" }} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-5px)"; e.currentTarget.style.boxShadow = `0 10px 30px ${c.p}33`; e.currentTarget.style.borderColor = c.p; }} onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.borderColor = "#E8DDD0"; }}>
-                <div style={{ fontSize: "2.5rem", marginBottom: "10px" }}>{cat.icon}</div>
-                <div style={{ color: c.d, fontWeight: "700", fontSize: "0.95rem" }}>{t.categories[cat.key]}</div>
+        <div style={{ display: "flex", gap: "1.5rem", shortcuts: "center", justifyContent: "center", flexWrap: "wrap", maxWidth: "1000px", margin: "0 auto" }}>
+          {categories.map((cat) => (
+            <Link key={cat.slug} to={`/products?category=${cat.slug}`} style={{ textDecoration: "none", flex: "1", minWidth: "160px", maxWidth: "220px" }}>
+              <div style={{ 
+                background: "#fff", 
+                border: "1px solid #E8DDD0", 
+                borderRadius: "24px", 
+                overflow: "hidden",
+                boxShadow: "0 4px 15px rgba(0,0,0,0.03)",
+                cursor: "pointer", 
+                transition: "all 0.3s ease" 
+              }} 
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-6px)"; e.currentTarget.style.boxShadow = `0 12px 30px ${c.p}25`; }} 
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 15px rgba(0,0,0,0.03)"; }}>
+                
+                {/* عرض غلاف الفئة المرفوع كـ Base64 أو رابط، وإذا لم يوجد يعرض الـ Icon الافتراضي */}
+                <div style={{ height: "140px", background: cat.bg || "#FAF7F2", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", position: "relative" }}>
+                  {cat.imageUrl ? (
+                    <img src={cat.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    <div style={{ fontSize: "3rem" }}>{cat.icon}</div>
+                  )}
+                </div>
+
+                <div style={{ padding: "12px", background: "#fff", borderTop: "1px solid #FAF7F2" }}>
+                  <div style={{ color: c.d, fontWeight: "700", fontSize: "1rem" }}>
+                    {lang === "ar" ? cat.nameAr : cat.nameEn}
+                  </div>
+                </div>
+
               </div>
             </Link>
           ))}
@@ -144,7 +174,7 @@ export default function Home() {
       )}
 
       <div style={{ background: c.d, padding: "4rem 2rem", textAlign: "center" }}>
-        <h2 style={{ color: c.p, fontSize: "2rem", fontWeight: "800", marginBottom: "2.5rem" }}>ليه LEMO LUXE؟</h2>
+        <h2 style={{ color: c.p, fontSize: "2rem", fontWeight: "800", marginBottom: "2.5rem" }}>ليه LEMO Store؟</h2>
         <div style={{ display: "flex", gap: "2rem", justifyContent: "center", flexWrap: "wrap", maxWidth: "900px", margin: "0 auto" }}>
           {[{ icon: "🕯️", title: "جودة فاخرة", desc: "منتجات مصنوعة بعناية من أجود الخامات" }, { icon: "🎁", title: "تغليف مميز", desc: "كل طلب يوصلك في تغليف هدايا أنيق" }, { icon: "🚚", title: "توصيل سريع", desc: "توصيل لكل أنحاء مصر" }, { icon: "💛", title: "ضمان الجودة", desc: "رضاكم أولويتنا دايماً" }].map((item) => (
             <div key={item.title} style={{ flex: "1", minWidth: "180px", maxWidth: "200px" }}>
@@ -157,7 +187,7 @@ export default function Home() {
       </div>
 
       <footer style={{ background: "#2C1810", color: "#E8DDD0", padding: "2rem", textAlign: "center" }}>
-        <p style={{ fontSize: "1.5rem", fontWeight: "800", marginBottom: "8px" }}>🕯️ LEMO LUXE</p>
+        <p style={{ fontSize: "1.5rem", fontWeight: "800", marginBottom: "8px" }}>🕯️ LEMO Store</p>
         <p style={{ opacity: 0.6, fontSize: "0.9rem", margin: 0 }}>© 2026 جميع الحقوق محفوظة — صُنع بـ ❤️ في مصر</p>
       </footer>
     </div>
