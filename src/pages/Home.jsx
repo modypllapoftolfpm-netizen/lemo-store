@@ -50,7 +50,7 @@ export default function Home() {
   const uiText = {
     heroDesc: lang === "ar" ? "اكتشف مجموعتنا المميزة المصنوعة يدوياً من أجود الخامات العطرية الآمنة تماماً على منزلك وعائلتك." : "Discover our premium products, made with top-quality ingredients that are gentle, aromatic, and irritation-free!",
     shopNow: lang === "ar" ? "تسوق الآن" : "Shop Now",
-    shippingBar: lang === "ar" ? "🚚 شحن مجاني على الطلبات فوق 500 ج.م | 🎁 تغليف هدايا مجاني فاخر" : "🚚 Free Shipping on orders over 500 EGP | 🎁 Luxury Gift Wrapping Included",
+    shippingBar: lang === "ar" ? `🚚 شحن مجاني على الطلبات فوق ${settings.freeShippingLimit || 500} ج.م | 🎁 تغليف هدايا مجاني فاخر` : `🚚 Free Shipping on orders over ${settings.freeShippingLimit || 500} EGP | 🎁 Luxury Gift Wrapping Included`,
     catsTitle: lang === "ar" ? "تصفح الأقسام" : "Our Categories",
     catsSub: lang === "ar" ? "تسوق حسب" : "Shop By",
     popularTitle: lang === "ar" ? "المنتجات الأكثر مبيعاً" : "Most Popular Products",
@@ -63,17 +63,18 @@ export default function Home() {
     contactUs: lang === "ar" ? "اتصل بنا" : "Contact Us",
     aboutUs: lang === "ar" ? "من نحن" : "About Us",
     account: lang === "ar" ? "حسابي" : "Account",
-    rights: lang === "ar" ? "© 2026 Lemo Store — جميع الحقوق محفوظة — صُنع بحب في مصر" : "© 2026 Lemo Store — ALL RIGHTS RESERVED — MADE WITH ❤️ IN EGYPT"
+    rights: lang === "ar" ? `© 2026 ${settings.storeNameEn || "Lemo Store"} — جميع الحقوق محفوظة — صُنع بحب في مصر` : `© 2026 ${settings.storeNameEn || "Lemo Store"} — ALL RIGHTS RESERVED — MADE WITH ❤️ IN EGYPT`
   };
 
   if (globalLoading) {
     return (
       <div style={{ position: "fixed", inset: 0, background: "#FAF8F5", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 99999, fontFamily: "Cairo, sans-serif" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", animation: "pulse 1.8s infinite ease-in-out" }}>
-          <img src="https://lemo-store-eg.vercel.app/assets/logo.png" alt="Lemo Store" style={{ width: "220px", height: "auto", marginBottom: "15px" }} />
-          <p style={{ color: "#C9A96E", fontSize: "0.85rem", fontWeight: "600", letterSpacing: "2px" }}>HANDMADE HOME DECOR & CANDLES</p>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div style={{ fontSize: "2.8rem", fontWeight: "800", color: "#3D2B1F", marginBottom: "5px", letterSpacing: "0.5px" }}>
+            {settings.storeNameEn || "Lemo Store"} 🕯️
+          </div>
+          <p style={{ color: "#C9A96E", fontSize: "0.82rem", fontWeight: "700", letterSpacing: "2px", textTransform: "uppercase" }}>HANDMADE HOME DECOR & CANDLES</p>
         </div>
-        <style>{`@keyframes pulse { 0% { transform: scale(0.97); opacity: 0.7; } 50% { transform: scale(1.01); opacity: 1; } 100% { transform: scale(0.97); opacity: 0.7; } }`}</style>
       </div>
     );
   }
@@ -88,7 +89,7 @@ export default function Home() {
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "4rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "4rem", flexWrap: "wrap-reverse" }}>
         <div style={{ flex: "1 1 450px", textAlign: lang === "ar" ? "right" : "left" }}>
           <h1 style={{ fontSize: "3.8rem", fontWeight: "300", lineHeight: "1.1", color: c.d, margin: "0 0 1.5rem 0", textTransform: "uppercase", letterSpacing: "1px" }}>
-            <span style={{ fontWeight: "800", color: "#3D2B1F", display: "block", marginBottom: "0.5rem" }}>Lemo Store</span> 
+            <span style={{ fontWeight: "800", color: "#3D2B1F", display: "block", marginBottom: "0.5rem" }}>{lang === "ar" ? (settings.storeNameAr || "متجر ليمو") : (settings.storeNameEn || "Lemo Store")}</span> 
             {lang === "ar" ? "الشموع الفاخرة والديكور" : "Candles & Wellness"}
           </h1>
           <p style={{ fontSize: "1.1rem", color: "#666", lineHeight: "1.7", marginBottom: "2.5rem", maxWidth: "480px" }}>
@@ -205,10 +206,10 @@ export default function Home() {
         <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", justifyContent: "space-between", gap: "3rem", flexWrap: "wrap", borderBottom: "1px solid #E8DDD0", paddingBottom: "3rem" }}>
           
           <div style={{ flex: "2 1 350px", textAlign: lang === "ar" ? "right" : "left" }}>
-            <h3 style={{ fontSize: "1.8rem", fontWeight: "800", margin: "0 0 1rem 0", letterSpacing: "1px" }}>Lemo Store</h3>
+            <h3 style={{ fontSize: "1.8rem", fontWeight: "800", margin: "0 0 1rem 0", letterSpacing: "1px" }}>{settings.storeNameEn || "Lemo Store"}</h3>
             <p style={{ color: "#666", fontSize: "0.95rem", maxWidth: "320px", lineHeight: "1.6", marginBottom: "1.5rem" }}>{uiText.footerDesc}</p>
             
-            {/* 🌐 أزرار السوشيال ميديا الديناميكية */}
+            {/* أزرار قنوات السوشيال ميديا الحية المتصلة بالإيداعات المباشرة */}
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
               {settings.whatsapp && (
                 <a href={`https://wa.me/${settings.whatsapp}`} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: "#fff", background: "#25D366", padding: "8px 16px", borderRadius: "20px", fontSize: "0.85rem", fontWeight: "700" }}>

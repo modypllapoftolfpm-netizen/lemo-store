@@ -4,7 +4,7 @@ import { getSettings, updateSettings } from "../../firebase/settings";
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState({
-    storeNameAr: "Lemo Store",
+    storeNameAr: "متجر ليمو",
     storeNameEn: "Lemo Store",
     primaryColor: "#C9A96E",
     darkColor: "#111111",
@@ -77,28 +77,28 @@ export default function AdminSettings() {
             </div>
           </div>
 
-          {/* 🌐 قسم وسائل التواصل الاجتماعي الجديد */}
-          <div style={{ background: "#F5F7FA", borderRadius: "16px", padding: "1.5rem", border: "1px solid #E2E8F0", display: "flex", flexDirection: "column", gap: "1.2rem" }}>
-            <h3 style={{ margin: "0 0 4px 0", color: "#1A202C", fontSize: "1.1rem", fontWeight: "700" }}>🌐 روابط ووسائل التواصل</h3>
+          {/* 🌐 بوكس وسائل التواصل الاجتماعي */}
+          <div style={{ background: "#FAF8F5", borderRadius: "16px", padding: "1.5rem", border: "1px solid #E8DDD0", display: "flex", flexDirection: "column", gap: "1.2rem" }}>
+            <h3 style={{ margin: "0 0 4px 0", color: "#3D2B1F", fontSize: "1.1rem", fontWeight: "700" }}>🌐 روابط ووسائل التواصل</h3>
             
             <div>
-              <label style={{ fontSize: "13px", fontWeight: "600", color: "#4A5568" }}>رقم الواتساب (مثال: 2010xxxxxxxx)</label>
-              <input type="text" name="whatsapp" value={settings.whatsapp || ""} onChange={handleChange} placeholder="201012345678" style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #CBD5E0", marginTop: "4px", outline: "none", boxSizing: "border-box" }} />
+              <label style={{ fontSize: "13px", fontWeight: "600", color: "#555" }}>رقم الواتساب (مثال: 2010xxxxxxxx)</label>
+              <input type="text" name="whatsapp" value={settings.whatsapp || ""} onChange={handleChange} placeholder="201012345678" style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #E8DDD0", marginTop: "4px", outline: "none", boxSizing: "border-box" }} />
             </div>
 
             <div>
-              <label style={{ fontSize: "13px", fontWeight: "600", color: "#4A5568" }}>رابط صفحة الفيسبوك (Facebook URL)</label>
-              <input type="url" name="facebook" value={settings.facebook || ""} onChange={handleChange} placeholder="https://facebook.com/..." style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #CBD5E0", marginTop: "4px", outline: "none", boxSBoxSizing: "border-box" }} />
+              <label style={{ fontSize: "13px", fontWeight: "600", color: "#555" }}>رابط صفحة الفيسبوك</label>
+              <input type="url" name="facebook" value={settings.facebook || ""} onChange={handleChange} placeholder="https://facebook.com/..." style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #E8DDD0", marginTop: "4px", outline: "none", boxSizing: "border-box" }} />
             </div>
 
             <div>
-              <label style={{ fontSize: "13px", fontWeight: "600", color: "#4A5568" }}>رابط حساب الإنستجرام (Instagram URL)</label>
-              <input type="url" name="instagram" value={settings.instagram || ""} onChange={handleChange} placeholder="https://instagram.com/..." style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #CBD5E0", marginTop: "4px", outline: "none", boxSizing: "border-box" }} />
+              <label style={{ fontSize: "13px", fontWeight: "600", color: "#555" }}>رابط حساب الإنستجرام</label>
+              <input type="url" name="instagram" value={settings.instagram || ""} onChange={handleChange} placeholder="https://instagram.com/..." style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #E8DDD0", marginTop: "4px", outline: "none", boxSizing: "border-box" }} />
             </div>
           </div>
 
           <div style={{ background: "#FAF8F5", borderRadius: "16px", padding: "1.5rem", border: "1px solid #E8DDD0", display: "flex", flexDirection: "column", gap: "1.2rem" }}>
-            <h3 style={{ margin: "0 0 4px 0", color: "#3D2B1F", fontSize: "1.1rem", fontWeight: "700" }}>🎨 بالتة الألوان الفنية للمتجر</h3>
+            <h3 style={{ margin: "0 0 4px 0", color: "#3D2B1F", fontSize: "1.1rem", fontWeight: "700" }}>🎨 بالتة الألوان الفنية</h3>
             
             <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
               <div style={{ flex: "1 1 180px" }}>
@@ -118,7 +118,7 @@ export default function AdminSettings() {
               </div>
 
               <div style={{ flex: "1 1 180px" }}>
-                <label style={{ fontSize: "13px", fontWeight: "600", color: "#555" }}>خلفية الموقع العامة</label>
+                <label style={{ fontSize: "13px", fontWeight: "600", color: "#555" }}>خلفية الموقع</label>
                 <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
                   <input type="color" name="bgColor" value={settings.bgColor} onChange={handleChange} style={{ width: "45px", height: "42px", border: "1px solid #E8DDD0", borderRadius: "8px", cursor: "pointer", background: "none", padding: 0 }} />
                   <input type="text" name="bgColor" value={settings.bgColor} onChange={handleChange} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid #E8DDD0", outline: "none", fontSize: "14px" }} />
@@ -132,8 +132,8 @@ export default function AdminSettings() {
             <input type="number" name="freeShippingLimit" value={settings.freeShippingLimit} onChange={handleChange} required style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #E8DDD0", marginTop: "6px", outline: "none", boxSizing: "border-box" }} />
           </div>
 
-          <button type="submit" disabled={saving} style={{ width: "100%", padding: "14px", backgroundColor: "#111111", color: "white", border: "none", borderRadius: "12px", fontWeight: "bold", cursor: "pointer", marginTop: "1rem", fontSize: "15px" }}>
-            {saving ? "⏳ جاري الحفظ..." : "💾 حفظ التعديلات"}
+          <button type="submit" disabled={saving} style={{ width: "100%", padding: "14px", backgroundColor: "#111111", color: "white", border: "none", borderRadius: "12px", fontWeight: "bold", cursor: "pointer", marginTop: "1rem", fontSize: "15px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
+            {saving ? "⏳ جاري الحفظ..." : "💾 حفظ التعديلات الفخمة"}
           </button>
 
         </form>
