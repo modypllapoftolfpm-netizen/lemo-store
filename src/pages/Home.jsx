@@ -51,7 +51,7 @@ export default function Home() {
     return (
       <div style={{ position: "fixed", inset: 0, background: "#FAF8F5", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 99999, fontFamily: "Cairo, sans-serif" }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", animation: "pulse 1.8s infinite ease-in-out" }}>
-          <img src="https://lemo-store-eg.vercel.app/assets/logo.png" alt="LEMO Store" style={{ width: "220px", height: "auto", marginBottom: "15px" }} />
+          <img src="https://lemo-store-eg.vercel.app/assets/logo.png" alt="Lemo Store" style={{ width: "220px", height: "auto", marginBottom: "15px" }} />
           <p style={{ color: "#C9A96E", fontSize: "0.85rem", fontWeight: "600", letterSpacing: "2px" }}>HANDMADE HOME DECOR & CANDLES</p>
         </div>
         <style>{`@keyframes pulse { 0% { transform: scale(0.97); opacity: 0.7; } 50% { transform: scale(1.01); opacity: 1; } 100% { transform: scale(0.97); opacity: 0.7; } }`}</style>
@@ -87,7 +87,7 @@ export default function Home() {
             <div style={{ width: "100%", height: "100%", borderRadius: "190px 190px 0 0", overflow: "hidden" }}>
               <img 
                 src={mainBanner?.imageUrl || "https://images.unsplash.com/photo-1603006905003-be475563bc59?q=80&w=1887&auto=format&fit=cover"} 
-                alt="LEMO Premium Arch" 
+                alt="Lemo Premium Arch" 
                 style={{ width: "100%", height: "100%", objectFit: "cover" }} 
               />
             </div>
@@ -107,7 +107,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ─── 3) OUR CATEGORIES قسم الفئات المقوسة الاحترافي ─── */}
+      {/* ─── 3) OUR CATEGORIES قسم الفئات المقوسة ─── */}
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "5rem 2rem", textAlign: "center" }}>
         <h2 style={{ fontSize: "2.5rem", fontWeight: "700", marginBottom: "3.5rem", color: c.d }}>Our Categories</h2>
         <div style={{ display: "flex", gap: "2rem", justifyContent: "center", flexWrap: "wrap" }}>
@@ -132,7 +132,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ─── 4) MOST POPULAR PRODUCTS المنتجات الأكثر طلباً ─── */}
+      {/* ─── 4) MOST POPULAR PRODUCTS ─── */}
       {bestSellers.length > 0 && (
         <div style={{ background: "#fff", padding: "5rem 2rem", borderTop: "1px solid #E8DDD0" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
@@ -147,7 +147,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* ─── 5) FEATURED OFFER SECTION قسم عروض التوفير ─── */}
+      {/* ─── 5) FEATURED OFFER SECTION ─── */}
       {featuredOffer.length > 0 && (
         <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "5rem 2rem" }}>
           <div style={{ display: "flex", gap: "4rem", flexWrap: "wrap" }}>
@@ -174,11 +174,11 @@ export default function Home() {
         </div>
       )}
 
-      {/* ─── 6) FOOTER الفخم المتكامل بالهوية المودرن ─── */}
+      {/* ─── 6) FOOTER ─── */}
       <footer style={{ background: "#FAF8F5", borderTop: "1px solid #E8DDD0", padding: "5rem 2rem 2rem" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", justifyContent: "between", gap: "3rem", flexWrap: "wrap", borderBottom: "1px solid #E8DDD0", paddingBottom: "3rem" }}>
           <div style={{ flex: "2 1 350px" }}>
-            <h3 style={{ fontSize: "1.8rem", fontWeight: "800", margin: "0 0 1rem 0", letterSpacing: "1px" }}>LEMO Store</h3>
+            <h3 style={{ fontSize: "1.8rem", fontWeight: "800", margin: "0 0 1rem 0", letterSpacing: "1px" }}>Lemo Store</h3>
             <p style={{ color: "#666", fontSize: "0.95rem", maxWidth: "320px", lineHeight: "1.6" }}>Luxury Candles & Wellness Essentials. Premium handmade products that elevate your home environment with pure scent and fine aesthetics.</p>
           </div>
           <div style={{ flex: "1 1 150px" }}>
@@ -195,7 +195,7 @@ export default function Home() {
           </div>
         </div>
         <div style={{ textAlign: "center", paddingTop: "2rem", color: "#8B7355", fontSize: "0.85rem", opacity: 0.8 }}>
-          © 2026 LEMO Store — ALL RIGHTS RESERVED — MADE WITH ❤️ IN EGYPT
+          © 2026 Lemo Store — ALL RIGHTS RESERVED — MADE WITH ❤️ IN EGYPT
         </div>
       </footer>
 
