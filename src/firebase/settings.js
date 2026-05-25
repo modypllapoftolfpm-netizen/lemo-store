@@ -23,7 +23,7 @@ export const subscribeToSettings = (callback) => {
   });
 };
 
-// ─── إدارة الفئات المباشرة والمستقرة بنسبة 100% ──────────────────────────────
+// ─── إدارة الفئات المستقرة بنسبة 100% ──────────────────────────────────────────
 export const addCategory = async (data) => {
   return await addDoc(collection(db, "categories"), {
     ...data,

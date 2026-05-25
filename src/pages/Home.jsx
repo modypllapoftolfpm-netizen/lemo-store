@@ -80,7 +80,6 @@ export default function Home() {
         </div>
 
         <div style={{ flex: "1 1 450px", display: "flex", justifyContent: "center", position: "relative" }}>
-          {/* نجوم الديكور الفنية الجانبية */}
           <div style={{ position: "absolute", top: "-20px", right: "20px", fontSize: "2rem", opacity: 0.8 }}>✦</div>
           <div style={{ position: "absolute", bottom: "40px", left: "0px", fontSize: "1.5rem", opacity: 0.5 }}>✦</div>
           
@@ -94,7 +93,6 @@ export default function Home() {
             </div>
           </div>
           
-          {/* عنصر الدائرة الشمسية المودرن في الأسفل */}
           <div style={{ position: "absolute", bottom: "-30px", right: "-20px", width: "120px", height: "120px", opacity: 0.15, background: "repeating-conic-gradient(from 0deg, #000 0deg 10deg, transparent 10deg 20deg)", borderRadius: "50%" }}></div>
         </div>
       </div>
@@ -102,10 +100,10 @@ export default function Home() {
       {/* ─── 2) MOVING MARQUEE الشريط المائل المتحرك ─── */}
       <div style={{ background: "#fff", borderTop: "1px solid #E8DDD0", borderBottom: "1px solid #E8DDD0", padding: "16px 0", overflow: "hidden", whiteSpace: "nowrap", width: "100vw", display: "flex" }}>
         <div style={{ display: "inline-block", animation: "marquee 20s infinite linear", fontSize: "1.1rem", fontWeight: "700", letterSpacing: "4px", textTransform: "uppercase", color: "#3D2B1F" }}>
-          ✦ PACKAGES ✦ OFFERS ✦ BUNDLES ✦ CANDLES ✦ HOME DECOR ✦ MERCHANDISE ✦ BODY ESSENTIALS ✦ SPECIAL GIFTS  
+          ✦ PACKAGES ✦ OFFERS ✦ BUNDLES ✦ CANDLES ✦ HOME DECOR ✦ MERCHANDISE ✦ BODY ESSENTIALS ✦ SPECIAL GIFTS  
         </div>
         <div style={{ display: "inline-block", animation: "marquee 20s infinite linear", fontSize: "1.1rem", fontWeight: "700", letterSpacing: "4px", textTransform: "uppercase", color: "#3D2B1F" }}>
-          ✦ PACKAGES ✦ OFFERS ✦ BUNDLES ✦ CANDLES ✦ HOME DECOR ✦ MERCHANDISE ✦ BODY ESSENTIALS ✦ SPECIAL GIFTS  
+          ✦ PACKAGES ✦ OFFERS ✦ BUNDLES ✦ CANDLES ✦ HOME DECOR ✦ MERCHANDISE ✦ BODY ESSENTIALS ✦ SPECIAL GIFTS  
         </div>
       </div>
 
@@ -117,7 +115,6 @@ export default function Home() {
             <Link key={cat.slug} to={`/products?category=${cat.slug}`} style={{ textDecoration: "none", color: "inherit", flex: "1 1 220px", maxWidth: "260px" }}>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                 
-                {/* كادر القوس الفني المتناسق مع الهوية الجديدة بالملي */}
                 <div style={{ width: "100%", height: "320px", border: "1px solid #111", borderRadius: "150px 150px 0 0", overflow: "hidden", position: "relative", marginBottom: "1rem", transition: "transform 0.3s ease" }} onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.03)"} onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}>
                   {cat.imageUrl ? (
                     <img src={cat.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -179,7 +176,7 @@ export default function Home() {
 
       {/* ─── 6) FOOTER الفخم المتكامل بالهوية المودرن ─── */}
       <footer style={{ background: "#FAF8F5", borderTop: "1px solid #E8DDD0", padding: "5rem 2rem 2rem" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", justifyContent: "between", gap: "3rem", flexWrap: "wrap", pb: "3rem", borderBottom: "1px solid #E8DDD0", paddingBottom: "3rem" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", justifyContent: "between", gap: "3rem", flexWrap: "wrap", borderBottom: "1px solid #E8DDD0", paddingBottom: "3rem" }}>
           <div style={{ flex: "2 1 350px" }}>
             <h3 style={{ fontSize: "1.8rem", fontWeight: "800", margin: "0 0 1rem 0", letterSpacing: "1px" }}>LEMO Store</h3>
             <p style={{ color: "#666", fontSize: "0.95rem", maxWidth: "320px", lineHeight: "1.6" }}>Luxury Candles & Wellness Essentials. Premium handmade products that elevate your home environment with pure scent and fine aesthetics.</p>
@@ -202,7 +199,6 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* كود الأنيميشن المخصص لحركة الـ Marquee بنعومة فائقة */}
       <style>{`
         @keyframes marquee {
           0% { transform: translateX(0%); }
@@ -237,7 +233,7 @@ function ProductCard({ product, field, t, addToCart, c }) {
         <div style={{ padding: "1.2rem 1.2rem 0.5rem 1.2rem" }}>
           <h3 style={{ margin: "0 0 8px 0", color: c.d, fontSize: "1.05rem", fontWeight: "700", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{field(product, "name")}</h3>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ color: c.d,确: true, fontWeight: "800", fontSize: "1.1rem" }}>{finalPrice} ج.م</span>
+            <span style={{ color: c.d, fontWeight: "800", fontSize: "1.1rem" }}>{finalPrice} ج.م</span>
             {hasDiscount && <span style={{ color: "#999", textDecoration: "line-through", fontSize: "0.85rem" }}>{product.price} ج.م</span>}
           </div>
         </div>
