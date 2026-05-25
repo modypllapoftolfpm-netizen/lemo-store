@@ -52,7 +52,6 @@ export default function AdminBanners() {
     return () => { unsubBanners(); unsubCategories(); };
   }, []);
 
-  // دالة عبقرية لتحويل الصورة إلى نص Base64 فورا وبدون سيرفرات خارجية
   const convertToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const fileReader = new FileReader();
@@ -67,19 +66,13 @@ export default function AdminBanners() {
     setCatUploading(true);
     try {
       const cleanSlug = catForm.slug.toLowerCase().replace(/\s+/g, "-");
-      const currentCat = categories.find(c => c.id === catEditId);
       
       let updateData = { 
         nameAr: catForm.nameAr, 
         nameEn: catForm.nameEn, 
         slug: cleanSlug,
-        imageUrl: currentCat?.imageUrl || ""
+        imageUrl: catPreview || "" 
       };
-
-      // لو رفع صورة جديدة حولها لنص Base64 فورا واحفظها داخل الـ database
-      if (catPreview && catPreview.startsWith("data:image")) {
-        updateData.imageUrl = catPreview;
-      }
 
       if (catEditId) {
         await updateCategory(catEditId, updateData);
@@ -228,7 +221,7 @@ export default function AdminBanners() {
 
         {/* ─── 2) لوحة التحكم في خلفيات وصور الموقع ─── */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-          <h2 style={{ color: "#3D2B1F", margin: "0 0 5px 0", fontWeight: "800" }}>实用 صور وتنسيقات الموقع الخلفية</h2>
+          <h2 style={{ color: "#3D2B1F", margin: "0 0 5px 0", fontWeight: "800" }}>🖼️ صور وتنسيقات الموقع الخلفية</h2>
           {SECTIONS.map((section) => {
             const banner = getBanner(section.key);
             const isUploading = uploading[section.key];
