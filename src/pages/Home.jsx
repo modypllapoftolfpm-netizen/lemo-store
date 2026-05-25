@@ -17,7 +17,7 @@ export default function Home() {
   const [settings, setSettings] = useState({});
   const [globalLoading, setGlobalLoading] = useState(true);
   
-  // المصفوفة الديناميكية لآراء العملاء الحقيقيين من الفايربيس
+  // المصفوفة تبدأ فارغة تماماً "على بياض" بانتظار التقييمات الفعليّة الحقيقية
   const [testimonials, setTestimonials] = useState([]);
   
   // التحكم في فتح وإغلاق قائمة التواصل العائمة
@@ -43,7 +43,7 @@ export default function Home() {
     
     getSettings().then((set) => { setSettings(set); });
 
-    // ─── جلب آراء وتقييمات العملاء الحقيقيين ديناميكياً ───
+    // ─── جلب آراء وتقييمات العملاء الحقيقيين من Firestore ───
     async function fetchRealTestimonials() {
       try {
         const qReviews = query(collection(db, "reviews"), orderBy("createdAt", "desc"), limit(6));
@@ -51,16 +51,19 @@ export default function Home() {
         let reviewsList = [];
         querySnap.forEach((doc) => {
           const rData = doc.data();
-          reviewsList.push({
-            name: rData.customerName || "عميل حقيقي",
-            review: rData.comment || rData.review || "",
-            stars: Number(rData.rating) || 5,
-            date: rData.createdAt ? (lang === "ar" ? "تم التقييم مؤخراً" : "Recently") : ""
-          });
+          // التأكد من أن التقييم يحتوي على نص حقيقي ومكتوب
+          if (rData.comment || rData.review) {
+            reviewsList.push({
+              name: rData.customerName || "عميل حقيقي",
+              review: rData.comment || rData.review || "",
+              stars: Number(rData.rating) || 5,
+              date: rData.createdAt ? (lang === "ar" ? "تم التقييم مؤخراً" : "Recently") : ""
+            });
+          }
         });
         setTestimonials(reviewsList);
       } catch (e) {
-        console.error("No reviews found or collection empty yet:", e);
+        console.log("No reviews available yet in cloud databases.");
       }
       setGlobalLoading(false);
     }
@@ -94,7 +97,6 @@ export default function Home() {
     shopSale: lang === "ar" ? "تسوق العروض الحالية" : "Shop Sale Items",
     reviewsTitle: lang === "ar" ? "آراء وتقييمات عملائنا" : "What Our Customers Say",
     reviewsSub: lang === "ar" ? "آراء وتجارب حقيقية" : "Real Customer Experiences",
-    noReviews: lang === "ar" ? "📦 في انتظار أول عميل حقيقي يشاركنا تجيربته الفخمة هنا!" : "📦 Waiting for our first amazing customer to leave a review here!",
     footerDesc: lang === "ar" ? "شموع ديكورية فاخرة ومنتجات عناية طبيعية. منتجات مصنوعة يدوياً بكل حب لترتقي بجمال وأناقة منزلك." : "Luxury Candles & Wellness Essentials. Premium handmade products that elevate your home environment with pure scent and fine aesthetics.",
     helpTitle: lang === "ar" ? "مساعدة" : "Help",
     contactUs: lang === "ar" ? "اتصل بنا" : "Contact Us",
@@ -239,13 +241,13 @@ export default function Home() {
         </div>
       )}
 
-      {/* ─── 6) CUSTOMER REVIEWS SECTION (مربوط حياً بالداتابيز الفعليّة) ─── */}
-      <div style={{ background: "#fff", padding: "5rem 2rem", borderTop: "1px solid #E8DDD0" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
-          <p style={{ color: c.p, fontWeight: "600", letterSpacing: "2px", fontSize: "0.85rem", marginBottom: "8px", textTransform: "uppercase" }}>{uiText.reviewsSub}</p>
-          <h2 style={{ fontSize: "2.5rem", fontWeight: "700", marginBottom: "3.5rem", color: c.d, fontFamily: fTitleFamily }}>{uiText.reviewsTitle}</h2>
-          
-          {testimonials.length > 0 ? (
+      {/* ─── 6) CUSTOMER REVIEWS SECTION (مخفية تلقائياً وعلي بياض تام) ─── */}
+      {testimonials.length > 0 && (
+        <div style={{ background: "#fff", padding: "5rem 2rem", borderTop: "1px solid #E8DDD0" }}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
+            <p style={{ color: c.p, fontWeight: "600", letterSpacing: "2px", fontSize: "0.85rem", marginBottom: "8px", textTransform: "uppercase" }}>{uiText.reviewsSub}</p>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: "700", marginBottom: "3.5rem", color: c.d, fontFamily: fTitleFamily }}>{uiText.reviewsTitle}</h2>
+            
             <div style={{ display: "flex", gap: "2rem", justifyContent: "center", flexWrap: "wrap" }}>
               {testimonials.map((t, idx) => (
                 <div key={idx} style={{ 
@@ -277,14 +279,9 @@ export default function Home() {
                 </div>
               ))}
             </div>
-          ) : (
-            /* البوكس الصافي والرايق اللي هيظهر طول ما قاعدة البيانات خالية وعلي بياض */
-            <div style={{ padding: "3rem", color: "#8B7355", fontSize: "1.1rem", background: "#FAF8F5", borderRadius: "20px", border: "1px solid #E8DDD0", maxWidth: "600px", margin: "0 auto", fontWeight: "300", fontStyle: "italic" }}>
-              {uiText.noReviews}
-            </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ─── 7) FOOTER ─── */}
       <footer style={{ background: "#FAF8F5", borderTop: "1px solid #E8DDD0", padding: "5rem 2rem 2rem" }}>
