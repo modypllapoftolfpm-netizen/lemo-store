@@ -23,6 +23,16 @@ export const subscribeToSettings = (callback) => {
   });
 };
 
+// ─── دالة مساعدة لرفع صور البنرات كـ Base64 متوافقة مع النظام المستقل ──────
+export const uploadBannerImage = async (file) => {
+  return new Promise((resolve, reject) => {
+    const fileReader = new FileReader();
+    fileReader.readAsDataURL(file);
+    fileReader.onload = () => { resolve({ url: fileReader.result, path: "inline_" + Date.now() }); };
+    fileReader.onerror = (error) => { reject(error); };
+  });
+};
+
 // ─── إدارة الفئات المستقرة بنسبة 100% ──────────────────────────────────────────
 export const addCategory = async (data) => {
   return await addDoc(collection(db, "categories"), {
