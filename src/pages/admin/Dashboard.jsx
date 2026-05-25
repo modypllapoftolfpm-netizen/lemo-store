@@ -25,23 +25,25 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchRealDashboardData() {
+    async function fetchAndCleanDashboard() {
       try {
-        // ─── خطوة التنظيف التلقائي للطلبات الوهمية القديمة (0 ج.م) ───
-        const checkOrdersSnap = await getDocs(collection(db, "orders"));
-        for (const orderDoc of checkOrdersSnap.docs) {
+        // 1) تنظيف وحذف الطلبات الوهمية (0 ج.م) من جذور قاعدة البيانات فوراً
+        const allOrdersSnap = await getDocs(collection(db, "orders"));
+        for (const orderDoc of allOrdersSnap.docs) {
           const orderData = orderDoc.data();
-          // لو الطلب إيراداته 0 ج.م أو من أسماء التجارب المسجلة، يطير فوراً على نظافة
-          if (Number(orderData.totalPrice) === 0 || orderDoc.id === "TPs5Bzki" || orderDoc.id === "98rbJIlf" || orderDoc.id === "RSXNQvRV") {
+          const price = Number(orderData.totalPrice) || 0;
+          
+          // شرط الإبادة الفورية لأي أوردر تجريبي قيمته صفر أو يحمل المعرفات القديمة
+          if (price === 0 || orderDoc.id === "TPs5Bzki" || orderDoc.id === "98rbJIlf" || orderDoc.id === "RSXNQvRV") {
             await deleteDoc(doc(db, "orders", orderDoc.id));
           }
         }
 
-        // 1) جلب المنتجات الحقيقية
+        // 2) إعادة جلب المنتجات الحقيقية المتبقية بعد الحذف
         const prodSnap = await getDocs(collection(db, "products"));
         const productsCount = prodSnap.size;
 
-        // 2) جلب الطلبات الحقيقية المتبقية بعد التنظيف
+        // 3) جلب الطلبات الحقيقية المتبقية
         const orderQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"));
         const orderSnap = await getDocs(orderQuery);
         
@@ -53,7 +55,6 @@ export default function AdminDashboard() {
         const monthsNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
         const monthlyEarningsMap = {};
 
-        // تهيئة الـ 5 أشهر الأخيرة بقيم صفرية لضمان ثبات الرسم البياني
         const currentMonth = new Date().getMonth();
         for (let i = 4; i >= 0; i--) {
           const mIndex = (currentMonth - i + 12) % 12;
@@ -102,12 +103,12 @@ export default function AdminDashboard() {
         setChartData(formattedChartData);
 
       } catch (e) {
-        console.error("Error calculations stats flow:", e);
+        console.error("Error cleaning and sync dashboard nodes:", e);
       }
       setLoading(false);
     }
     
-    fetchRealDashboardData();
+    fetchAndCleanDashboard();
   }, []);
 
   if (loading) {
@@ -115,7 +116,7 @@ export default function AdminDashboard() {
       <div style={{ minHeight: "100vh", background: "#FAF8F5" }} dir="rtl">
         <Navbar />
         <div style={{ padding: "10rem 2rem", color: "#8B7355", textAlign: "center", fontSize: "1.2rem", fontWeight: "600" }}>
-          ⏳ جاري تنظيف الطلبات الوهمية وتحديث الإحصائيات الحقيقية...
+          ⏳ جاري إبادة الطلبات الوهمية وتحديث لوحة التحكم على بياض...
         </div>
       </div>
     );
@@ -172,7 +173,7 @@ export default function AdminDashboard() {
           </Link>
         </div>
 
-        {/* الرسم البياني للأرباح الحقيقية */}
+        {/* الرسم البياني للأرباح */}
         <div style={{ background: "#fff", borderRadius: "24px", padding: "2rem", boxShadow: "0 4px 25px rgba(0,0,0,0.03)", border: "1px solid #E8DDD0", marginBottom: "2.5rem", minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.5rem" }}>
             <span style={{ fontSize: "1.3rem" }}>📈</span>
@@ -198,7 +199,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* جدول آخر الطلبات */}
+        {/* جدول آخر الطلبات المنظف تماماً */}
         <div style={{ background: "#fff", borderRadius: "24px", padding: "2rem", boxShadow: "0 4px 25px rgba(0,0,0,0.03)", border: "1px solid #E8DDD0" }}>
           <h3 style={{ color: "#3D2B1F", marginTop: 0, marginBottom: "1.5rem", fontSize: "1.2rem", fontWeight: "700" }}>آخر الطلبات المسجلة</h3>
           <div style={{ overflowX: "auto" }}>
@@ -236,7 +237,9 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             ) : (
-              <div style={{ padding: "2rem", textAlign: "center", color: "#8B7355" }}>📦 لا توجد طلبات مسجلة في قاعدة البيانات حتى الآن. اللوحة على نظافة وبانتظار أول أوردر فخم!</div>
+              <div style={{ padding: "3rem 2rem", textAlign: "center", color: "#8B7355", fontSize: "1.05rem", fontWeight: "300", fontStyle: "italic" }}>
+                📦 تم تنظيف كافة الطلبات الوهمية السابقة بنجاح. لوحة التحكم الحين على بياض تام ونظيفة 100% بانتظار أول طلب حقيقي!
+              </div>
             )}
           </div>
         </div>
