@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../../components/layout/Navbar";
-import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { 
   ResponsiveContainer, 
@@ -27,11 +27,11 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function fetchRealDashboardData() {
       try {
-        // 1) جلب المنتجات الحقيقية وحساب عددها
+        // 1) جلب المنتجات الحقيقية
         const prodSnap = await getDocs(collection(db, "products"));
         const productsCount = prodSnap.size;
 
-        // 2) جلب الطلبات الحقيقية مرتبة تنازلياً
+        // 2) جلب الطلبات الحقيقية مرتبة
         const orderQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"));
         const orderSnap = await getDocs(orderQuery);
         
@@ -40,11 +40,10 @@ export default function AdminDashboard() {
         let pending = 0;
         let ordersList = [];
 
-        // هيكل الشهور الذكي لحساب الرسم البياني ديناميكياً من الواقع
         const monthsNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
         const monthlyEarningsMap = {};
 
-        // تهيئة الشهور الـ 5 الأخيرة افتراضياً بقيمة 0 لضمان شكل الرسم البياني حتى لو الداتا جديدة
+        // تهيئة الـ 5 أشهر الأخيرة بقيم صفرية لضمان ثبات الرسم البياني دائمًا
         const currentMonth = new Date().getMonth();
         for (let i = 4; i >= 0; i--) {
           const mIndex = (currentMonth - i + 12) % 12;
@@ -56,22 +55,17 @@ export default function AdminDashboard() {
           const totalPrice = Number(data.totalPrice) || 0;
           const status = data.status || "pending";
 
-          // إضافة الطلب لقائمة آخر الطلبات
           ordersList.push({
-            id: doc.id.slice(0, 8) + "#", // عرض أول 8 رموز بشكل جمالي كالمعتاد
+            id: doc.id.slice(0, 8) + "#",
             customer: data.customerName || data.customer?.name || "عميل LEMO",
             price: totalPrice,
             status: status
           });
 
-          // حساب الطلبات المعلقة والإيرادات الحقيقية للطلبات المكتملة
-          if (status === "pending") {
-            pending++;
-          }
+          if (status === "pending") pending++;
           if (status === "completed") {
             earnings += totalPrice;
 
-            // توزيع الأرباح الحقيقية على الشهور ديناميكياً حسب تاريخ الطلب المكتمل
             if (data.createdAt) {
               const orderDate = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
               const monthName = monthsNames[orderDate.getMonth()];
@@ -82,7 +76,6 @@ export default function AdminDashboard() {
           }
         });
 
-        // تحويل خريطة الشهور الحقيقية إلى مصفوفة يقبلها الرسم البياني (Recharts)
         const formattedChartData = Object.keys(monthlyEarningsMap).map(month => ({
           name: month,
           sales: monthlyEarningsMap[month]
@@ -95,11 +88,11 @@ export default function AdminDashboard() {
           pendingOrders: pending
         });
 
-        setLastOrders(ordersList.slice(0, 5)); // جلب آخر 5 طلبات حقيقية فقط للجدول
+        setLastOrders(ordersList.slice(0, 5));
         setChartData(formattedChartData);
 
       } catch (e) {
-        console.error("Error calculating dashboard live matrix", e);
+        console.error("Error calculations stats flow:", e);
       }
       setLoading(false);
     }
@@ -129,36 +122,31 @@ export default function AdminDashboard() {
           <h1 style={{ color: "#111", margin: 0, fontSize: "1.8rem", fontWeight: "800" }}>لوحة التحكم الحية</h1>
         </div>
 
-        {/* ─── 1) كروت الإحصائيات الأربعة الحقيقية 100% ─── */}
+        {/* ─── كروت الإحصائيات الأربعة ─── */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.5rem", marginBottom: "2.5rem" }}>
-          
           <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", textAlign: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.02)", border: "1px solid #E8DDD0" }}>
             <div style={{ fontSize: "2rem", marginBottom: "8px" }}>📦</div>
             <div style={{ color: "#8B7355", fontSize: "0.9rem", fontWeight: "600" }}>إجمالي المنتجات</div>
             <div style={{ fontSize: "2rem", fontWeight: "800", color: "#3D2B1F", marginTop: "4px" }}>{stats.totalProducts}</div>
           </div>
-
           <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", textAlign: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.02)", border: "1px solid #E8DDD0" }}>
             <div style={{ fontSize: "2rem", marginBottom: "8px" }}>📋</div>
             <div style={{ color: "#8B7355", fontSize: "0.9rem", fontWeight: "600" }}>إجمالي الطلبات</div>
             <div style={{ fontSize: "2rem", fontWeight: "800", color: "#3D2B1F", marginTop: "4px" }}>{stats.totalOrders}</div>
           </div>
-
           <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", textAlign: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.02)", border: "1px solid #E8DDD0" }}>
             <div style={{ fontSize: "2rem", marginBottom: "8px" }}>💰</div>
             <div style={{ color: "#8B7355", fontSize: "0.9rem", fontWeight: "600" }}>إجمالي الإيرادات (المكتملة)</div>
             <div style={{ fontSize: "2rem", fontWeight: "800", color: "#3D2B1F", marginTop: "4px" }}>{stats.totalEarnings} ج.م</div>
           </div>
-
           <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", textAlign: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.02)", border: "1px solid #E8DDD0" }}>
             <div style={{ fontSize: "2rem", marginBottom: "8px" }}>⏳</div>
             <div style={{ color: "#8B7355", fontSize: "0.9rem", fontWeight: "600" }}>طلبات معلقة بحاجة لشحن</div>
             <div style={{ fontSize: "2rem", fontWeight: "800", color: "#C9A96E", marginTop: "4px" }}>{stats.pendingOrders}</div>
           </div>
-
         </div>
 
-        {/* ─── 2) أزرار التنقل السريع ─── */}
+        {/* ─── أزرار التنقل السريع ─── */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.5rem", marginBottom: "2.5rem" }}>
           <Link to="/admin/products" style={{ textDecoration: "none", background: "#3D2B1F", color: "#fff", padding: "1.5rem", borderRadius: "16px", textAlign: "center", fontWeight: "700", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
             <span style={{ fontSize: "1.8rem" }}>📦</span> إدارة المنتجات
@@ -174,15 +162,16 @@ export default function AdminDashboard() {
           </Link>
         </div>
 
-        {/* ─── 3) الرسم البياني الحقيقي المتصل بالمبيعات الفعليّة ─── */}
-        <div style={{ background: "#fff", borderRadius: "24px", padding: "2rem", boxShadow: "0 4px 25px rgba(0,0,0,0.03)", border: "1px solid #E8DDD0", marginBottom: "2.5rem" }}>
+        {/* ─── 3) بوكس الرسم البياني المعدل والمحمي بنسبة 100% ─── */}
+        <div style={{ background: "#fff", borderRadius: "24px", padding: "2rem", boxShadow: "0 4px 25px rgba(0,0,0,0.03)", border: "1px solid #E8DDD0", marginBottom: "2.5rem", minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.5rem" }}>
             <span style={{ fontSize: "1.3rem" }}>📈</span>
             <h3 style={{ color: "#3D2B1F", margin: 0, fontSize: "1.2rem", fontWeight: "700" }}>تحليلات المبيعات والأرباح الحقيقية</h3>
           </div>
           
-          <div style={{ width: "100%", height: 300, direction: "ltr" }}>
-            <ResponsiveContainer width="100%" height="100%">
+          {/* هنا قمنا بتثبيت الارتفاع وإلغاء تضارب الـ ResponsiveContainer بالكامل */}
+          <div style={{ width: "100%", height: "300px", minHeight: "300px", direction: "ltr", position: "relative" }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
@@ -200,7 +189,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* ─── 4) جدول آخر الطلبات من قاعدة البيانات الحية ─── */}
+        {/* ─── جدول آخر الطلبات حقيقي 100% ─── */}
         <div style={{ background: "#fff", borderRadius: "24px", padding: "2rem", boxShadow: "0 4px 25px rgba(0,0,0,0.03)", border: "1px solid #E8DDD0" }}>
           <h3 style={{ color: "#3D2B1F", marginTop: 0, marginBottom: "1.5rem", fontSize: "1.2rem", fontWeight: "700" }}>آخر الطلبات المسجلة</h3>
           <div style={{ overflowX: "auto" }}>
