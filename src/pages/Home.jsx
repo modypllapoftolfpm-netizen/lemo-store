@@ -14,6 +14,9 @@ export default function Home() {
   const [categories, setCategories] = useState([]);
   const [settings, setSettings] = useState({});
   const [globalLoading, setGlobalLoading] = useState(true);
+  
+  // حالة التحكم في فتح وإغلاق قائمة التواصل العائمة
+  const [showContactMenu, setShowContactMenu] = useState(false);
 
   const defaultCats = [
     { id: "gifts_default", slug: "gifts", nameAr: "هدايا فخمة", nameEn: "Luxury Gifts", icon: "🎁" },
@@ -65,6 +68,7 @@ export default function Home() {
     contactUs: lang === "ar" ? "اتصل بنا" : "Contact Us",
     aboutUs: lang === "ar" ? "من نحن" : "About Us",
     account: lang === "ar" ? "حسابي" : "Account",
+    floatingBtn: lang === "ar" ? "💬 تواصل معنا" : "💬 Contact Us",
     rights: lang === "ar" ? `© 2026 Lemo Store — جميع الحقوق محفوظة — صُنع بحب في مصر` : `© 2026 Lemo Store — ALL RIGHTS RESERVED — MADE WITH ❤️ IN EGYPT`
   };
 
@@ -203,31 +207,13 @@ export default function Home() {
         </div>
       )}
 
-      {/* ─── 6) FOOTER ─── */}
+      {/* ─── 6) FOOTER (تم تصفية أزرار السوشيال ميديا منه ونقلها للزر العائم) ─── */}
       <footer style={{ background: "#FAF8F5", borderTop: "1px solid #E8DDD0", padding: "5rem 2rem 2rem" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", justifyContent: "space-between", gap: "3rem", flexWrap: "wrap", borderBottom: "1px solid #E8DDD0", paddingBottom: "3rem" }}>
           
           <div style={{ flex: "2 1 350px", textAlign: lang === "ar" ? "right" : "left" }}>
             <h3 style={{ fontSize: "1.8rem", fontWeight: "800", margin: "0 0 1rem 0", fontFamily: "'Playfair Display', serif" }}>Lemo Store</h3>
             <p style={{ color: "#666", fontSize: "0.95rem", maxWidth: "320px", lineHeight: "1.7", marginBottom: "1.5rem", fontWeight: "300" }}>{uiText.footerDesc}</p>
-            
-            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-              {settings.whatsapp && (
-                <a href={`https://wa.me/${settings.whatsapp}`} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: "#fff", background: "#25D366", padding: "8px 16px", borderRadius: "20px", fontSize: "0.85rem", fontWeight: "600" }}>
-                  WhatsApp
-                </a>
-              )}
-              {settings.facebook && (
-                <a href={settings.facebook} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: "#fff", background: "#1877F2", padding: "8px 16px", borderRadius: "20px", fontSize: "0.85rem", fontWeight: "600" }}>
-                  Facebook
-                </a>
-              )}
-              {settings.instagram && (
-                <a href={settings.instagram} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: "#fff", background: "#E1306C", padding: "8px 16px", borderRadius: "20px", fontSize: "0.85rem", fontWeight: "600" }}>
-                  Instagram
-                </a>
-              )}
-            </div>
           </div>
 
           <div style={{ flex: "1 1 150px", textAlign: lang === "ar" ? "right" : "left" }}>
@@ -253,6 +239,66 @@ export default function Home() {
         </div>
       </footer>
 
+      {/* ─── 7) ونظام رادارات التواصل العائم المودرن (Floating Multi-Channel Widget) ─── */}
+      <div style={{ position: "fixed", bottom: "30px", left: lang === "ar" ? "30px" : "auto", right: lang === "ar" ? "auto" : "30px", zIndex: 99999 }}>
+        
+        {/* قائمة الروابط المنبثقة لأعلى بسلاسة */}
+        {showContactMenu && (
+          <div style={{ 
+            backgroundColor: "#fff", 
+            border: "1px solid #E8DDD0", 
+            borderRadius: "20px", 
+            padding: "14px", 
+            marginBottom: "15px", 
+            boxShadow: "0 10px 30px rgba(0,0,0,0.08)", 
+            display: "flex", 
+            flexDirection: "column", 
+            gap: "10px",
+            animation: "slideUp 0.3s ease-out"
+          }}>
+            {settings.whatsapp && (
+              <a href={`https://wa.me/${settings.whatsapp}`} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "#111", fontSize: "0.9rem", fontWeight: "600", padding: "8px 16px", borderRadius: "12px", background: "#F4FFF7", border: "1px solid #C2F0C2" }}>
+                <span style={{ fontSize: "1.2rem" }}>💚</span> WhatsApp
+              </a>
+            )}
+            {settings.instagram && (
+              <a href={settings.instagram} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "#111", fontSize: "0.9rem", fontWeight: "600", padding: "8px 16px", borderRadius: "12px", background: "#FFF0F5", border: "1px solid #FFCCD5" }}>
+                <span style={{ fontSize: "1.2rem" }}>💖</span> Instagram
+              </a>
+            )}
+            {settings.facebook && (
+              <a href={settings.facebook} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "#111", fontSize: "0.9rem", fontWeight: "600", padding: "8px 16px", borderRadius: "12px", background: "#F0F5FF", border: "1px solid #CCDFFF" }}>
+                <span style={{ fontSize: "1.2rem" }}>💙</span> Facebook
+              </a>
+            )}
+          </div>
+        )}
+
+        {/* زر التشغيل العائم الرئيسي الثابت */}
+        <button 
+          onClick={() => setShowContactMenu(!showContactMenu)} 
+          style={{ 
+            background: c.d, 
+            color: "#fff", 
+            border: `1px solid ${c.p}`, 
+            borderRadius: "30px", 
+            padding: "12px 24px", 
+            fontSize: "0.9rem", 
+            fontWeight: "700", 
+            cursor: "pointer", 
+            boxShadow: "0 6px 20px rgba(0,0,0,0.15)", 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "8px",
+            transition: "all 0.3s"
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.04)"}
+          onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+        >
+          {showContactMenu ? "✕" : uiText.floatingBtn}
+        </button>
+      </div>
+
       <style>{`
         @keyframes marquee {
           0% { transform: translateX(0%); }
@@ -261,6 +307,10 @@ export default function Home() {
         @keyframes blink {
           0%, 100% { opacity: 0.2; transform: scale(0.8); }
           50% { opacity: 1; transform: scale(1.1); }
+        }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(15px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>

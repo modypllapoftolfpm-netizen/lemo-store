@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../../components/layout/Navbar";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, deleteDoc, doc } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { 
   ResponsiveContainer, 
@@ -27,11 +27,21 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function fetchRealDashboardData() {
       try {
+        // ─── خطوة التنظيف التلقائي للطلبات الوهمية القديمة (0 ج.م) ───
+        const checkOrdersSnap = await getDocs(collection(db, "orders"));
+        for (const orderDoc of checkOrdersSnap.docs) {
+          const orderData = orderDoc.data();
+          // لو الطلب إيراداته 0 ج.م أو من أسماء التجارب المسجلة، يطير فوراً على نظافة
+          if (Number(orderData.totalPrice) === 0 || orderDoc.id === "TPs5Bzki" || orderDoc.id === "98rbJIlf" || orderDoc.id === "RSXNQvRV") {
+            await deleteDoc(doc(db, "orders", orderDoc.id));
+          }
+        }
+
         // 1) جلب المنتجات الحقيقية
         const prodSnap = await getDocs(collection(db, "products"));
         const productsCount = prodSnap.size;
 
-        // 2) جلب الطلبات الحقيقية مرتبة
+        // 2) جلب الطلبات الحقيقية المتبقية بعد التنظيف
         const orderQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"));
         const orderSnap = await getDocs(orderQuery);
         
@@ -43,7 +53,7 @@ export default function AdminDashboard() {
         const monthsNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
         const monthlyEarningsMap = {};
 
-        // تهيئة الـ 5 أشهر الأخيرة بقيم صفرية لضمان ثبات الرسم البياني دائمًا
+        // تهيئة الـ 5 أشهر الأخيرة بقيم صفرية لضمان ثبات الرسم البياني
         const currentMonth = new Date().getMonth();
         for (let i = 4; i >= 0; i--) {
           const mIndex = (currentMonth - i + 12) % 12;
@@ -105,7 +115,7 @@ export default function AdminDashboard() {
       <div style={{ minHeight: "100vh", background: "#FAF8F5" }} dir="rtl">
         <Navbar />
         <div style={{ padding: "10rem 2rem", color: "#8B7355", textAlign: "center", fontSize: "1.2rem", fontWeight: "600" }}>
-          ⏳ جاري فحص قاعدة البيانات وحساب المبيعات والطلبات الحقيقية...
+          ⏳ جاري تنظيف الطلبات الوهمية وتحديث الإحصائيات الحقيقية...
         </div>
       </div>
     );
@@ -122,7 +132,7 @@ export default function AdminDashboard() {
           <h1 style={{ color: "#111", margin: 0, fontSize: "1.8rem", fontWeight: "800" }}>لوحة التحكم الحية</h1>
         </div>
 
-        {/* ─── كروت الإحصائيات الأربعة ─── */}
+        {/* كروت الإحصائيات */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.5rem", marginBottom: "2.5rem" }}>
           <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", textAlign: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.02)", border: "1px solid #E8DDD0" }}>
             <div style={{ fontSize: "2rem", marginBottom: "8px" }}>📦</div>
@@ -146,7 +156,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* ─── أزرار التنقل السريع ─── */}
+        {/* أزرار التنقل */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.5rem", marginBottom: "2.5rem" }}>
           <Link to="/admin/products" style={{ textDecoration: "none", background: "#3D2B1F", color: "#fff", padding: "1.5rem", borderRadius: "16px", textAlign: "center", fontWeight: "700", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
             <span style={{ fontSize: "1.8rem" }}>📦</span> إدارة المنتجات
@@ -162,14 +172,13 @@ export default function AdminDashboard() {
           </Link>
         </div>
 
-        {/* ─── 3) بوكس الرسم البياني المعدل والمحمي بنسبة 100% ─── */}
+        {/* الرسم البياني للأرباح الحقيقية */}
         <div style={{ background: "#fff", borderRadius: "24px", padding: "2rem", boxShadow: "0 4px 25px rgba(0,0,0,0.03)", border: "1px solid #E8DDD0", marginBottom: "2.5rem", minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.5rem" }}>
             <span style={{ fontSize: "1.3rem" }}>📈</span>
             <h3 style={{ color: "#3D2B1F", margin: 0, fontSize: "1.2rem", fontWeight: "700" }}>تحليلات المبيعات والأرباح الحقيقية</h3>
           </div>
           
-          {/* هنا قمنا بتثبيت الارتفاع وإلغاء تضارب الـ ResponsiveContainer بالكامل */}
           <div style={{ width: "100%", height: "300px", minHeight: "300px", direction: "ltr", position: "relative" }}>
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -189,7 +198,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* ─── جدول آخر الطلبات حقيقي 100% ─── */}
+        {/* جدول آخر الطلبات */}
         <div style={{ background: "#fff", borderRadius: "24px", padding: "2rem", boxShadow: "0 4px 25px rgba(0,0,0,0.03)", border: "1px solid #E8DDD0" }}>
           <h3 style={{ color: "#3D2B1F", marginTop: 0, marginBottom: "1.5rem", fontSize: "1.2rem", fontWeight: "700" }}>آخر الطلبات المسجلة</h3>
           <div style={{ overflowX: "auto" }}>
@@ -227,7 +236,7 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             ) : (
-              <div style={{ padding: "2rem", textAlign: "center", color: "#8B7355" }}>📦 لا توجد طلبات مسجلة في قاعدة البيانات حتى الآن.</div>
+              <div style={{ padding: "2rem", textAlign: "center", color: "#8B7355" }}>📦 لا توجد طلبات مسجلة في قاعدة البيانات حتى الآن. اللوحة على نظافة وبانتظار أول أوردر فخم!</div>
             )}
           </div>
         </div>
