@@ -5,6 +5,8 @@ import { useLang } from "../context/LangContext";
 import { subscribeToProducts } from "../firebase/products";
 import { subscribeToBanners, getSettings, subscribeToCategories } from "../firebase/settings";
 import { useCart } from "../context/CartContext";
+import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
+import { db } from "../../firebase/config";
 
 export default function Home() {
   const { t, field, lang } = useLang();
@@ -15,30 +17,11 @@ export default function Home() {
   const [settings, setSettings] = useState({});
   const [globalLoading, setGlobalLoading] = useState(true);
   
+  // المصفوفة الديناميكية لآراء العملاء الحقيقيين من الفايربيس
+  const [testimonials, setTestimonials] = useState([]);
+  
   // التحكم في فتح وإغلاق قائمة التواصل العائمة
   const [showContactMenu, setShowContactMenu] = useState(false);
-
-  // داتا تقييمات العملاء الحقيقية والفخمة المتناسقة مع الـ Vibes بتاعة البراند
-  const testimonials = [
-    {
-      name: lang === "ar" ? "أحمد مصطفى" : "Ahmed Mostafa",
-      review: lang === "ar" ? "الشموع الديكورية فخمة جداً وريحتها بتملى المكان حتى من غير ما تتولع! التغليف لوحده قصة تانية ينفع كهدية قيمة جداً." : "The decorative candles are incredibly luxurious! The scent fills the room instantly. The packaging is premium and perfect for gifting.",
-      stars: 5,
-      date: lang === "ar" ? "منذ أسبوع" : "1 week ago"
-    },
-    {
-      name: lang === "ar" ? "سارة حسن" : "Sara Hassan",
-      review: lang === "ar" ? "جربت مرطبات الجسم وزبدة الشيا، ناعمة جداً على البشرة ومستحيل تعمل أي حرقان أو حساسية. بجد خامات نضيفة جداً وتستاهل كل مليم." : "Tried the body essentials and shea butter—so gentle on the skin with absolutely no irritation. High-quality ingredients that are worth every penny!",
-      stars: 5,
-      date: lang === "ar" ? "منذ 4 أيام" : "4 days ago"
-    },
-    {
-      name: lang === "ar" ? "مريم علي" : "Mariam Ali",
-      review: lang === "ar" ? "طلبت بوكس الهدايا الفخم وطلع أحلى من الصور بكتير، التفاصيل والاهتمام بالقطع والروائح يجنن. هعتمد المتجر دايماً لهدايا أصحابي." : "Ordered the luxury gift box and it's even more beautiful than the pictures. The attention to detail is unmatched. My go-to store for gifts now.",
-      stars: 5,
-      date: lang === "ar" ? "منذ يومين" : "2 days ago"
-    }
-  ];
 
   const defaultCats = [
     { id: "gifts_default", slug: "gifts", nameAr: "هدايا فخمة", nameEn: "Luxury Gifts", icon: "🎁" },
@@ -56,12 +39,36 @@ export default function Home() {
         return found ? { ...def, ...found } : def;
       });
       setCategories(merged);
-      setGlobalLoading(false);
     });
+    
     getSettings().then((set) => { setSettings(set); });
 
+    // ─── جلب آراء وتقييمات العملاء الحقيقيين ديناميكياً ───
+    async function fetchRealTestimonials() {
+      try {
+        const qReviews = query(collection(db, "reviews"), orderBy("createdAt", "desc"), limit(6));
+        const querySnap = await getDocs(qReviews);
+        let reviewsList = [];
+        querySnap.forEach((doc) => {
+          const rData = doc.data();
+          reviewsList.push({
+            name: rData.customerName || "عميل حقيقي",
+            review: rData.comment || rData.review || "",
+            stars: Number(rData.rating) || 5,
+            date: rData.createdAt ? (lang === "ar" ? "تم التقييم مؤخراً" : "Recently") : ""
+          });
+        });
+        setTestimonials(reviewsList);
+      } catch (e) {
+        console.error("No reviews found or collection empty yet:", e);
+      }
+      setGlobalLoading(false);
+    }
+
+    fetchRealTestimonials();
+
     return () => { unsub1(); unsub2(); unsub3(); };
-  }, []);
+  }, [lang]);
 
   const c = { 
     p: settings.primaryColor || "#C9A96E", 
@@ -85,8 +92,9 @@ export default function Home() {
     featuredTitle: lang === "ar" ? "عروض حصرية وتوفيرية لك" : "Featured Offer For You",
     featuredDesc: lang === "ar" ? "استفد من خصوماتنا الحصرية على باقات الشموع الديكورية الفاخرة ومنتجات العناية الطبيعية قبل نفاد الكمية." : "Take advantage of our exclusive discounts on premium candle bundles and organic skincare products before the quantity runs out.",
     shopSale: lang === "ar" ? "تسوق العروض الحالية" : "Shop Sale Items",
-    reviewsTitle: lang === "ar" ? "ماذا يقول عملؤنا؟" : "What Our Customers Say",
-    reviewsSub: lang === "ar" ? "آراء وتجارب حقيقية" : "Real Experiences",
+    reviewsTitle: lang === "ar" ? "آراء وتقييمات عملائنا" : "What Our Customers Say",
+    reviewsSub: lang === "ar" ? "آراء وتجارب حقيقية" : "Real Customer Experiences",
+    noReviews: lang === "ar" ? "📦 في انتظار أول عميل حقيقي يشاركنا تجيربته الفخمة هنا!" : "📦 Waiting for our first amazing customer to leave a review here!",
     footerDesc: lang === "ar" ? "شموع ديكورية فاخرة ومنتجات عناية طبيعية. منتجات مصنوعة يدوياً بكل حب لترتقي بجمال وأناقة منزلك." : "Luxury Candles & Wellness Essentials. Premium handmade products that elevate your home environment with pure scent and fine aesthetics.",
     helpTitle: lang === "ar" ? "مساعدة" : "Help",
     contactUs: lang === "ar" ? "اتصل بنا" : "Contact Us",
@@ -231,44 +239,50 @@ export default function Home() {
         </div>
       )}
 
-      {/* ─── 6) CUSTOMER REVIEWS SECTION (قسم آراء عملائنا الفخم الجديد) ─── */}
+      {/* ─── 6) CUSTOMER REVIEWS SECTION (مربوط حياً بالداتابيز الفعليّة) ─── */}
       <div style={{ background: "#fff", padding: "5rem 2rem", borderTop: "1px solid #E8DDD0" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
           <p style={{ color: c.p, fontWeight: "600", letterSpacing: "2px", fontSize: "0.85rem", marginBottom: "8px", textTransform: "uppercase" }}>{uiText.reviewsSub}</p>
           <h2 style={{ fontSize: "2.5rem", fontWeight: "700", marginBottom: "3.5rem", color: c.d, fontFamily: fTitleFamily }}>{uiText.reviewsTitle}</h2>
           
-          <div style={{ display: "flex", gap: "2rem", justifyContent: "center", flexWrap: "wrap" }}>
-            {testimonials.map((t, idx) => (
-              <div key={idx} style={{ 
-                flex: "1 1 300px", 
-                maxWidth: "360px", 
-                background: "#FAF8F5", 
-                border: "1px solid #E8DDD0", 
-                borderRadius: "20px", 
-                padding: "2rem", 
-                textAlign: lang === "ar" ? "right" : "left",
-                display: "flex", 
-                flexDirection: "column", 
-                justifyContent: "space-between",
-                boxShadow: "0 4px 15px rgba(0,0,0,0.01)"
-              }}>
-                <div>
-                  {/* النجوم الذهبية للتقييم */}
-                  <div style={{ color: "#C9A96E", fontSize: "1.1rem", marginBottom: "1rem" }}>
-                    {"★".repeat(t.stars)}
+          {testimonials.length > 0 ? (
+            <div style={{ display: "flex", gap: "2rem", justifyContent: "center", flexWrap: "wrap" }}>
+              {testimonials.map((t, idx) => (
+                <div key={idx} style={{ 
+                  flex: "1 1 300px", 
+                  maxWidth: "360px", 
+                  background: "#FAF8F5", 
+                  border: "1px solid #E8DDD0", 
+                  borderRadius: "20px", 
+                  padding: "2rem", 
+                  textAlign: lang === "ar" ? "right" : "left",
+                  display: "flex", 
+                  flexDirection: "column", 
+                  justifyContent: "space-between",
+                  boxShadow: "0 4px 15px rgba(0,0,0,0.01)"
+                }}>
+                  <div>
+                    <div style={{ color: "#C9A96E", fontSize: "1.1rem", marginBottom: "1rem" }}>
+                      {"★".repeat(t.stars)}
+                    </div>
+                    <p style={{ color: "#3D2B1F", fontSize: "0.95rem", lineHeight: "1.7", margin: "0 0 1.5rem 0", fontWeight: "300", fontStyle: "italic" }}>
+                      "{t.review}"
+                    </p>
                   </div>
-                  <p style={{ color: "#3D2B1F", fontSize: "0.95rem", lineHeight: "1.7", margin: "0 0 1.5rem 0", fontWeight: "300", fontStyle: "italic" }}>
-                    "{t.review}"
-                  </p>
+                  
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #E8DDD0", paddingTop: "1rem" }}>
+                    <span style={{ fontSize: "0.95rem", fontWeight: "700", color: c.d }}>{t.name}</span>
+                    <span style={{ fontSize: "0.8rem", color: "#999", fontWeight: "300" }}>{t.date}</span>
+                  </div>
                 </div>
-                
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #E8DDD0", paddingTop: "1rem" }}>
-                  <span style={{ fontSize: "0.95rem", fontWeight: "700", color: c.d }}>{t.name}</span>
-                  <span style={{ fontSize: "0.8rem", color: "#999", fontWeight: "300" }}>{t.date}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            /* البوكس الصافي والرايق اللي هيظهر طول ما قاعدة البيانات خالية وعلي بياض */
+            <div style={{ padding: "3rem", color: "#8B7355", fontSize: "1.1rem", background: "#FAF8F5", borderRadius: "20px", border: "1px solid #E8DDD0", maxWidth: "600px", margin: "0 auto", fontWeight: "300", fontStyle: "italic" }}>
+              {uiText.noReviews}
+            </div>
+          )}
         </div>
       </div>
 
