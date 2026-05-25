@@ -15,7 +15,7 @@ export default function Home() {
   const [settings, setSettings] = useState({});
   const [globalLoading, setGlobalLoading] = useState(true);
   
-  // حالة التحكم في فتح وإغلاق قائمة التواصل العائمة
+  // التحكم في فتح وإغلاق قائمة التواصل العائمة
   const [showContactMenu, setShowContactMenu] = useState(false);
 
   const defaultCats = [
@@ -207,7 +207,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* ─── 6) FOOTER (تم تصفية أزرار السوشيال ميديا منه ونقلها للزر العائم) ─── */}
+      {/* ─── 6) FOOTER ─── */}
       <footer style={{ background: "#FAF8F5", borderTop: "1px solid #E8DDD0", padding: "5rem 2rem 2rem" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", justifyContent: "space-between", gap: "3rem", flexWrap: "wrap", borderBottom: "1px solid #E8DDD0", paddingBottom: "3rem" }}>
           
@@ -239,36 +239,42 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* ─── 7) ونظام رادارات التواصل العائم المودرن (Floating Multi-Channel Widget) ─── */}
+      {/* ─── 7) نظام التواصل العائم المطور بالأيقونات الرسمية الحقيقية (Pure SVGs) ─── */}
       <div style={{ position: "fixed", bottom: "30px", left: lang === "ar" ? "30px" : "auto", right: lang === "ar" ? "auto" : "30px", zIndex: 99999 }}>
         
-        {/* قائمة الروابط المنبثقة لأعلى بسلاسة */}
+        {/* قائمة الروابط المنبثقة */}
         {showContactMenu && (
           <div style={{ 
             backgroundColor: "#fff", 
             border: "1px solid #E8DDD0", 
             borderRadius: "20px", 
-            padding: "14px", 
+            padding: "12px", 
             marginBottom: "15px", 
             boxShadow: "0 10px 30px rgba(0,0,0,0.08)", 
             display: "flex", 
             flexDirection: "column", 
-            gap: "10px",
+            gap: "8px",
             animation: "slideUp 0.3s ease-out"
           }}>
             {settings.whatsapp && (
-              <a href={`https://wa.me/${settings.whatsapp}`} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "#111", fontSize: "0.9rem", fontWeight: "600", padding: "8px 16px", borderRadius: "12px", background: "#F4FFF7", border: "1px solid #C2F0C2" }}>
-                <span style={{ fontSize: "1.2rem" }}>💚</span> WhatsApp
+              <a href={`https://wa.me/${settings.whatsapp}`} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", color: "#25D366", fontSize: "0.95rem", fontWeight: "700", padding: "10px 20px", borderRadius: "14px", background: "#F4FFF7", border: "1px solid #C2F0C2", transition: "all 0.2s" }}>
+                {/* أيقونة واتساب الرسمية الحقيقية */}
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12.012 2c-5.508 0-9.985 4.478-9.985 9.984 0 1.76.457 3.413 1.258 4.86L2 22l5.314-1.395c1.395.76 2.977 1.187 4.67 1.187 5.507 0 9.984-4.479 9.984-9.985 0-5.507-4.477-9.984-9.957-9.984zm5.72 14.12c-.244.683-1.22 1.246-1.683 1.3-.439.053-.984.076-1.61-.132-.39-.128-.888-.305-1.522-.577-2.67-1.144-4.407-3.86-4.54-4.043-.134-.183-.993-1.32-.993-2.522 0-1.2.622-1.791.844-2.035.22-.244.488-.305.65-.305.163 0 .326.002.468.01.146.01.346-.037.545.443.203.492.691 1.692.752 1.814.06.122.102.264.02.427-.08.162-.122.264-.244.406-.122.142-.26.315-.366.422-.122.122-.25.254-.108.498.143.244.634 1.047 1.36 1.692.937.83 1.724 1.087 1.968 1.21.244.122.386.102.53-.06.142-.163.61-.71.772-.955.163-.244.325-.203.548-.122.224.08 1.423.67 1.667.792.244.122.406.183.467.284.06.102.06.59-.183 1.273z"/></svg>
+                WhatsApp
               </a>
             )}
             {settings.instagram && (
-              <a href={settings.instagram} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "#111", fontSize: "0.9rem", fontWeight: "600", padding: "8px 16px", borderRadius: "12px", background: "#FFF0F5", border: "1px solid #FFCCD5" }}>
-                <span style={{ fontSize: "1.2rem" }}>💖</span> Instagram
+              <a href={settings.instagram} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", color: "#E1306C", fontSize: "0.95rem", fontWeight: "700", padding: "10px 20px", borderRadius: "14px", background: "#FFF0F5", border: "1px solid #FFCCD5", transition: "all 0.2s" }}>
+                {/* أيقونة إنستجرام الرسمية الحقيقية */}
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+                Instagram
               </a>
             )}
             {settings.facebook && (
-              <a href={settings.facebook} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "#111", fontSize: "0.9rem", fontWeight: "600", padding: "8px 16px", borderRadius: "12px", background: "#F0F5FF", border: "1px solid #CCDFFF" }}>
-                <span style={{ fontSize: "1.2rem" }}>💙</span> Facebook
+              <a href={settings.facebook} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", color: "#1877F2", fontSize: "0.95rem", fontWeight: "700", padding: "10px 20px", borderRadius: "14px", background: "#F0F5FF", border: "1px solid #CCDFFF", transition: "all 0.2s" }}>
+                {/* أيقونة فيسبوك الرسمية الحقيقية */}
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                Facebook
               </a>
             )}
           </div>
@@ -282,14 +288,14 @@ export default function Home() {
             color: "#fff", 
             border: `1px solid ${c.p}`, 
             borderRadius: "30px", 
-            padding: "12px 24px", 
-            fontSize: "0.9rem", 
+            padding: "12px 26px", 
+            fontSize: "0.95rem", 
             fontWeight: "700", 
             cursor: "pointer", 
             boxShadow: "0 6px 20px rgba(0,0,0,0.15)", 
             display: "flex", 
             alignItems: "center", 
-            gap: "8px",
+            gap: "10px",
             transition: "all 0.3s"
           }}
           onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.04)"}
