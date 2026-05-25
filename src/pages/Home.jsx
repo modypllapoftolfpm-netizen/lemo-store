@@ -47,7 +47,6 @@ export default function Home() {
   const bestSellers = products.filter((p) => p.isBestSeller).slice(0, 4);
   const featuredOffer = products.filter((p) => p.discount > 0).slice(0, 3);
 
-  // نصوص ثابتة مترجمة ديناميكياً للواجهة
   const uiText = {
     heroDesc: lang === "ar" ? "اكتشف مجموعتنا المميزة المصنوعة يدوياً من أجود الخامات العطرية الآمنة تماماً على منزلك وعائلتك." : "Discover our premium products, made with top-quality ingredients that are gentle, aromatic, and irritation-free!",
     shopNow: lang === "ar" ? "تسوق الآن" : "Shop Now",
@@ -127,7 +126,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* شريط الشحن المجاني المترجم */}
       <div style={{ background: `linear-gradient(135deg, ${c.p}, ${c.p}DD)`, padding: "12px", textAlign: "center", color: "#fff", fontSize: "0.95rem", fontWeight: "600" }}>
         {uiText.shippingBar}
       </div>
@@ -182,7 +180,7 @@ export default function Home() {
               <p style={{ color: "#666", lineHeight: "1.6", marginBottom: "2rem" }}>{uiText.featuredDesc}</p>
               <Link to="/products" style={{ color: c.d, fontWeight: "700", textDecoration: "underline" }}>{uiText.shopSale}</Link>
             </div>
-            <div style={{ flex: "2 1 600px", display: "flex", gap: "1.5rem", flexWrap: "wrap", shortcuts: "center", justifyContent: "center" }}>
+            <div style={{ flex: "2 1 600px", display: "flex", gap: "1.5rem", flexWrap: "wrap", justifyContent: "center" }}>
               {featuredOffer.map((p) => (
                 <div key={p.id} style={{ flex: "1 1 200px", maxWidth: "240px", background: "#fff", border: "1px solid #E8DDD0", borderRadius: "16px", overflow: "hidden", position: "relative" }}>
                   <div style={{ height: "240px", position: "relative" }}>
@@ -205,16 +203,38 @@ export default function Home() {
       {/* ─── 6) FOOTER ─── */}
       <footer style={{ background: "#FAF8F5", borderTop: "1px solid #E8DDD0", padding: "5rem 2rem 2rem" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", justifyContent: "space-between", gap: "3rem", flexWrap: "wrap", borderBottom: "1px solid #E8DDD0", paddingBottom: "3rem" }}>
+          
           <div style={{ flex: "2 1 350px", textAlign: lang === "ar" ? "right" : "left" }}>
             <h3 style={{ fontSize: "1.8rem", fontWeight: "800", margin: "0 0 1rem 0", letterSpacing: "1px" }}>Lemo Store</h3>
-            <p style={{ color: "#666", fontSize: "0.95rem", maxWidth: "320px", lineHeight: "1.6" }}>{uiText.footerDesc}</p>
+            <p style={{ color: "#666", fontSize: "0.95rem", maxWidth: "320px", lineHeight: "1.6", marginBottom: "1.5rem" }}>{uiText.footerDesc}</p>
+            
+            {/* 🌐 أزرار السوشيال ميديا الديناميكية */}
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+              {settings.whatsapp && (
+                <a href={`https://wa.me/${settings.whatsapp}`} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: "#fff", background: "#25D366", padding: "8px 16px", borderRadius: "20px", fontSize: "0.85rem", fontWeight: "700" }}>
+                  WhatsApp
+                </a>
+              )}
+              {settings.facebook && (
+                <a href={settings.facebook} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: "#fff", background: "#1877F2", padding: "8px 16px", borderRadius: "20px", fontSize: "0.85rem", fontWeight: "700" }}>
+                  Facebook
+                </a>
+              )}
+              {settings.instagram && (
+                <a href={settings.instagram} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: "#fff", background: "#E1306C", padding: "8px 16px", borderRadius: "20px", fontSize: "0.85rem", fontWeight: "700" }}>
+                  Instagram
+                </a>
+              )}
+            </div>
           </div>
+
           <div style={{ flex: "1 1 150px", textAlign: lang === "ar" ? "right" : "left" }}>
             <h4 style={{ fontSize: "1rem", fontWeight: "700", margin: "0 0 1.2rem 0" }}>{uiText.helpTitle}</h4>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.9rem", color: "#555" }}>
               <span>{uiText.contactUs}</span><span>{uiText.aboutUs}</span><span>{uiText.account}</span>
             </div>
           </div>
+          
           <div style={{ flex: "1 1 150px", textAlign: lang === "ar" ? "right" : "left" }}>
             <h4 style={{ fontSize: "1rem", fontWeight: "700", margin: "0 0 1.2rem 0" }}>{lang === "ar" ? "الأقسام" : "Categories"}</h4>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.9rem", color: "#555" }}>
@@ -224,6 +244,7 @@ export default function Home() {
               <span>{lang === "ar" ? "العروض" : "Offers"}</span>
             </div>
           </div>
+
         </div>
         <div style={{ textAlign: "center", paddingTop: "2rem", color: "#8B7355", fontSize: "0.85rem", opacity: 0.8 }}>
           {uiText.rights}
@@ -256,14 +277,14 @@ function ProductCard({ product, field, t, addToCart, c, lang }) {
           
           {hasDiscount && (
             <span style={{ position: "absolute", top: "12px", left: lang === "ar" ? "auto" : "12px", right: lang === "ar" ? "12px" : "auto", background: "#000", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: "700" }}>
-              {lang === "ar" ? `-${product.discount}%` : `-${product.discount}%`}
+              -{product.discount}%
             </span>
           )}
           {product.isNew && <span style={{ position: "absolute", top: "12px", left: lang === "ar" ? "12px" : "auto", right: lang === "ar" ? "auto" : "12px", background: "#C9A96E", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: "700" }}>{lang === "ar" ? "جديد" : "NEW"}</span>}
         </div>
         <div style={{ padding: "1.2rem 1.2rem 0.5rem 1.2rem" }}>
           <h3 style={{ margin: "0 0 8px 0", color: c.d, fontSize: "1.05rem", fontWeight: "700", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{field(product, "name")}</h3>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexDirection: lang === "ar" ? "row" : "row" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ color: c.d, fontWeight: "800", fontSize: "1.1rem" }}>{finalPrice} {t.currency}</span>
             {hasDiscount && <span style={{ color: "#999", textDecoration: "line-through", fontSize: "0.85rem" }}>{product.price} {t.currency}</span>}
           </div>
