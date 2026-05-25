@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "../../components/layout/Navbar";
 import { 
-  subscribeToBanners, addBanner, deleteBanner, updateBanner, uploadBannerImage,
-  subscribeToCategories, addCategory, updateCategory, deleteCategory, uploadCategoryImage 
+  subscribeToBanners, addBanner, deleteBanner, updateBanner,
+  subscribeToCategories, addCategory, updateCategory, deleteCategory 
 } from "../../firebase/settings";
 
 const SECTIONS = [
@@ -21,7 +21,6 @@ export default function AdminBanners() {
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const [catForm, setCatForm] = useState({ nameAr: "", nameEn: "", slug: "" });
   const [catEditId, setCatEditId] = useState(null);
-  const [catImage, setCatImage] = useState(null);
   const [catPreview, setCatPreview] = useState("");
   const [catUploading, setCatUploading] = useState(false);
 
@@ -53,6 +52,16 @@ export default function AdminBanners() {
     return () => { unsubBanners(); unsubCategories(); };
   }, []);
 
+  // دالة عبقرية لتحويل الصورة إلى نص Base64 فورا وبدون سيرفرات خارجية
+  const convertToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const fileReader = new FileReader();
+      fileReader.readAsDataURL(file);
+      fileReader.onload = () => { resolve(fileReader.result); };
+      fileReader.onerror = (error) => { reject(error); };
+    });
+  };
+
   const handleCatSubmit = async (e) => {
     e.preventDefault();
     setCatUploading(true);
@@ -64,31 +73,24 @@ export default function AdminBanners() {
         nameAr: catForm.nameAr, 
         nameEn: catForm.nameEn, 
         slug: cleanSlug,
-        imageUrl: currentCat?.imageUrl || "",
-        imagePath: currentCat?.imagePath || ""
+        imageUrl: currentCat?.imageUrl || ""
       };
 
-      if (catImage) {
-        const uploaded = await uploadCategoryImage(catImage);
-        updateData.imageUrl = uploaded.url;
-        updateData.imagePath = uploaded.path;
+      // لو رفع صورة جديدة حولها لنص Base64 فورا واحفظها داخل الـ database
+      if (catPreview && catPreview.startsWith("data:image")) {
+        updateData.imageUrl = catPreview;
       }
 
       if (catEditId) {
         await updateCategory(catEditId, updateData);
         setCatEditId(null);
       } else {
-        const docRef = await addCategory(updateData);
-        if (catImage) {
-          const uploaded = await uploadCategoryImage(catImage);
-          await updateCategory(docRef.id, { imageUrl: uploaded.url, imagePath: uploaded.path });
-        }
+        await addCategory(updateData);
       }
       
       setCatForm({ nameAr: "", nameEn: "", slug: "" });
-      setCatImage(null);
       setCatPreview("");
-      alert("تم حفظ خصائص الفئة بنجاح وعبر Cloudinary ✅");
+      alert("تم حفظ خصائص الفئة وصورتها الفخمة بنجاح آمن ومباشر ✅");
     } catch (err) { 
       alert("حدث خطأ أثناء حفظ الفئة"); 
     }
@@ -99,25 +101,24 @@ export default function AdminBanners() {
     setCatEditId(cat.id);
     setCatForm({ nameAr: cat.nameAr || "", nameEn: cat.nameEn || "", slug: cat.slug || "" });
     setCatPreview(cat.imageUrl || "");
-    setCatImage(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const getBanner = (key) => banners.find((b) => b.sectionKey === key);
 
-  const handleUpload = async (sectionKey, file) => {
+  const handleBannerUploadLocal = async (sectionKey, file) => {
     if (!file) return;
     setUploading((prev) => ({ ...prev, [sectionKey]: true }));
     try {
-      const { url, path } = await uploadBannerImage(file);
+      const base64String = await convertToBase64(file);
       const existing = getBanner(sectionKey);
       const data = formData[sectionKey] || {};
       if (existing) {
-        await updateBanner(existing.id, { imageUrl: url, imagePath: path, ...data });
+        await updateBanner(existing.id, { imageUrl: base64String, ...data });
       } else {
-        await addBanner({ sectionKey, imageUrl: url, imagePath: path, order: 0, ...data });
+        await addBanner({ sectionKey, imageUrl: base64String, order: 0, ...data });
       }
-      alert("تم رفع صورة البانر بنجاح على Cloudinary ✅");
+      alert("تم حفظ وتحديث الصورة بنجاح آمن ومباشر ✅");
     } catch { alert("حدث خطأ في الرفع"); }
     setUploading((prev) => ({ ...prev, [sectionKey]: false }));
   };
@@ -140,9 +141,9 @@ export default function AdminBanners() {
       <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "2rem" }}>
         
         <h1 style={{ color: "#3D2B1F", marginBottom: "0.5rem", fontWeight: "800" }}>🖼️ لوحة إدارة الفئات وصور LEMO Store</h1>
-        <p style={{ color: "#8B7355", marginBottom: "2rem" }}>تحكم كامل في هيكلة تصنيفات الشموع الفاخرة وخلفيات الموقع عبر السحابة</p>
+        <p style={{ color: "#8B7355", marginBottom: "2rem" }}>تحكم كامل ومباشر في هيكلة تصنيفات الشموع الفاخرة وخلفيات الموقع</p>
 
-        {/* ─── 1) لوحة التحكم في الفئات ─── */}
+        {/* ─── 1) لوحة التحكم في الفئات الاحترافية ─── */}
         <div style={{ background: "#fff", borderRadius: "24px", padding: "2rem", boxShadow: "0 4px 25px rgba(0,0,0,0.04)", marginBottom: "2.5rem", border: "1px solid #E8DDD0" }}>
           <h2 style={{ color: "#3D2B1F", marginTop: 0, borderBottom: "2px solid #FAF7F2", paddingBottom: "12px", fontWeight: "700" }}>🏷️ {catEditId ? "📝 تعديل بيانات وصورة الفئة" : "➕ إضافة فئة مخصصة جديدة"}</h2>
           
@@ -173,14 +174,17 @@ export default function AdminBanners() {
                     <p style={{ margin: "5px 0 0", fontSize: "12px", color: "#8B7355", fontWeight: "600" }}>اضغط لرفع صورة الغلاف</p>
                   </div>
                 )}
-                <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => {
+                <input type="file" accept="image/*" style={{ display: "none" }} onChange={async (e) => {
                   const file = e.target.files[0];
-                  if(file) { setCatImage(file); setCatPreview(URL.createObjectURL(file)); }
+                  if(file) {
+                    const base64Str = await convertToBase64(file);
+                    setCatPreview(base64Str);
+                  }
                 }} />
               </label>
               
               <button type="submit" disabled={catUploading} style={{ width: "100%", padding: "14px", backgroundColor: "#3D2B1F", color: "white", border: "none", borderRadius: "12px", fontWeight: "bold", cursor: "pointer", marginTop: "12px", boxShadow: "0 4px 12px rgba(61,43,31,0.15)" }}>
-                {catUploading ? "⏳ جاري الحفظ والرفع لـ Cloudinary..." : catEditId ? "💾 حفظ التعديلات الفخمة" : "✨ إضافة الفئة للمتجر"}
+                {catUploading ? "⏳ جاري المعالجة والحفظ المباشر..." : catEditId ? "💾 حفظ التعديلات الفخمة" : "✨ إضافة الفئة للمتجر"}
               </button>
             </div>
           </form>
@@ -224,7 +228,7 @@ export default function AdminBanners() {
 
         {/* ─── 2) لوحة التحكم في خلفيات وصور الموقع ─── */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-          <h2 style={{ color: "#3D2B1F", margin: "0 0 5px 0", fontWeight: "800" }}>🖼️ صور وتنسيقات الموقع الخلفية</h2>
+          <h2 style={{ color: "#3D2B1F", margin: "0 0 5px 0", fontWeight: "800" }}>实用 صور وتنسيقات الموقع الخلفية</h2>
           {SECTIONS.map((section) => {
             const banner = getBanner(section.key);
             const isUploading = uploading[section.key];
@@ -270,7 +274,7 @@ export default function AdminBanners() {
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <label style={{ display: "flex", alignItems: "center", gap: "8px", background: "linear-gradient(135deg, #C9A96E, #b8925a)", color: "#fff", padding: "10px 18px", borderRadius: "10px", cursor: "pointer", fontWeight: "700", fontSize: "0.9rem" }}>
                       {isUploading ? "⏳ جاري الرفع..." : "📤 رفع صورة الخلفية"}
-                      <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleUpload(section.key, e.target.files[0])} disabled={isUploading} />
+                      <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleBannerUploadLocal(section.key, e.target.files[0])} disabled={isUploading} />
                     </label>
 
                     {banner?.imageUrl && (
