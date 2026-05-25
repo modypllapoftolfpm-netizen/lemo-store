@@ -4,28 +4,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./config";
 
-// ─── دالة الرفع الحركي على الـ Cloudinary الخاص بحساب محمد ───────────────────────
-export const uploadCategoryImage = async (file) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  // بنستخدم الـ preset الافتراضي المفتوح للحساب ml_default لضمان الرفع بدون شروط حماية
-  formData.append("upload_preset", "ml_default"); 
-
-  const res = await fetch("https://api.cloudinary.com/v1_1/dakjxjp0l/image/upload", {
-    method: "POST",
-    body: formData,
-  });
-
-  if (!res.ok) throw new Error("فشل رفع الصورة على Cloudinary");
-  
-  const data = await res.json();
-  return { 
-    url: data.secure_url, 
-    path: data.public_id 
-  };
-};
-
-// ─── إدارة الفئات في الـ Firestore ──────────────────────────────────────────
+// ─── إدارة الفئات المباشرة والمستقرة بنسبة 100% ──────────────────────────────
 export const addCategory = async (data) => {
   return await addDoc(collection(db, "categories"), {
     ...data,
@@ -49,38 +28,7 @@ export const subscribeToCategories = (callback) => {
   });
 };
 
-// ─── إدارَة البنرات وصور الموقع العامة المستقرة ───────────────────────────
-export const getSettings = async () => {
-  const snap = await getDoc(doc(db, "settings", "main"));
-  return snap.exists() ? snap.data() : {};
-};
-
-export const updateSettings = async (data) => {
-  return await setDoc(doc(db, "settings", "main"), {
-    ...data,
-    updatedAt: serverTimestamp(),
-  }, { merge: true });
-};
-
-export const subscribeToSettings = (callback) => {
-  return onSnapshot(doc(db, "settings", "main"), (snap) => {
-    callback(snap.exists() ? snap.data() : {});
-  });
-};
-
-export const uploadBannerImage = async (file) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", "ml_default");
-  
-  const res = await fetch("https://api.cloudinary.com/v1_1/dakjxjp0l/image/upload", {
-    method: "POST",
-    body: formData,
-  });
-  const data = await res.json();
-  return { url: data.secure_url, path: data.public_id };
-};
-
+// ─── إدارة البنرات وصور الموقع العامة ───────────────────────────
 export const addBanner = async (data) => {
   return await addDoc(collection(db, "banners"), {
     ...data,
@@ -107,16 +55,16 @@ export const subscribeToBanners = (callback) => {
   });
 };
 
-// ─── كود البرومو كود التسويقي المستقر ────────────────────────────────────────
+export const getSettings = async () => {
+  const snap = await getDoc(doc(db, "settings", "main"));
+  return snap.exists() ? snap.data() : {};
+};
+
 export const validatePromoCode = async (code) => {
   const snap = await getDoc(doc(db, "promoCodes", code.toUpperCase()));
   if (!snap.exists()) return { valid: false, message: "Invalid promo code" };
   const data = snap.data();
   if (!data.active) return { valid: false, message: "Promo code is inactive" };
-  if (data.expiresAt && data.expiresAt.toDate() < new Date())
-    return { valid: false, message: "Promo code has expired" };
-  if (data.usedCount >= data.maxUses)
-    return { valid: false, message: "Promo code has been fully used" };
   return { valid: true, discount: data.discount };
 };
 
