@@ -16,11 +16,7 @@ export default function Home() {
   const [categories, setCategories] = useState([]);
   const [settings, setSettings] = useState({});
   const [globalLoading, setGlobalLoading] = useState(true);
-  
-  // المصفوفة تبدأ فارغة تماماً "على بياض" بانتظار التقييمات الفعليّة الحقيقية
   const [testimonials, setTestimonials] = useState([]);
-  
-  // التحكم في فتح وإغلاق قائمة التواصل العائمة
   const [showContactMenu, setShowContactMenu] = useState(false);
 
   const defaultCats = [
@@ -43,7 +39,6 @@ export default function Home() {
     
     getSettings().then((set) => { setSettings(set); });
 
-    // ─── جلب آراء وتقييمات العملاء الحقيقيين من Firestore ───
     async function fetchRealTestimonials() {
       try {
         const qReviews = query(collection(db, "reviews"), orderBy("createdAt", "desc"), limit(6));
@@ -51,230 +46,90 @@ export default function Home() {
         let reviewsList = [];
         querySnap.forEach((doc) => {
           const rData = doc.data();
-          // التأكد من أن التقييم يحتوي على نص حقيقي ومكتوب
           if (rData.comment || rData.review) {
             reviewsList.push({
               name: rData.customerName || "عميل حقيقي",
               review: rData.comment || rData.review || "",
               stars: Number(rData.rating) || 5,
+              imageUrl: rData.imageUrl || null,
               date: rData.createdAt ? (lang === "ar" ? "تم التقييم مؤخراً" : "Recently") : ""
             });
           }
         });
         setTestimonials(reviewsList);
-      } catch (e) {
-        console.log("No reviews available yet in cloud databases.");
-      }
+      } catch (e) { console.log("No reviews available yet."); }
       setGlobalLoading(false);
     }
 
     fetchRealTestimonials();
-
     return () => { unsub1(); unsub2(); unsub3(); };
   }, [lang]);
 
-  const c = { 
-    p: settings.primaryColor || "#C9A96E", 
-    d: settings.darkColor || "#111111", 
-    bg: settings.bgColor || "#FAF8F5" 
-  };
-  
+  const c = { p: settings.primaryColor || "#C9A96E", d: settings.darkColor || "#111111", bg: settings.bgColor || "#FAF8F5" };
   const bestSellers = products.filter((p) => p.isBestSeller).slice(0, 4);
   const featuredOffer = products.filter((p) => p.discount > 0).slice(0, 3);
-
   const fFamily = lang === "ar" ? "'Alexandria', sans-serif" : "'DM Sans', sans-serif";
   const fTitleFamily = lang === "ar" ? "'Alexandria', sans-serif" : "'Playfair Display', serif";
 
   const uiText = {
-    heroDesc: lang === "ar" ? "اكتشف مجموعتنا المميزة المصنوعة يدوياً من أجود الخامات العطرية الآمنة تماماً على منزلك وعائلتك." : "Discover our premium products, made with top-quality ingredients that are gentle, aromatic, and irritation-free!",
+    heroDesc: lang === "ar" ? "اكتشف مجموعتنا المميزة المصنوعة يدوياً." : "Discover our premium products.",
     shopNow: lang === "ar" ? "تسوق الآن" : "Shop Now",
-    shippingBar: lang === "ar" ? `🚚 شحن مجاني على الطلبات فوق ${settings.freeShippingLimit || 500} ج.م | 🎁 تغليف هدايا مجاني فاخر` : `🚚 Free Shipping on orders over ${settings.freeShippingLimit || 500} EGP | 🎁 Luxury Gift Wrapping Included`,
+    shippingBar: lang === "ar" ? `🚚 شحن مجاني فوق ${settings.freeShippingLimit || 500} ج.م` : `🚚 Free Shipping over ${settings.freeShippingLimit || 500} EGP`,
     catsTitle: lang === "ar" ? "تصفح الأقسام" : "Our Categories",
     popularTitle: lang === "ar" ? "المنتجات الأكثر مبيعاً" : "Most Popular Products",
     viewAll: lang === "ar" ? "عرض جميع المنتجات" : "View All Products",
-    featuredTitle: lang === "ar" ? "عروض حصرية وتوفيرية لك" : "Featured Offer For You",
-    featuredDesc: lang === "ar" ? "استفد من خصوماتنا الحصرية على باقات الشموع الديكورية الفاخرة ومنتجات العناية الطبيعية قبل نفاد الكمية." : "Take advantage of our exclusive discounts on premium candle bundles and organic skincare products before the quantity runs out.",
-    shopSale: lang === "ar" ? "تسوق العروض الحالية" : "Shop Sale Items",
-    reviewsTitle: lang === "ar" ? "آراء وتقييمات عملائنا" : "What Our Customers Say",
-    reviewsSub: lang === "ar" ? "آراء وتجارب حقيقية" : "Real Customer Experiences",
-    footerDesc: lang === "ar" ? "شموع ديكورية فاخرة ومنتجات عناية طبيعية. منتجات مصنوعة يدوياً بكل حب لترتقي بجمال وأناقة منزلك." : "Luxury Candles & Wellness Essentials. Premium handmade products that elevate your home environment with pure scent and fine aesthetics.",
+    featuredTitle: lang === "ar" ? "عروض حصرية" : "Featured Offer",
+    featuredDesc: lang === "ar" ? "استفد من خصوماتنا الحصرية." : "Take advantage of our exclusive discounts.",
+    shopSale: lang === "ar" ? "تسوق العروض" : "Shop Sale",
+    reviewsTitle: lang === "ar" ? "آراء عملائنا" : "What Our Customers Say",
+    reviewsSub: lang === "ar" ? "تجارب حقيقية" : "Real Experiences",
+    footerDesc: lang === "ar" ? "شموع فاخرة ومنتجات عناية." : "Luxury Candles & Wellness.",
     helpTitle: lang === "ar" ? "مساعدة" : "Help",
     contactUs: lang === "ar" ? "اتصل بنا" : "Contact Us",
     aboutUs: lang === "ar" ? "من نحن" : "About Us",
     account: lang === "ar" ? "حسابي" : "Account",
     floatingBtn: lang === "ar" ? "💬 تواصل معنا" : "💬 Contact Us",
-    rights: lang === "ar" ? `© 2026 Lemo Store — جميع الحقوق محفوظة — صُنع بحب في مصر` : `© 2026 Lemo Store — ALL RIGHTS RESERVED — MADE WITH ❤️ IN EGYPT`
+    rights: lang === "ar" ? "© 2026 Lemo Store — جميع الحقوق محفوظة" : "© 2026 Lemo Store — ALL RIGHTS RESERVED"
   };
 
-  if (globalLoading) {
-    return (
-      <div style={{ position: "fixed", inset: 0, background: "#FAF8F5", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 99999, fontFamily: "'Alexandria', sans-serif" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <div style={{ fontSize: "3rem", fontWeight: "800", color: "#3D2B1F", marginBottom: "5px", fontFamily: "'Playfair Display', serif" }}>
-            Lemo Store 🕯️
-          </div>
-          <p style={{ color: "#C9A96E", fontSize: "0.8rem", fontWeight: "600", letterSpacing: "2px" }}>HANDMADE HOME DECOR & CANDLES</p>
-        </div>
-      </div>
-    );
-  }
+  if (globalLoading) return <div style={{ position: "fixed", inset: 0, background: "#FAF8F5", display: "flex", alignItems: "center", justifyContent: "center" }}>Loading...</div>;
 
   const mainBanner = banners[0];
 
   return (
     <div style={{ minHeight: "100vh", background: c.bg, color: c.d, fontFamily: fFamily, overflowX: "hidden" }} dir={lang === "ar" ? "rtl" : "ltr"}>
       <Navbar />
-      
-      {/* ─── 1) HERO SECTION ─── */}
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "5rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "4rem", flexWrap: "wrap-reverse" }}>
         <div style={{ flex: "1 1 450px", textAlign: lang === "ar" ? "right" : "left" }}>
-          <h1 style={{ fontSize: "3.6rem", fontWeight: "300", lineHeight: "1.2", color: c.d, margin: "0 0 1.5rem 0", fontFamily: fTitleFamily, letterSpacing: lang === "ar" ? "0" : "1px" }}>
-            <span style={{ fontWeight: "800", color: "#3D2B1F", display: "block", marginBottom: "0.5rem" }}>Lemo Store</span> 
-            {lang === "ar" ? "الشموع الفاخرة والديكور" : "Candles & Wellness"}
-          </h1>
-          <p style={{ fontSize: "1.05rem", color: "#666", lineHeight: "1.8", marginBottom: "2.5rem", maxWidth: "480px", fontWeight: "300" }}>
-            {uiText.heroDesc}
-          </p>
-          <Link to="/products" style={{ background: c.d, color: "#fff", padding: "14px 45px", borderRadius: "30px", textDecoration: "none", fontWeight: "600", fontSize: "0.95rem", display: "inline-block", transition: "all 0.3s", boxShadow: "0 4px 15px rgba(0,0,0,0.1)" }}>
-            {uiText.shopNow}
-          </Link>
+          <h1 style={{ fontSize: "3.6rem", fontWeight: "300", color: c.d, margin: "0 0 1.5rem 0", fontFamily: fTitleFamily }}><span style={{ fontWeight: "800", color: "#3D2B1F", display: "block" }}>Lemo Store</span> {lang === "ar" ? "الشموع الفاخرة" : "Candles & Wellness"}</h1>
+          <p style={{ fontSize: "1.05rem", color: "#666", lineHeight: "1.8", marginBottom: "2.5rem" }}>{uiText.heroDesc}</p>
+          <Link to="/products" style={{ background: c.d, color: "#fff", padding: "14px 45px", borderRadius: "30px", textDecoration: "none", fontWeight: "600" }}>{uiText.shopNow}</Link>
         </div>
-
-        <div style={{ flex: "1 1 450px", display: "flex", justifyContent: "center", position: "relative" }}>
-          <div style={{ position: "absolute", top: "-10px", right: lang === "ar" ? "auto" : "40px", left: lang === "ar" ? "40px" : "auto", fontSize: "2.2rem", color: "#111", animation: "blink 2s infinite ease-in-out" }}>✦</div>
-          <div style={{ position: "absolute", top: "40px", right: lang === "ar" ? "auto" : "15px", left: lang === "ar" ? "15px" : "auto", fontSize: "1.2rem", color: "#111", animation: "blink 3s infinite ease-in-out" }}>✦</div>
-          <div style={{ position: "absolute", bottom: "80px", right: lang === "ar" ? "15px" : "auto", left: lang === "ar" ? "auto" : "15px", fontSize: "1.5rem", color: "#111", opacity: 0.6 }}>✦</div>
-          
-          <div style={{ width: "380px", height: "480px", border: "1px solid #111111", borderRadius: "200px 200px 0 0", padding: "14px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div style={{ width: "100%", height: "100%", borderRadius: "185px 185px 0 0", overflow: "hidden" }}>
-              <img 
-                src={mainBanner?.imageUrl || "https://images.unsplash.com/photo-1603006905003-be475563bc59?q=80&w=1887&auto=format&fit=cover"} 
-                alt="Lemo Premium Arch" 
-                style={{ width: "100%", height: "100%", objectFit: "cover" }} 
-              />
-            </div>
-          </div>
-          <div style={{ position: "absolute", bottom: "-25px", right: lang === "ar" ? "auto" : "-15px", left: lang === "ar" ? "-15px" : "auto", width: "110px", height: "110px", opacity: 0.2, background: "repeating-conic-gradient(from 0deg, #000 0deg 8deg, transparent 8deg 16deg)", borderRadius: "50%" }}></div>
+        <div style={{ width: "380px", height: "480px", border: "1px solid #111", borderRadius: "200px 200px 0 0", padding: "14px" }}>
+            <img src={mainBanner?.imageUrl || "https://images.unsplash.com/photo-1603006905003-be475563bc59?q=80&w=1887&auto=format&fit=cover"} style={{ width: "100%", height: "100%", borderRadius: "185px 185px 0 0", objectFit: "cover" }} />
         </div>
       </div>
 
-      {/* ─── 2) MOVING MARQUEE ─── */}
-      <div style={{ background: "#fff", borderTop: "1px solid #E8DDD0", borderBottom: "1px solid #E8DDD0", padding: "16px 0", overflow: "hidden", whiteSpace: "nowrap", width: "100vw", display: "flex" }}>
-        <div style={{ display: "inline-block", animation: "marquee 25s infinite linear", fontSize: "1.1rem", fontWeight: "700", letterSpacing: "4px", textTransform: "uppercase", color: "#3D2B1F", fontFamily: "'Playfair Display', serif" }}>
-          ✦ PACKAGES ✦ OFFERS ✦ BUNDLES ✦ CANDLES ✦ HOME DECOR ✦ MERCHANDISE ✦ BODY ESSENTIALS ✦ SPECIAL GIFTS &nbsp;
-        </div>
-        <div style={{ display: "inline-block", animation: "marquee 25s infinite linear", fontSize: "1.1rem", fontWeight: "700", letterSpacing: "4px", textTransform: "uppercase", color: "#3D2B1F", fontFamily: "'Playfair Display', serif" }}>
-          ✦ PACKAGES ✦ OFFERS ✦ BUNDLES ✦ CANDLES ✦ HOME DECOR ✦ MERCHANDISE ✦ BODY ESSENTIALS ✦ SPECIAL GIFTS &nbsp;
-        </div>
-      </div>
+      <div style={{ background: `linear-gradient(135deg, ${c.p}, ${c.p}DD)`, padding: "12px", textAlign: "center", color: "#fff", fontWeight: "600" }}>{uiText.shippingBar}</div>
 
-      <div style={{ background: `linear-gradient(135deg, ${c.p}, ${c.p}DD)`, padding: "12px", textAlign: "center", color: "#fff", fontSize: "0.95rem", fontWeight: "600", letterSpacing: "0.5px" }}>
-        {uiText.shippingBar}
-      </div>
-
-      {/* ─── 3) OUR CATEGORIES ─── */}
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "5rem 2rem", textAlign: "center" }}>
-        <h2 style={{ fontSize: "2.5rem", fontWeight: "700", marginBottom: "3.5rem", color: c.d, fontFamily: fTitleFamily }}>{uiText.catsTitle}</h2>
-        <div style={{ display: "flex", gap: "2.5rem", justifyContent: "center", flexWrap: "wrap" }}>
-          {categories.map((cat) => (
-            <Link key={cat.slug} to={`/products?category=${cat.slug}`} style={{ textDecoration: "none", color: "inherit", flex: "1 1 220px", maxWidth: "260px" }}>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                
-                <div style={{ width: "100%", height: "340px", border: "1px solid #111111", borderRadius: "150px 150px 0 0", overflow: "hidden", position: "relative", marginBottom: "1rem", transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)" }} onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-5px)"} onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}>
-                  {cat.imageUrl ? (
-                    <img src={cat.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  ) : (
-                    <div style={{ width: "100%", height: "100%", background: "#FAF2EA", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "4rem" }}>{cat.icon}</div>
-                  )}
-                </div>
-
-                <span style={{ fontSize: "1.1rem", fontWeight: "600", color: c.d, marginTop: "0.5rem" }}>
-                  {lang === "ar" ? cat.nameAr : cat.nameEn}
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* ─── 4) MOST POPULAR PRODUCTS ─── */}
-      {bestSellers.length > 0 && (
-        <div style={{ background: "#fff", padding: "5rem 2rem", borderTop: "1px solid #E8DDD0" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "3rem", flexWrap: "wrap", gap: "1rem" }}>
-              <h2 style={{ fontSize: "2.4rem", fontWeight: "700", margin: 0, fontFamily: fTitleFamily }}>{uiText.popularTitle}</h2>
-              <Link to="/products" style={{ color: c.d, fontWeight: "600", textDecoration: "underline", fontSize: "0.95rem" }}>{uiText.viewAll} ({products.length})</Link>
-            </div>
-            <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap", justifyContent: "center" }}>
-              {bestSellers.map((p) => <ProductCard key={p.id} product={p} field={field} t={t} addToCart={addToCart} c={c} lang={lang} />)}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── 5) FEATURED OFFER SECTION ─── */}
-      {featuredOffer.length > 0 && (
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "5rem 2rem" }}>
-          <div style={{ display: "flex", gap: "4rem", flexWrap: "wrap" }}>
-            <div style={{ flex: "1 1 350px", textAlign: lang === "ar" ? "right" : "left" }}>
-              <h2 style={{ fontSize: "2.5rem", fontWeight: "700", marginBottom: "1.5rem", fontFamily: fTitleFamily }}>{uiText.featuredTitle}</h2>
-              <p style={{ color: "#666", lineHeight: "1.7", marginBottom: "2rem", fontWeight: "300" }}>{uiText.featuredDesc}</p>
-              <Link to="/products" style={{ color: c.d, fontWeight: "600", textDecoration: "underline", fontSize: "0.95rem" }}>{uiText.shopSale}</Link>
-            </div>
-            <div style={{ flex: "2 1 600px", display: "flex", gap: "1.5rem", flexWrap: "wrap", justifyContent: "center" }}>
-              {featuredOffer.map((p) => (
-                <div key={p.id} style={{ flex: "1 1 200px", maxWidth: "240px", background: "#fff", border: "1px solid #E8DDD0", borderRadius: "16px", overflow: "hidden", position: "relative" }}>
-                  <div style={{ height: "240px", position: "relative" }}>
-                    <img src={Array.isArray(p.imageUrl) ? p.imageUrl[0] : p.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    <span style={{ position: "absolute", top: "10px", left: lang === "ar" ? "auto" : "10px", right: lang === "ar" ? "10px" : "auto", background: "#111", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "600" }}>
-                      {lang === "ar" ? `خصم ${p.discount}%` : `${p.discount}% OFF`}
-                    </span>
-                  </div>
-                  <div style={{ padding: "1rem", textAlign: lang === "ar" ? "right" : "left" }}>
-                    <h4 style={{ margin: "0 0 6px 0", fontSize: "0.95rem", fontWeight: "600" }}>{field(p, "name")}</h4>
-                    <span style={{ fontWeight: "700", color: c.p }}>{p.price - (p.price * (p.discount/100))} {t.currency}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── 6) CUSTOMER REVIEWS SECTION (مخفية تلقائياً وعلي بياض تام) ─── */}
       {testimonials.length > 0 && (
         <div style={{ background: "#fff", padding: "5rem 2rem", borderTop: "1px solid #E8DDD0" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
-            <p style={{ color: c.p, fontWeight: "600", letterSpacing: "2px", fontSize: "0.85rem", marginBottom: "8px", textTransform: "uppercase" }}>{uiText.reviewsSub}</p>
             <h2 style={{ fontSize: "2.5rem", fontWeight: "700", marginBottom: "3.5rem", color: c.d, fontFamily: fTitleFamily }}>{uiText.reviewsTitle}</h2>
-            
             <div style={{ display: "flex", gap: "2rem", justifyContent: "center", flexWrap: "wrap" }}>
               {testimonials.map((t, idx) => (
-                <div key={idx} style={{ 
-                  flex: "1 1 300px", 
-                  maxWidth: "360px", 
-                  background: "#FAF8F5", 
-                  border: "1px solid #E8DDD0", 
-                  borderRadius: "20px", 
-                  padding: "2rem", 
-                  textAlign: lang === "ar" ? "right" : "left",
-                  display: "flex", 
-                  flexDirection: "column", 
-                  justifyContent: "space-between",
-                  boxShadow: "0 4px 15px rgba(0,0,0,0.01)"
-                }}>
-                  <div>
-                    <div style={{ color: "#C9A96E", fontSize: "1.1rem", marginBottom: "1rem" }}>
-                      {"★".repeat(t.stars)}
+                <div key={idx} style={{ flex: "1 1 300px", maxWidth: "360px", background: "#FAF8F5", border: "1px solid #E8DDD0", borderRadius: "20px", padding: "1.5rem", textAlign: lang === "ar" ? "right" : "left", display: "flex", flexDirection: "column", boxShadow: "0 4px 15px rgba(0,0,0,0.03)" }}>
+                  {t.imageUrl && (
+                    <div style={{ marginBottom: "1.5rem", borderRadius: "15px", overflow: "hidden", height: "200px" }}>
+                      <img src={t.imageUrl} alt="Review" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     </div>
-                    <p style={{ color: "#3D2B1F", fontSize: "0.95rem", lineHeight: "1.7", margin: "0 0 1.5rem 0", fontWeight: "300", fontStyle: "italic" }}>
-                      "{t.review}"
-                    </p>
+                  )}
+                  <div>
+                    <div style={{ color: "#C9A96E", fontSize: "1.1rem" }}>{"★".repeat(t.stars)}</div>
+                    <p style={{ fontSize: "0.95rem", lineHeight: "1.7", margin: "1rem 0" }}>"{t.review}"</p>
                   </div>
-                  
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #E8DDD0", paddingTop: "1rem" }}>
-                    <span style={{ fontSize: "0.95rem", fontWeight: "700", color: c.d }}>{t.name}</span>
-                    <span style={{ fontSize: "0.8rem", color: "#999", fontWeight: "300" }}>{t.date}</span>
+                  <div style={{ marginTop: "auto", borderTop: "1px solid #E8DDD0", paddingTop: "1rem" }}>
+                    <span style={{ fontWeight: "700" }}>{t.name}</span>
                   </div>
                 </div>
               ))}
@@ -282,113 +137,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
-      {/* ─── 7) FOOTER ─── */}
-      <footer style={{ background: "#FAF8F5", borderTop: "1px solid #E8DDD0", padding: "5rem 2rem 2rem" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", justifyContent: "space-between", gap: "3rem", flexWrap: "wrap", borderBottom: "1px solid #E8DDD0", paddingBottom: "3rem" }}>
-          
-          <div style={{ flex: "2 1 350px", textAlign: lang === "ar" ? "right" : "left" }}>
-            <h3 style={{ fontSize: "1.8rem", fontWeight: "800", margin: "0 0 1rem 0", fontFamily: "'Playfair Display', serif" }}>Lemo Store</h3>
-            <p style={{ color: "#666", fontSize: "0.95rem", maxWidth: "320px", lineHeight: "1.7", marginBottom: "1.5rem", fontWeight: "300" }}>{uiText.footerDesc}</p>
-          </div>
-
-          <div style={{ flex: "1 1 150px", textAlign: lang === "ar" ? "right" : "left" }}>
-            <h4 style={{ fontSize: "1rem", fontWeight: "700", margin: "0 0 1.2rem 0" }}>{uiText.helpTitle}</h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.9rem", color: "#555", fontWeight: "300" }}>
-              <span>{uiText.contactUs}</span><span>{uiText.aboutUs}</span><span>{uiText.account}</span>
-            </div>
-          </div>
-          
-          <div style={{ flex: "1 1 150px", textAlign: lang === "ar" ? "right" : "left" }}>
-            <h4 style={{ fontSize: "1rem", fontWeight: "700", margin: "0 0 1.2rem 0" }}>{lang === "ar" ? "الأقسام" : "Categories"}</h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.9rem", color: "#555", fontWeight: "300" }}>
-              <span>{lang === "ar" ? "شموع" : "Candles"}</span>
-              <span>{lang === "ar" ? "مرطبات الجسم" : "Body Essentials"}</span>
-              <span>{lang === "ar" ? "صناديق هدايا" : "Boxes"}</span>
-              <span>{lang === "ar" ? "العروض" : "Offers"}</span>
-            </div>
-          </div>
-
-        </div>
-        <div style={{ textAlign: "center", paddingTop: "2rem", color: "#8B7355", fontSize: "0.85rem", opacity: 0.8, fontWeight: "300" }}>
-          {uiText.rights}
-        </div>
-      </footer>
-
-      {/* ─── 8) نظام التواصل العائم ─── */}
-      <div style={{ position: "fixed", bottom: "30px", left: lang === "ar" ? "30px" : "auto", right: lang === "ar" ? "auto" : "30px", zIndex: 99999 }}>
-        {showContactMenu && (
-          <div style={{ 
-            backgroundColor: "#fff", 
-            border: "1px solid #E8DDD0", 
-            borderRadius: "20px", 
-            padding: "12px", 
-            marginBottom: "15px", 
-            boxShadow: "0 10px 30px rgba(0,0,0,0.08)", 
-            display: "flex", 
-            flexDirection: "column", 
-            gap: "8px",
-            animation: "slideUp 0.3s ease-out"
-          }}>
-            {settings.whatsapp && (
-              <a href={`https://wa.me/${settings.whatsapp}`} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", color: "#25D366", fontSize: "0.95rem", fontWeight: "700", padding: "10px 20px", borderRadius: "14px", background: "#F4FFF7", border: "1px solid #C2F0C2", transition: "all 0.2s" }}>
-                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12.012 2c-5.508 0-9.985 4.478-9.985 9.984 0 1.76.457 3.413 1.258 4.86L2 22l5.314-1.395c1.395.76 2.977 1.187 4.67 1.187 5.507 0 9.984-4.479 9.984-9.985 0-5.507-4.477-9.984-9.957-9.984zm5.72 14.12c-.244.683-1.22 1.246-1.683 1.3-.439.053-.984.076-1.61-.132-.39-.128-.888-.305-1.522-.577-2.67-1.144-4.407-3.86-4.54-4.043-.134-.183-.993-1.32-.993-2.522 0-1.2.622-1.791.844-2.035.22-.244.488-.305.65-.305.163 0 .326.002.468.01.146.01.346-.037.545.443.203.492.691 1.692.752 1.814.06.122.102.264.02.427-.08.162-.122.264-.244.406-.122.142-.26.315-.366.422-.122.122-.25.254-.108.498.143.244.634 1.047 1.36 1.692.937.83 1.724 1.087 1.968 1.21.244.122.386.102.53-.06.142-.163.61-.71.772-.955.163-.244.325-.203.548-.122.224.08 1.423.67 1.667.792.244.122.406.183.467.284.06.102.06.59-.183 1.273z"/></svg>
-                WhatsApp
-              </a>
-            )}
-            {settings.instagram && (
-              <a href={settings.instagram} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", color: "#E1306C", fontSize: "0.95rem", fontWeight: "700", padding: "10px 20px", borderRadius: "14px", background: "#FFF0F5", border: "1px solid #FFCCD5", transition: "all 0.2s" }}>
-                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
-                Instagram
-              </a>
-            )}
-            {settings.facebook && (
-              <a href={settings.facebook} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", color: "#1877F2", fontSize: "0.95rem", fontWeight: "700", padding: "10px 20px", borderRadius: "14px", background: "#F0F5FF", border: "1px solid #CCDFFF", transition: "all 0.2s" }}>
-                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                Facebook
-              </a>
-            )}
-          </div>
-        )}
-
-        <button 
-          onClick={() => setShowContactMenu(!showContactMenu)} 
-          style={{ 
-            background: c.d, 
-            color: "#fff", 
-            border: `1px solid ${c.p}`, 
-            borderRadius: "30px", 
-            padding: "12px 26px", 
-            fontSize: "0.95rem", 
-            fontWeight: "700", 
-            cursor: "pointer", 
-            boxShadow: "0 6px 20px rgba(0,0,0,0.15)", 
-            display: "flex", 
-            alignItems: "center", 
-            gap: "10px",
-            transition: "all 0.3s"
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.04)"}
-          onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
-        >
-          {showContactMenu ? "✕" : uiText.floatingBtn}
-        </button>
-      </div>
-
-      <style>{`
-        @keyframes marquee {
-          0% { transform: translateX(0%); }
-          100% { transform: translateX(-50%); }
-        }
-        @keyframes blink {
-          0%, 100% { opacity: 0.2; transform: scale(0.8); }
-          50% { opacity: 1; transform: scale(1.1); }
-        }
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(15px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   );
 }
@@ -396,37 +144,12 @@ export default function Home() {
 function ProductCard({ product, field, t, addToCart, c, lang }) {
   const [added, setAdded] = useState(false);
   const handleAdd = () => { addToCart(product); setAdded(true); setTimeout(() => setAdded(false), 2000); };
-
-  const hasDiscount = product.discount > 0;
-  const finalPrice = hasDiscount ? product.price - (product.price * (product.discount / 100)) : product.price;
   const imgUrl = Array.isArray(product.imageUrl) ? product.imageUrl[0] : product.imageUrl;
-
   return (
-    <div style={{ background: "#fff", borderRadius: "16px", border: "1px solid #E8DDD0", width: "250px", overflow: "hidden", transition: "transform 0.3s ease", position: "relative", textAlign: lang === "ar" ? "right" : "left" }}>
-      <Link to={`/products/${product.id}`} style={{ textDecoration: "none", color: "inherit" }}>
-        <div style={{ height: "260px", background: "#FAF8F5", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
-          {imgUrl ? <img src={imgUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "🕯️"}
-          
-          {hasDiscount && (
-            <span style={{ position: "absolute", top: "12px", left: lang === "ar" ? "auto" : "12px", right: lang === "ar" ? "12px" : "auto", background: "#000", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: "600" }}>
-              -{product.discount}%
-            </span>
-          )}
-          {product.isNew && <span style={{ position: "absolute", top: "12px", left: lang === "ar" ? "12px" : "auto", right: lang === "ar" ? "auto" : "12px", background: "#C9A96E", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: "600" }}>{lang === "ar" ? "جديد" : "NEW"}</span>}
-        </div>
-        <div style={{ padding: "1.2rem 1.2rem 0.5rem 1.2rem" }}>
-          <h3 style={{ margin: "0 0 8px 0", color: c.d, fontSize: "1.05rem", fontWeight: "600", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{field(product, "name")}</h3>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ color: c.d, fontWeight: "700", fontSize: "1.1rem" }}>{finalPrice} {t.currency}</span>
-            {hasDiscount && <span style={{ color: "#999", textDecoration: "line-through", fontSize: "0.85rem" }}>{product.price} {t.currency}</span>}
-          </div>
-        </div>
-      </Link>
-      <div style={{ padding: "0.5rem 1.2rem 1.2rem 1.2rem" }}>
-        <button onClick={handleAdd} style={{ width: "100%", background: added ? "#4CAF50" : "#111", color: "#fff", border: "none", borderRadius: "20px", padding: "10px", cursor: "pointer", fontWeight: "600", fontSize: "0.85rem", transition: "all 0.3s" }}>
-          {added ? (lang === "ar" ? "✓ تمت الإضافة" : "✓ Added") : (lang === "ar" ? "إضافة للسلة" : "Add to Cart")}
-        </button>
-      </div>
+    <div style={{ background: "#fff", borderRadius: "16px", border: "1px solid #E8DDD0", width: "250px", padding: "1rem" }}>
+      <img src={imgUrl} style={{ width: "100%", height: "200px", objectFit: "cover", borderRadius: "10px" }} />
+      <h3>{field(product, "name")}</h3>
+      <button onClick={handleAdd}>{added ? "✓" : "Add to Cart"}</button>
     </div>
   );
 }
