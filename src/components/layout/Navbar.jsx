@@ -5,6 +5,65 @@ import { useCart } from "../../context/CartContext";
 import { useLang } from "../../context/LangContext";
 import { logOut } from "../../firebase/auth";
 
+// الـ Component الخاص باللوجو الجديد بالكود بالملي من غير صور
+const LemoLogo = () => (
+  <div style={{
+    display: "inline-flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    borderTop: "3.5px solid #3D2B1F",
+    borderLeft: "3.5px solid #3D2B1F",
+    borderRight: "3.5px solid #3D2B1F",
+    padding: "6px 12px 10px 12px",
+    position: "relative",
+    transform: "scale(0.85)", /* حجم مثالي ومناسب لارتفاع الهيدر الـ 70px */
+    transformOrigin: "right center",
+    userSelect: "none"
+  }}>
+    {/* كلمة LEM وحرف الـ O اللي جواه الشمعة */}
+    <div style={{ display: "flex", alignItems: "center", fontSize: "28px", fontWeight: "900", color: "#3D2B1F", letterSpacing: "1px", lineHeight: "1", fontFamily: "Arial, sans-serif" }}>
+      <span>LEM</span>
+      <div style={{ 
+        width: "26px", 
+        height: "26px", 
+        border: "3.5px solid #3D2B1F", 
+        borderRadius: "50%", 
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "center", 
+        marginRight: "2px",
+        position: "relative"
+      }}>
+        {/* رسمة شعلة وجسم الشمعة وقاعدة الـ O السفلي */}
+        <svg viewBox="0 0 24 24" width="20" height="20" style={{ marginTop: "1px" }}>
+          {/* شعلة اللهب */}
+          <path d="M12 3C12 3 9 7.5 9 11.5C9 13.2 10.3 14.5 12 14.5C13.7 14.5 15 13.2 15 11.5C15 7.5 12 3 12 3Z" fill="#3D2B1F" />
+          {/* منحنى القاعدة السفلي المتقاطع لخطوط الـ O من الداخل */}
+          <path d="M5 13C6.5 17 9 20 12 20C15 20 17.5 17 19 13" fill="none" stroke="#3D2B1F" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+      </div>
+    </div>
+
+    {/* الخط السفلي المقطوع والكلمة التوضيحية لبراند LEMO */}
+    <div style={{ position: "absolute", bottom: "-6px", display: "flex", alignItems: "center", width: "100%", justifyContent: "center" }}>
+      <div style={{ height: "3.5px", backgroundColor: "#3D2B1F", flex: 1 }}></div>
+      <span style={{ 
+        padding: "0 5px", 
+        fontSize: "8px", 
+        fontWeight: "800", 
+        color: "#3D2B1F", 
+        letterSpacing: "0.5px", 
+        whiteSpace: "nowrap", 
+        fontFamily: "Arial, sans-serif" 
+      }}>
+        ART DESIGNS & CANDLES
+      </span>
+      <div style={{ height: "3.5px", backgroundColor: "#3D2B1F", flex: 1 }}></div>
+    </div>
+  </div>
+);
+
 export default function Navbar() {
   const { isLoggedIn, isAdmin } = useAuth();
   const { itemCount } = useCart();
@@ -35,12 +94,9 @@ export default function Navbar() {
         zIndex: 1000,
         boxShadow: "0 2px 20px rgba(201,169,110,0.1)"
       }}>
-        {/* Logo */}
-        <Link to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontSize: "1.5rem" }}>🕯️</span>
-          <span style={{ fontSize: "1.4rem", fontWeight: "800", color: "#3D2B1F", letterSpacing: "-0.5px" }}>
-            LEMO <span style={{ color: "#C9A96E" }}>Store</span>
-          </span>
+        {/* Logo - تم استبدال النص والشموع القديمة باللوجو المكتوب بالكود حيا بالملي */}
+        <Link to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
+          <LemoLogo />
         </Link>
 
         {/* Desktop Links */}
