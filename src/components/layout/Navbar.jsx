@@ -5,14 +5,14 @@ import { useCart } from "../../context/CartContext";
 import { useLang } from "../../context/LangContext";
 import { logOut } from "../../firebase/auth";
 
-// 1. اللوجو المبرمج الفخم (بنظام الكتل عشان ميضربش في أي لغة)
+// 1. اللوجو الفخم (متبرمج ككتلة واحدة عشان ميضربش)
 const LemoLogo = () => (
   <div dir="ltr" style={{
     display: "flex",
     flexDirection: "column",
     width: "max-content",
     transform: "scale(0.85)",
-    transformOrigin: "center",
+    transformOrigin: "right center", // عشان يفضل لازق في اليمين
     userSelect: "none"
   }}>
     <div style={{
@@ -67,13 +67,14 @@ export default function Navbar() {
   const isActive = (path) => location.pathname === path;
 
   return (
+    // التعديل الجذري: استخدام Grid لتقسيم الشاشة 3 أجزاء محكمة مستحيل تتداخل
     <nav style={{
       background: "#fff",
       borderBottom: "1px solid #f0e8df",
       padding: "0 2rem",
-      display: "flex",
+      display: "grid",
+      gridTemplateColumns: "1fr auto 1fr", // جزء يمين، جزء في النص بالظبط، جزء شمال
       alignItems: "center",
-      justifyContent: "space-between",
       height: "75px",
       position: "sticky",
       top: 0,
@@ -82,13 +83,15 @@ export default function Navbar() {
       fontFamily: "Cairo, sans-serif"
     }}>
       
-      {/* استدعاء اللوجو الفخم هنا */}
-      <Link to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
-        <LemoLogo />
-      </Link>
+      {/* 1. منطقة اليمين (اللوجو) */}
+      <div style={{ justifySelf: "start" }}>
+        <Link to="/" style={{ textDecoration: "none" }}>
+          <LemoLogo />
+        </Link>
+      </div>
 
-      {/* 2. روابط الصفحات في المنتصف */}
-      <div style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
+      {/* 2. منطقة المنتصف (الروابط) */}
+      <div style={{ justifySelf: "center", display: "flex", gap: "2rem", alignItems: "center" }}>
         {[
           { to: "/", label: t.nav.home },
           { to: "/products", label: t.nav.products },
@@ -124,10 +127,10 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* 3. الأزرار الدائرية (تصميم الفيديو بالملي) */}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      {/* 3. منطقة اليسار (الزراير الدائرية بتاعت الفيديو) */}
+      <div style={{ justifySelf: "end", display: "flex", alignItems: "center", gap: "10px" }}>
         
-        {/* زرار تغيير اللغة (دائري مفرغ) */}
+        {/* زرار تغيير اللغة */}
         <button onClick={toggleLang} style={{
           background: "transparent", border: "1px solid #E8DDD0",
           width: "42px", height: "42px", borderRadius: "50%", cursor: "pointer",
@@ -138,7 +141,7 @@ export default function Navbar() {
           {lang === "ar" ? "EN" : "عربي"}
         </button>
 
-        {/* أيقونة السلة (دائرية مفرغة) */}
+        {/* أيقونة السلة */}
         <Link to="/cart" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
           <div style={{
             background: "transparent", border: "1px solid #E8DDD0",
@@ -158,7 +161,7 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* زرار تسجيل الدخول / الخروج (شكل بيضاوي Pill) */}
+        {/* زرار الدخول / الخروج */}
         {isLoggedIn ? (
           <button onClick={handleLogout} style={{
             background: "transparent", border: "1px solid #E8DDD0",
