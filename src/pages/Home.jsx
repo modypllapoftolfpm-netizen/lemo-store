@@ -6,7 +6,9 @@ import { subscribeToProducts } from "../firebase/products";
 import { subscribeToBanners, getSettings, subscribeToCategories } from "../firebase/settings";
 import { useCart } from "../context/CartContext";
 import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
-import { db } from "../../firebase/config";
+
+// السطر اللي كان فيه المشكلة - تم تصحيحه ليرجع خطوة واحدة فقط
+import { db } from "../firebase/config";
 
 export default function Home() {
   const { t, field, lang } = useLang();
@@ -66,8 +68,6 @@ export default function Home() {
   }, [lang]);
 
   const c = { p: settings.primaryColor || "#C9A96E", d: settings.darkColor || "#111111", bg: settings.bgColor || "#FAF8F5" };
-  const bestSellers = products.filter((p) => p.isBestSeller).slice(0, 4);
-  const featuredOffer = products.filter((p) => p.discount > 0).slice(0, 3);
   const fFamily = lang === "ar" ? "'Alexandria', sans-serif" : "'DM Sans', sans-serif";
   const fTitleFamily = lang === "ar" ? "'Alexandria', sans-serif" : "'Playfair Display', serif";
 
@@ -75,21 +75,7 @@ export default function Home() {
     heroDesc: lang === "ar" ? "اكتشف مجموعتنا المميزة المصنوعة يدوياً." : "Discover our premium products.",
     shopNow: lang === "ar" ? "تسوق الآن" : "Shop Now",
     shippingBar: lang === "ar" ? `🚚 شحن مجاني فوق ${settings.freeShippingLimit || 500} ج.م` : `🚚 Free Shipping over ${settings.freeShippingLimit || 500} EGP`,
-    catsTitle: lang === "ar" ? "تصفح الأقسام" : "Our Categories",
-    popularTitle: lang === "ar" ? "المنتجات الأكثر مبيعاً" : "Most Popular Products",
-    viewAll: lang === "ar" ? "عرض جميع المنتجات" : "View All Products",
-    featuredTitle: lang === "ar" ? "عروض حصرية" : "Featured Offer",
-    featuredDesc: lang === "ar" ? "استفد من خصوماتنا الحصرية." : "Take advantage of our exclusive discounts.",
-    shopSale: lang === "ar" ? "تسوق العروض" : "Shop Sale",
     reviewsTitle: lang === "ar" ? "آراء عملائنا" : "What Our Customers Say",
-    reviewsSub: lang === "ar" ? "تجارب حقيقية" : "Real Experiences",
-    footerDesc: lang === "ar" ? "شموع فاخرة ومنتجات عناية." : "Luxury Candles & Wellness.",
-    helpTitle: lang === "ar" ? "مساعدة" : "Help",
-    contactUs: lang === "ar" ? "اتصل بنا" : "Contact Us",
-    aboutUs: lang === "ar" ? "من نحن" : "About Us",
-    account: lang === "ar" ? "حسابي" : "Account",
-    floatingBtn: lang === "ar" ? "💬 تواصل معنا" : "💬 Contact Us",
-    rights: lang === "ar" ? "© 2026 Lemo Store — جميع الحقوق محفوظة" : "© 2026 Lemo Store — ALL RIGHTS RESERVED"
   };
 
   if (globalLoading) return <div style={{ position: "fixed", inset: 0, background: "#FAF8F5", display: "flex", alignItems: "center", justifyContent: "center" }}>Loading...</div>;
@@ -101,7 +87,10 @@ export default function Home() {
       <Navbar />
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "5rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "4rem", flexWrap: "wrap-reverse" }}>
         <div style={{ flex: "1 1 450px", textAlign: lang === "ar" ? "right" : "left" }}>
-          <h1 style={{ fontSize: "3.6rem", fontWeight: "300", color: c.d, margin: "0 0 1.5rem 0", fontFamily: fTitleFamily }}><span style={{ fontWeight: "800", color: "#3D2B1F", display: "block" }}>Lemo Store</span> {lang === "ar" ? "الشموع الفاخرة" : "Candles & Wellness"}</h1>
+          <h1 style={{ fontSize: "3.6rem", fontWeight: "300", color: c.d, margin: "0 0 1.5rem 0", fontFamily: fTitleFamily }}>
+            <span style={{ fontWeight: "800", color: "#3D2B1F", display: "block" }}>Lemo Store</span> 
+            {lang === "ar" ? "الشموع الفاخرة" : "Candles & Wellness"}
+          </h1>
           <p style={{ fontSize: "1.05rem", color: "#666", lineHeight: "1.8", marginBottom: "2.5rem" }}>{uiText.heroDesc}</p>
           <Link to="/products" style={{ background: c.d, color: "#fff", padding: "14px 45px", borderRadius: "30px", textDecoration: "none", fontWeight: "600" }}>{uiText.shopNow}</Link>
         </div>
@@ -137,19 +126,6 @@ export default function Home() {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function ProductCard({ product, field, t, addToCart, c, lang }) {
-  const [added, setAdded] = useState(false);
-  const handleAdd = () => { addToCart(product); setAdded(true); setTimeout(() => setAdded(false), 2000); };
-  const imgUrl = Array.isArray(product.imageUrl) ? product.imageUrl[0] : product.imageUrl;
-  return (
-    <div style={{ background: "#fff", borderRadius: "16px", border: "1px solid #E8DDD0", width: "250px", padding: "1rem" }}>
-      <img src={imgUrl} style={{ width: "100%", height: "200px", objectFit: "cover", borderRadius: "10px" }} />
-      <h3>{field(product, "name")}</h3>
-      <button onClick={handleAdd}>{added ? "✓" : "Add to Cart"}</button>
     </div>
   );
 }
