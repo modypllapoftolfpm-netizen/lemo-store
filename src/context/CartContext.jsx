@@ -49,7 +49,9 @@ export const CartProvider = ({ children }) => {
 
   // ─── Derived values ──────────────────────────────────────────────────────
   const itemCount = items.reduce((sum, i) => sum + i.qty, 0);
-  const subtotal  = items.reduce((sum, i) => sum + i.price * i.qty, 0);
+  
+  // التعديل هنا لضمان إن السعر يتحول لرقم عشان مفيش NaN تظهر
+  const subtotal = items.reduce((sum, i) => sum + (parseFloat(i.price || 0) * i.qty), 0);
 
   const getTotal = (discountPercent = 0) => {
     const discount = (subtotal * discountPercent) / 100;

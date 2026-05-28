@@ -4,6 +4,41 @@ import Navbar from "../components/layout/Navbar";
 import { useLang } from "../context/LangContext";
 import { subscribeToBanners, getSettings, subscribeToCategories } from "../firebase/settings";
 
+// المكون المتحرك الأسود (الفئات بالإنجليزي)
+const MovingCategoryTicker = ({ categories }) => {
+  return (
+    <div style={{
+      background: "#111",
+      color: "#fff",
+      padding: "12px 0",
+      overflow: "hidden",
+      whiteSpace: "nowrap",
+      width: "100%",
+      fontSize: "0.9rem",
+      fontWeight: "600",
+      borderBottom: "1px solid #333"
+    }}>
+      <div style={{
+        display: "inline-block",
+        animation: "marquee 25s linear infinite",
+        paddingLeft: "100%"
+      }}>
+        {categories.concat(categories).map((cat, index) => (
+          <span key={index} style={{ margin: "0 25px", textTransform: "uppercase", letterSpacing: "1px" }}>
+            {cat.nameEn || "CATEGORY"} ✦
+          </span>
+        ))}
+      </div>
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 export default function Home() {
   const { field, lang } = useLang();
   const [banners, setBanners] = useState([]);
@@ -24,25 +59,12 @@ export default function Home() {
   return (
     <div style={{ minHeight: "100vh", background: "#FAF8F5", fontFamily: "'Cairo', sans-serif" }} dir={lang === "ar" ? "rtl" : "ltr"}>
       <Navbar />
+      
+      {/* 1. الشريط الأسود المتحرك (الجديد) */}
+      <MovingCategoryTicker categories={categories} />
 
-      {/* 1. شريط التصنيفات (Category Bar) */}
-      <div style={{ background: "#fff", padding: "15px 2rem", borderBottom: "1px solid #f0e8df", display: "flex", justifyContent: "center", gap: "25px", flexWrap: "wrap", fontSize: "0.85rem", fontWeight: "700", color: "#3D2B1F" }}>
-        {categories.map((cat, index) => (
-          <div key={cat.id} style={{ display: "flex", alignItems: "center", gap: "25px" }}>
-            <Link to={`/category/${cat.slug}`} style={{ textDecoration: "none", color: "inherit" }}>{field(cat, "name")}</Link>
-            {index < categories.length - 1 && <span style={{ color: "#E8DDD0" }}>✦</span>}
-          </div>
-        ))}
-      </div>
-
-      {/* 2. شريط الإعلانات (Ticker Bar) */}
-      <div style={{ background: "#C9A96E", color: "#fff", padding: "10px 0", textAlign: "center", fontSize: "0.85rem", fontWeight: "600" }}>
-        شحن مجاني على الطلبات فوق 2000 ج.م | تغليف هدايا فاخر
-      </div>
-
-      {/* 3. الهيرو سكشن (Hero Section) */}
+      {/* 2. الهيرو سكشن (Hero Section) */}
       <div style={{ maxWidth: "1140px", margin: "0 auto", padding: "4rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "4rem", flexWrap: "wrap-reverse" }}>
-        {/* النص والزر */}
         <div style={{ flex: "1 1 450px" }}>
           <h1 style={{ fontSize: "3.5rem", fontWeight: "900", color: "#111", margin: "0 0 1rem 0" }}>Lemo Store</h1>
           <h2 style={{ fontSize: "2rem", color: "#3D2B1F", marginBottom: "1.5rem" }}>{lang === "ar" ? "الشموع الفاخرة والديكور" : "Luxury Candles & Decor"}</h2>
@@ -56,7 +78,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 4. الأقسام */}
+      {/* 3. الأقسام */}
       <div style={{ background: "#fff", padding: "4rem 2rem", textAlign: "center" }}>
         <h2 style={{ fontSize: "2.5rem", fontWeight: "800", color: "#111", marginBottom: "3rem" }}>{lang === "ar" ? "تصفح الأقسام" : "Browse Categories"}</h2>
         <div style={{ display: "flex", justifyContent: "center", gap: "3rem", flexWrap: "wrap" }}>
