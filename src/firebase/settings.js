@@ -23,7 +23,15 @@ export const subscribeToSettings = (callback) => {
   });
 };
 
-// ─── دالة مساعدة لرفع صور البنرات كـ Base64 متوافقة مع النظام المستقل ──────
+// ─── إدارة المنتجات (الجديد) ──────────────────────────────────────────────────
+export const subscribeToProducts = (callback) => {
+  const q = query(collection(db, "products"));
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  });
+};
+
+// ─── دالة مساعدة لرفع صور البنرات كـ Base64 ──────
 export const uploadBannerImage = async (file) => {
   return new Promise((resolve, reject) => {
     const fileReader = new FileReader();
@@ -33,7 +41,7 @@ export const uploadBannerImage = async (file) => {
   });
 };
 
-// ─── إدارة الفئات المستقرة بنسبة 100% ──────────────────────────────────────────
+// ─── إدارة الفئات ──────────────────────────────────────────
 export const addCategory = async (data) => {
   return await addDoc(collection(db, "categories"), {
     ...data,
@@ -84,7 +92,7 @@ export const subscribeToBanners = (callback) => {
   });
 };
 
-// ─── كود البرومو كود التسويقي المستقر ────────────────────────────────────────
+// ─── كود البرومو كود ────────────────────────────────────────────────
 export const validatePromoCode = async (code) => {
   const snap = await getDoc(doc(db, "promoCodes", code.toUpperCase()));
   if (!snap.exists()) return { valid: false, message: "Invalid promo code" };

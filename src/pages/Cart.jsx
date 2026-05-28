@@ -3,14 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useLang } from "../context/LangContext";
 import Navbar from "../components/layout/Navbar";
-import { validateCoupon } from "../firebase/coupons"; // تأكد من المسار ده
+import { validateCoupon } from "../firebase/coupons"; 
 
 export default function Cart() {
   const { items, removeFromCart, updateQty } = useCart();
   const { field, lang } = useLang();
   const navigate = useNavigate();
 
-  // الحالة الخاصة بالكوبون والإهداء
   const [promo, setPromo] = useState("");
   const [coupon, setCoupon] = useState(null);
   const [promoMsg, setPromoMsg] = useState("");
@@ -25,8 +24,6 @@ export default function Cart() {
   };
 
   const subtotal = items.reduce((acc, i) => acc + (parseFloat(i.price || 0) * i.qty), 0);
-  
-  // حساب الخصم
   const discountAmount = coupon ? (subtotal * coupon.discount) / 100 : 0;
   const finalTotal = subtotal - discountAmount + (isGift ? giftFee : 0);
 
@@ -47,8 +44,7 @@ export default function Cart() {
           <div style={{ background: "#fff", padding: "2rem", borderRadius: "20px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
             {items.length === 0 ? <p>السلة فارغة</p> : items.map(item => (
               <div key={item.id} style={{ display: "flex", alignItems: "center", gap: "1.5rem", borderBottom: "1px solid #f0e8df", paddingBottom: "1.5rem", marginBottom: "1.5rem" }}>
-                {/* تعديل الصورة: خلفية رمادي عشان لو الصورة مش موجودة تظهر */}
-                <div style={{ width: "100px", height: "100px", borderRadius: "12px", overflow: "hidden", background: "#f9f9f9", border: "1px solid #eee" }}>
+                <div style={{ width: "100px", height: "100px", borderRadius: "12px", overflow: "hidden", background: "#f9f9f9" }}>
                   <img src={item.image} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => e.target.src = 'https://via.placeholder.com/100'} />
                 </div>
                 <div style={{ flex: 1 }}>
@@ -69,10 +65,14 @@ export default function Cart() {
           <div style={{ background: "#3D2B1F", color: "#fff", padding: "2.5rem", borderRadius: "20px", height: "fit-content" }}>
             <h2 style={{ fontSize: "1.4rem", marginBottom: "2rem" }}>{lang === "ar" ? "ملخص الطلب" : "Order Summary"}</h2>
             
-            {/* خانة الكوبون */}
             <div style={{ marginBottom: "1.5rem" }}>
               <div style={{ display: "flex", gap: "10px" }}>
-                <input value={promo} onChange={(e) => setPromo(e.target.value.toUpperCase())} placeholder="كود الخصم" style={{ flex: 1, padding: "10px", borderRadius: "5px", border: "none" }} />
+                <input 
+                  value={promo} 
+                  onChange={(e) => setPromo(e.target.value.toUpperCase())} 
+                  placeholder="كود الخصم" 
+                  style={{ flex: 1, padding: "12px", borderRadius: "5px", border: "1px solid #ccc", color: "#333", background: "#fff" }} 
+                />
                 <button onClick={handleApply} style={{ background: "#C9A96E", color: "#fff", border: "none", padding: "10px 15px", borderRadius: "5px", cursor: "pointer" }}>تطبيق</button>
               </div>
               <p style={{ fontSize: "0.8rem", marginTop: "5px", color: promoMsg.includes("✅") ? "#81c784" : "#e57373" }}>{promoMsg}</p>
@@ -90,12 +90,10 @@ export default function Cart() {
                 <span>{lang === "ar" ? "المجموع:" : "Subtotal:"}</span>
                 <span>{subtotal.toFixed(2)} ج.م</span>
               </div>
-              {coupon && (
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", color: "#81c784" }}>
-                  <span>{lang === "ar" ? "الخصم:" : "Discount:"}</span>
-                  <span>-{discountAmount.toFixed(2)} ج.م</span>
-                </div>
-              )}
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", color: "#81c784" }}>
+                <span>{lang === "ar" ? "الخصم:" : "Discount:"}</span>
+                <span>-{discountAmount.toFixed(2)} ج.م</span>
+              </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "2rem", fontSize: "1.3rem", fontWeight: "bold" }}>
                 <span>الإجمالي:</span>
                 <span style={{ color: "#C9A96E" }}>{finalTotal.toFixed(2)} ج.م</span>

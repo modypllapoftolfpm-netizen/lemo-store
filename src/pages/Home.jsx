@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/layout/Navbar";
 import { useLang } from "../context/LangContext";
-import { subscribeToBanners, getSettings, subscribeToCategories } from "../firebase/settings";
+import { subscribeToBanners, getSettings, subscribeToCategories, subscribeToProducts } from "../firebase/settings";
 
 const MovingCategoryTicker = ({ categories }) => (
   <div style={{ background: "#111", color: "#fff", padding: "12px 0", overflow: "hidden", whiteSpace: "nowrap", width: "100%", fontSize: "0.9rem", fontWeight: "600", borderBottom: "1px solid #333", margin: "2rem 0" }}>
@@ -19,24 +19,27 @@ export default function Home() {
   const { field, lang } = useLang();
   const [banners, setBanners] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]); 
   const [globalLoading, setGlobalLoading] = useState(true);
 
   useEffect(() => {
-    const unsub2 = subscribeToBanners((data) => setBanners(data));
-    const unsub3 = subscribeToCategories((data) => setCategories(data));
+    const unsubBanners = subscribeToBanners((data) => setBanners(data));
+    const unsubCats = subscribeToCategories((data) => setCategories(data));
+    const unsubProds = subscribeToProducts((data) => setProducts(data));
     getSettings().then(() => setGlobalLoading(false));
-    return () => { unsub2(); unsub3(); };
+    return () => { unsubBanners(); unsubCats(); unsubProds(); };
   }, [lang]);
 
   if (globalLoading) return <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>جاري التحميل...</div>;
 
   const mainBanner = banners[0];
+  const bestSellers = products.filter(p => p.bestSeller === true);
 
   return (
     <div style={{ minHeight: "100vh", background: "#FAF8F5", fontFamily: "'Cairo', sans-serif" }} dir={lang === "ar" ? "rtl" : "ltr"}>
       <Navbar />
 
-      {/* 1. الشريط الذهبي (الشحن المجاني - في الأعلى) */}
+      {/* 1. الشريط الذهبي */}
       <div style={{ background: "#C9A96E", color: "#fff", padding: "10px 0", textAlign: "center", fontSize: "0.85rem", fontWeight: "600" }}>
         {lang === "ar" ? "شحن مجاني على الطلبات فوق 2000 ج.م | تغليف هدايا فاخر" : "Free shipping on orders over 2000 EGP | Luxury Gift Wrap"}
       </div>
@@ -53,18 +56,10 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 3. الشريط الأسود المتحرك (في منتصف الصفحة) */}
+      {/* 3. الشريط الأسود المتحرك */}
       <MovingCategoryTicker categories={categories} />
 
-      {/* 4. قسم الأكثر مبيعاً (Best Sellers) */}
-      <div style={{ padding: "4rem 2rem", textAlign: "center" }}>
-        <h2 style={{ fontSize: "2.5rem", fontWeight: "800", color: "#111", marginBottom: "2rem" }}>{lang === "ar" ? "الأكثر مبيعاً" : "Best Sellers"}</h2>
-        <p style={{ color: "#666", marginBottom: "3rem" }}>{lang === "ar" ? "أفضل منتجاتنا طلباً لدى عملائنا" : "Our most popular products"}</p>
-        {/* هنا يمكنك إضافة ماب للـ products في المستقبل */}
-        <div style={{ color: "#aaa" }}>{lang === "ar" ? "جاري تحديث قائمة المبيعات..." : "Updating best sellers..."}</div>
-      </div>
-
-      {/* 5. تصفح الأقسام (في الأسفل) */}
+      {/* 4. تصفح الأقسام */}
       <div style={{ background: "#fff", padding: "4rem 2rem", textAlign: "center" }}>
         <h2 style={{ fontSize: "2.5rem", fontWeight: "800", color: "#111", marginBottom: "3rem" }}>{lang === "ar" ? "تصفح الأقسام" : "Browse Categories"}</h2>
         <div style={{ display: "flex", justifyContent: "center", gap: "3rem", flexWrap: "wrap" }}>
@@ -76,6 +71,20 @@ export default function Home() {
               <h3 style={{ marginTop: "1rem", color: "#111" }}>{field(cat, "name")}</h3>
             </Link>
           ))}
+        </div>
+      </div>
+
+      {/* 5. قسم الأكثر مبيعاً */}
+      <div style={{ padding: "4rem 2rem", textAlign: "center" }}>
+        <h2 style={{ fontSize: "2.5rem", fontWeight: "800", color: "#111", marginBottom: "3rem" }}>{lang === "ar" ? "الأكثر مبيعاً" : "Best Sellers"}</h2>
+        <div style={{ display: "flex", justifyContent: "center", gap: "2rem", flexWrap: "wrap" }}>
+          {bestSellers.length > 0 ? bestSellers.map(product => (
+            <Link key={product.id} to={`/product/${product.id}`} style={{ textDecoration: "none", color: "inherit", width: "250px" }}>
+              <img src={product.image} style={{ width: "100%", height: "250px", objectFit: "cover", borderRadius: "10px" }} />
+              <h3 style={{ marginTop: "1rem" }}>{field(product, "name")}</h3>
+              <p style={{ color: "#C9A96E", fontWeight: "bold" }}>{product.price} ج.م</p>
+            </Link>
+          )) : <p>لا توجد منتجات مميزة حالياً</p>}
         </div>
       </div>
     </div>
