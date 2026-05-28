@@ -23,6 +23,114 @@ const LemoLogo = () => (
   </div>
 );
 
+const FloatingContact = ({ links }) => {
+  const [open, setOpen] = useState(false);
+
+  const socials = [
+    { href: `https://wa.me/${links?.whatsapp}`, color: "#25D366", icon: (
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.122 1.532 5.853L.057 23.535a.5.5 0 00.608.608l5.757-1.458A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.944 9.944 0 01-5.073-1.387l-.363-.217-3.767.954.972-3.682-.236-.38A9.944 9.944 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+    )},
+    { href: links?.facebook, color: "#4267B2", icon: (
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+    )},
+    { href: links?.instagram, color: "#C13584", icon: (
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+    )},
+    { href: `mailto:${links?.email}`, color: "#D44638", icon: (
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="white"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 010 19.366V5.457c0-.904.732-1.636 1.636-1.636h.749L12 10.55l9.615-6.73h.749A1.636 1.636 0 0124 5.457z"/></svg>
+    )},
+  ];
+
+  const angles = [-60, -20, 20, 60];
+
+  return (
+    <>
+      <style>{`
+        @keyframes popIn {
+          0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        @keyframes popOut {
+          0% { transform: scale(1) rotate(0deg); opacity: 1; }
+          100% { transform: scale(0) rotate(180deg); opacity: 0; }
+        }
+        .social-btn {
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .social-btn:hover {
+          transform: scale(1.2) !important;
+          box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important;
+        }
+        @keyframes pulse {
+          0% { box-shadow: 0 0 0 0 rgba(201,169,110,0.4); }
+          70% { box-shadow: 0 0 0 10px rgba(201,169,110,0); }
+          100% { box-shadow: 0 0 0 0 rgba(201,169,110,0); }
+        }
+        .contact-main-btn {
+          animation: pulse 2s infinite;
+        }
+      `}</style>
+
+      <div style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+        {/* الأيقونات الاجتماعية */}
+        {socials.map((s, i) => (
+          
+            key={i}
+            href={s.href}
+            target="_blank"
+            rel="noreferrer"
+            className="social-btn"
+            style={{
+              position: "absolute",
+              bottom: open ? `${55 + i * 50}px` : "0px",
+              left: "50%",
+              marginLeft: "-22px",
+              width: "44px",
+              height: "44px",
+              borderRadius: "50%",
+              background: s.color,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
+              animation: open ? `popIn 0.3s ease ${i * 0.07}s both` : `popOut 0.2s ease ${(3 - i) * 0.05}s both`,
+              pointerEvents: open ? "auto" : "none",
+              zIndex: 999,
+            }}
+          >
+            {s.icon}
+          </a>
+        ))}
+
+        {/* الزرار الرئيسي */}
+        <button
+          onClick={() => setOpen(!open)}
+          className="contact-main-btn"
+          style={{
+            width: "42px",
+            height: "42px",
+            borderRadius: "50%",
+            background: open ? "#3D2B1F" : "#C9A96E",
+            border: "none",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "background 0.3s, transform 0.3s",
+            transform: open ? "rotate(45deg)" : "rotate(0deg)",
+            position: "relative",
+            zIndex: 1000,
+          }}
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="white">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/>
+          </svg>
+        </button>
+      </div>
+    </>
+  );
+};
+
 export default function Navbar() {
   const { isLoggedIn, isAdmin } = useAuth();
   const { itemCount } = useCart();
@@ -30,10 +138,9 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [links, setLinks] = useState(null);
-  const [isContactOpen, setIsContactOpen] = useState(false);
 
   useEffect(() => {
-    getDoc(doc(db, "settings", "general")).then(snap => { if (snap.exists()) setLinks(snap.data()); });
+    getDoc(doc(db, "settings", "main")).then(snap => { if (snap.exists()) setLinks(snap.data()); });
   }, []);
 
   const handleLogout = async () => { await logOut(); navigate("/"); };
@@ -41,58 +148,52 @@ export default function Navbar() {
 
   return (
     <nav style={{ background: "#fff", borderBottom: "1px solid #f0e8df", padding: "0 2rem", display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", height: "75px", position: "sticky", top: 0, zIndex: 1000, fontFamily: "Cairo, sans-serif" }}>
-      
+
       <div style={{ justifySelf: "start" }}>
         <Link to="/" style={{ textDecoration: "none" }}><LemoLogo /></Link>
       </div>
 
       <div style={{ justifySelf: "center", display: "flex", gap: "2rem", alignItems: "center" }}>
-        {[ { to: "/", label: t.nav.home }, { to: "/products", label: t.nav.products } ].map((link) => (
-          <Link key={link.to} to={link.to} style={{ textDecoration: "none", color: isActive(link.to) ? "#C9A96E" : "#3D2B1F", fontWeight: isActive(link.to) ? "700" : "600", fontSize: "0.95rem", borderBottom: isActive(link.to) ? "2px solid #C9A96E" : "2px solid transparent", paddingBottom: "4px" }}>{link.label}</Link>
+        {[{ to: "/", label: t.nav.home }, { to: "/products", label: t.nav.products }].map((link) => (
+          <Link key={link.to} to={link.to} style={{ textDecoration: "none", color: isActive(link.to) ? "#C9A96E" : "#3D2B1F", fontWeight: isActive(link.to) ? "700" : "600", fontSize: "0.95rem", borderBottom: isActive(link.to) ? "2px solid #C9A96E" : "2px solid transparent", paddingBottom: "4px" }}>
+            {link.label}
+          </Link>
         ))}
-        {isLoggedIn && <Link to="/orders" style={{ textDecoration: "none", color: isActive("/orders") ? "#C9A96E" : "#3D2B1F", fontWeight: isActive("/orders") ? "700" : "600", fontSize: "0.95rem" }}>{t.nav.orders}</Link>}
-        {isAdmin && <Link to="/admin" style={{ textDecoration: "none", color: "#fff", background: "#3D2B1F", padding: "6px 16px", borderRadius: "20px", fontWeight: "700", fontSize: "0.9rem" }}>⚙️ {t.nav.admin}</Link>}
-        
-        {/* زرار تواصل معنا المدمج (مكتوب على سطور منفصلة لمنع القص) */}
-        <div style={{ position: "relative" }}>
-          <button 
-            onClick={() => setIsContactOpen(!isContactOpen)} 
-            style={{ 
-              background: "transparent", 
-              border: "1px solid #C9A96E", 
-              color: "#3D2B1F", 
-              padding: "6px 16px", 
-              borderRadius: "20px", 
-              cursor: "pointer", 
-              fontWeight: "600" 
-            }}
-          >
-            تواصل معنا
-          </button>
-
-          {isContactOpen && links && (
-            <div style={{ position: "absolute", top: "150%", left: 0, background: "#fff", padding: "15px", borderRadius: "10px", boxShadow: "0 5px 15px rgba(0,0,0,0.15)", display: "grid", gap: "8px", minWidth: "140px", zIndex: 999 }}>
-              <a href={`https://wa.me/${links.whatsapp}`} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: "#25D366" }}>واتساب</a>
-              <a href={links.facebook} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: "#4267B2" }}>فيسبوك</a>
-              <a href={links.instagram} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: "#C13584" }}>انستجرام</a>
-              <a href={`mailto:${links.email}`} style={{ textDecoration: "none", color: "#D44638" }}>الجيميل</a>
-            </div>
-          )}
-        </div>
+        {isLoggedIn && (
+          <Link to="/orders" style={{ textDecoration: "none", color: isActive("/orders") ? "#C9A96E" : "#3D2B1F", fontWeight: isActive("/orders") ? "700" : "600", fontSize: "0.95rem" }}>
+            {t.nav.orders}
+          </Link>
+        )}
+        {isAdmin && (
+          <Link to="/admin" style={{ textDecoration: "none", color: "#fff", background: "#3D2B1F", padding: "6px 16px", borderRadius: "20px", fontWeight: "700", fontSize: "0.9rem" }}>
+            ⚙️ {t.nav.admin}
+          </Link>
+        )}
+        <FloatingContact links={links} />
       </div>
 
       <div style={{ justifySelf: "end", display: "flex", alignItems: "center", gap: "10px" }}>
-        <button onClick={toggleLang} style={{ background: "transparent", border: "1px solid #E8DDD0", width: "42px", height: "42px", borderRadius: "50%", cursor: "pointer" }}>{lang === "ar" ? "EN" : "عربي"}</button>
-        <Link to="/cart" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
+        <button onClick={toggleLang} style={{ background: "transparent", border: "1px solid #E8DDD0", width: "42px", height: "42px", borderRadius: "50%", cursor: "pointer", fontWeight: "700", color: "#3D2B1F" }}>
+          {lang === "ar" ? "EN" : "عربي"}
+        </button>
+        <Link to="/cart" style={{ textDecoration: "none" }}>
           <div style={{ background: "transparent", border: "1px solid #E8DDD0", width: "42px", height: "42px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
             🛒
-            {itemCount > 0 && <span style={{ position: "absolute", top: "-4px", right: "-4px", background: "#C9A96E", color: "#fff", borderRadius: "50%", width: "20px", height: "20px", fontSize: "0.75rem" }}>{itemCount}</span>}
+            {itemCount > 0 && (
+              <span style={{ position: "absolute", top: "-4px", right: "-4px", background: "#C9A96E", color: "#fff", borderRadius: "50%", width: "20px", height: "20px", fontSize: "0.75rem", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700" }}>
+                {itemCount}
+              </span>
+            )}
           </div>
         </Link>
         {isLoggedIn ? (
-          <button onClick={handleLogout} style={{ background: "transparent", border: "1px solid #E8DDD0", padding: "8px 20px", borderRadius: "20px", cursor: "pointer" }}>{t.nav.logout}</button>
+          <button onClick={handleLogout} style={{ background: "transparent", border: "1px solid #E8DDD0", padding: "8px 20px", borderRadius: "20px", cursor: "pointer", color: "#3D2B1F", fontWeight: "600" }}>
+            {t.nav.logout}
+          </button>
         ) : (
-          <Link to="/login" style={{ background: "transparent", border: "1px solid #E8DDD0", padding: "8px 20px", borderRadius: "20px", textDecoration: "none", color: "#3D2B1F" }}>{t.nav.login}</Link>
+          <Link to="/login" style={{ background: "#3D2B1F", border: "none", padding: "8px 20px", borderRadius: "20px", textDecoration: "none", color: "#fff", fontWeight: "700" }}>
+            {t.nav.login}
+          </Link>
         )}
       </div>
     </nav>
