@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/layout/Navbar";
+import FloatingContact from "../components/FloatingContact";
 import { useLang } from "../context/LangContext";
 import { subscribeToBanners, getSettings, subscribeToCategories, subscribeToProducts } from "../firebase/settings";
 
@@ -28,21 +29,19 @@ export default function Home() {
 
   const heroBanner = banners.find(b => b.sectionKey === 'hero') || {};
   const bestSellers = products.filter(p => p.isBestSeller === true);
-  const newProducts = products.filter(p => p.isNew === true);
 
-  // صورة القوس الافتراضية لو مفيش صورة مرفوعة
+  // صورة القوس الافتراضية
   const defaultArchImg = "https://images.unsplash.com/photo-1602874801007-bd458bb1b8b6?q=80&w=800"; 
 
-  const ProductCard = ({ product }) => (
-    <Link to={`/product/${product.id}`} style={{ textDecoration: "none", color: "inherit", width: "220px", margin: "1rem" }}>
+  // كارت مخصص لعرض الأقسام
+  const CategoryCard = ({ category }) => (
+    <Link to={`/category/${category.id}`} style={{ textDecoration: "none", color: "inherit", width: "220px", margin: "1rem", textAlign: "center" }}>
       <img 
-        src={Array.isArray(product.imageUrl) ? product.imageUrl[0] : product.imageUrl} 
-        style={{ width: "100%", height: "220px", objectFit: "cover", borderRadius: "10px" }} 
-        alt=""
+        src={Array.isArray(category.imageUrl) ? category.imageUrl[0] : category.imageUrl || defaultArchImg} 
+        style={{ width: "100%", height: "220px", objectFit: "cover", borderRadius: "10px", boxShadow: "0 4px 8px rgba(0,0,0,0.1)" }} 
+        alt={field(category, "name")}
       />
-      <h3 style={{ marginTop: "1rem", fontSize: "1.1rem" }}>{field(product, "name")}</h3>
-      <p style={{ color: "#C9A96E", fontWeight: "bold" }}>{product.price} ج.م</p>
-      {settings?.showStock !== false && <p style={{ fontSize: "0.8rem", color: "#888" }}>المتبقي: {product.stock}</p>}
+      <h3 style={{ marginTop: "1rem", fontSize: "1.3rem", fontWeight: "bold", color: "#111" }}>{field(category, "name")}</h3>
     </Link>
   );
 
@@ -87,30 +86,33 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ─── شريط الكلمات المتحرك النحيف ─── */}
-      <div style={{ borderTop: "1px solid #E8DDD0", borderBottom: "1px solid #E8DDD0", padding: "12px 0", overflow: "hidden", whiteSpace: "nowrap", width: "100%", fontSize: "0.85rem", fontWeight: "800", color: "#3D2B1F" }}>
+      {/* ─── شريط الكلمات المتحرك (تم تغييره للأسود) ─── */}
+      <div style={{ background: "#000000", borderTop: "1px solid #222", borderBottom: "1px solid #222", padding: "12px 0", overflow: "hidden", whiteSpace: "nowrap", width: "100%", fontSize: "0.85rem", fontWeight: "800", color: "#ffffff" }}>
         <div style={{ display: "inline-block", animation: "marquee 40s linear infinite" }}>
           {[...Array(10)].map((_, i) => (
             <span key={i} style={{ margin: "0 15px", textTransform: "uppercase", letterSpacing: "3px" }}>
-              SPECIAL GIFTS ✦ PACKAGES ✦ OFFERS ✦ BUNDLES ✦ CANDLES ✦ HOME DECOR ✦ MERCHANDISE ✦ BODY ESSENTIALS ✦
+              SPECIAL GIFTS <span style={{color: "#C9A96E"}}>✦</span> PACKAGES <span style={{color: "#C9A96E"}}>✦</span> OFFERS <span style={{color: "#C9A96E"}}>✦</span> BUNDLES <span style={{color: "#C9A96E"}}>✦</span> CANDLES <span style={{color: "#C9A96E"}}>✦</span> HOME DECOR <span style={{color: "#C9A96E"}}>✦</span> BODY ESSENTIALS <span style={{color: "#C9A96E"}}>✦</span>
             </span>
           ))}
         </div>
         <style>{`@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }`}</style>
       </div>
 
-      {/* ─── شريط الشحن الذهبي ─── */}
+      {/* ─── شريط الشحن الذهبي (يقرأ من الإعدادات) ─── */}
       <div style={{ background: "#C9A96E", color: "#fff", textAlign: "center", padding: "12px", fontSize: "0.95rem", fontWeight: "700" }}>
-        🚚 شحن مجاني على الطلبات فوق 2000 ج.م | 🎁 تغليف هدايا مجاني فاخر
+        🚚 شحن مجاني على الطلبات فوق {settings?.freeShippingLimit || 2000} ج.م | 🎁 تغليف هدايا مجاني فاخر
       </div>
 
       {/* ─── تصفح الأقسام ─── */}
       <div style={{ padding: "4rem 2rem", textAlign: "center" }}>
         <h2 style={{ fontSize: "2.5rem", fontWeight: "900", color: "#111", marginBottom: "3rem" }}>{lang === "ar" ? "تصفح الأقسام" : "Browse Categories"}</h2>
         <div style={{ display: "flex", justifyContent: "center", gap: "2rem", flexWrap: "wrap" }}>
-          {bestSellers.length > 0 ? bestSellers.map(p => <ProductCard key={p.id} product={p} />) : <p>لا توجد منتجات مميزة</p>}
+          {categories.length > 0 ? categories.map(c => <CategoryCard key={c.id} category={c} />) : <p>{lang === "ar" ? "لا توجد أقسام مضافة" : "No categories found"}</p>}
         </div>
       </div>
+
+      {/* ─── زر التواصل العائم ─── */}
+      <FloatingContact />
 
     </div>
   );
