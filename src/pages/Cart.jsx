@@ -29,18 +29,31 @@ export default function Cart() {
     }
   };
 
-  // ─── الحسابات (مع فرض قيم أمان عشان الـ NaN ما تظهرش) ────────────────────
-  const subtotal = items.reduce((acc, i) => acc + (parseFloat(i.price || 0) * i.qty), 0);
+  // ─── الحسابات (مع فرض قيم أمان قوية لمنع NaN) ────────────────────
+  // بنحسب المجموع، ونضمن إن السعر والكمية أرقام، لو فيهم حاجة ناقصة بنحط 0
+  const subtotal = items.reduce((acc, i) => {
+    const price = parseFloat(i.price || 0);
+    const qty = parseInt(i.qty || 0);
+    return acc + (price * qty);
+  }, 0);
   
-  // بنجيب الخصم كـ رقم، ولو مش موجود بنعتبره صفر
-  const discountPercent = coupon && coupon.discount ? parseFloat(coupon.discount) : 0;
-  const discountAmount = (subtotal * discountPercent) / 100;
+  // بنجيب الخصم كـ رقم، ولو مش موجود بنعتبره 0
+  const discountVal = (coupon && coupon.discount) ? parseFloat(coupon.discount) : 0;
+  const discountAmount = (subtotal * discountVal) / 100;
   
-  // الإجمالي بأمان
-  const finalTotal = subtotal - discountAmount + (isGift ? giftFee : 0);
+  // الإجمالي: بنستخدم Math.max(0, ...) عشان نضمن إن الرقم عمره ما يطلع بالسالب أو NaN
+  const finalTotal = Math.max(0, subtotal - discountAmount + (isGift ? giftFee : 0));
 
   const proceedToCheckout = () => {
-    navigate("/checkout", { state: { total: finalTotal, isGift, giftNote, discount: discountPercent } });
+    navigate("/checkout", { 
+      state: { 
+        total: finalTotal, 
+        isGift, 
+        giftNote, 
+        discount: discountVal,
+        items: items 
+      } 
+    });
   };
 
   return (
