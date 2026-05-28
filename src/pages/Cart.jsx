@@ -19,35 +19,33 @@ export default function Cart() {
 
   const handleApply = async () => {
     const data = await validateCoupon(promo);
-    if (data) { 
+    console.log("البيانات اللي رجعت من الفايربيز:", data);
+    
+    // بنطمن إن الداتا موجودة وفيها قيمة discount
+    if (data && (data.discount !== undefined && data.discount !== null)) { 
       setCoupon(data); 
       setPromoMsg("✅ تم تطبيق الكوبون!"); 
-    }
-    else { 
+    } else { 
       setCoupon(null); 
       setPromoMsg("❌ كوبون غير صالح"); 
     }
   };
 
-  // ─── الحسابات (مع فرض قيم أمان قوية لمنع NaN) ────────────────────
-  // بنحسب المجموع، ونضمن إن السعر والكمية أرقام، لو فيهم حاجة ناقصة بنحط 0
-  const subtotal = items.reduce((acc, i) => {
-    const price = parseFloat(i.price || 0);
-    const qty = parseInt(i.qty || 0);
-    return acc + (price * qty);
-  }, 0);
+  // 1. حساب المجموع الكلي (Subtotal)
+  const subtotal = items.reduce((acc, i) => acc + (parseFloat(i.price || 0) * i.qty), 0);
   
-  // بنجيب الخصم كـ رقم، ولو مش موجود بنعتبره 0
-  const discountVal = (coupon && coupon.discount) ? parseFloat(coupon.discount) : 0;
+  // 2. حساب قيمة الخصم (بيقرأ الـ discount من الكوبون)
+  const discountVal = coupon ? parseFloat(coupon.discount || 0) : 0;
   const discountAmount = (subtotal * discountVal) / 100;
   
-  // الإجمالي: بنستخدم Math.max(0, ...) عشان نضمن إن الرقم عمره ما يطلع بالسالب أو NaN
+  // 3. حساب الإجمالي النهائي (مع مراعاة تكلفة الهدية)
   const finalTotal = Math.max(0, subtotal - discountAmount + (isGift ? giftFee : 0));
 
   const proceedToCheckout = () => {
     navigate("/checkout", { 
       state: { 
         total: finalTotal, 
+        subtotal: subtotal,
         isGift, 
         giftNote, 
         discount: discountVal,
@@ -65,12 +63,11 @@ export default function Cart() {
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: "3rem" }}>
           
-          {/* جزء المنتجات */}
           <div style={{ background: "#fff", padding: "2rem", borderRadius: "20px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
             {items.length === 0 ? <p>السلة فارغة</p> : items.map(item => (
               <div key={item.id} style={{ display: "flex", alignItems: "center", gap: "1.5rem", borderBottom: "1px solid #f0e8df", paddingBottom: "1.5rem", marginBottom: "1.5rem" }}>
                 <div style={{ width: "100px", height: "100px", borderRadius: "12px", overflow: "hidden", background: "#f9f9f9" }}>
-                  <img src={item.image} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => e.target.src = 'https://via.placeholder.com/100'} />
+                  <img src={Array.isArray(item.imageUrl) ? item.imageUrl[0] : item.imageUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => e.target.src = 'https://via.placeholder.com/100'} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.1rem" }}>{field(item, "name")}</h3>
@@ -86,7 +83,6 @@ export default function Cart() {
             ))}
           </div>
 
-          {/* جزء ملخص الطلب */}
           <div style={{ background: "#3D2B1F", color: "#fff", padding: "2.5rem", borderRadius: "20px", height: "fit-content" }}>
             <h2 style={{ fontSize: "1.4rem", marginBottom: "2rem" }}>{lang === "ar" ? "ملخص الطلب" : "Order Summary"}</h2>
             

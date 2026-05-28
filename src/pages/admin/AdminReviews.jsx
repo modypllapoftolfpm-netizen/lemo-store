@@ -12,7 +12,7 @@ export default function AdminReviews() {
         const snap = await getDocs(collection(db, "reviews"));
         setReviews(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       } catch (e) {
-        console.error(e);
+        console.error("خطأ في جلب التقييمات:", e);
       }
     }
     fetchReviews();
@@ -33,7 +33,6 @@ export default function AdminReviews() {
     setLoadingId(null);
   };
 
-  // دالة ذكية لرفع الصورة مباشرة إلى Cloudinary
   const handleImageUpload = async (e, reviewId) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -42,11 +41,10 @@ export default function AdminReviews() {
     try {
       const formData = new FormData();
       formData.append("file", file);
+      // تأكد من وضع الـ Preset والـ Name الخاصين بيك هنا
+      formData.append("upload_preset", "lemo_reviews"); 
       
-      // ⚠️ تنبيه هام: استبدل YOUR_UPLOAD_PRESET و YOUR_CLOUD_NAME ببيانات حسابك الحقيقية
-      formData.append("upload_preset", "YOUR_UPLOAD_PRESET"); 
-      
-      const res = await fetch("https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload", {
+      const res = await fetch("https://api.cloudinary.com/v1_1/dakjxjp0l/image/upload", {
         method: "POST",
         body: formData,
       });
@@ -54,38 +52,34 @@ export default function AdminReviews() {
       const data = await res.json();
       
       if (data.secure_url) {
-        // تحديث رابط الصورة في الـ state عشان تظهر كمعاينة فوراً
         setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, imageUrl: data.secure_url } : r));
-        alert("✅ تم رفع الصورة بنجاح! اضغط 'حفظ' لتأكيد التعديل.");
+        alert("✅ تم رفع الصورة! اضغط 'حفظ' لتأكيد التعديل.");
       } else {
-        alert("❌ تأكد من بيانات Cloudinary (Preset و Cloud Name)");
+        alert("❌ فشل الرفع، تأكد من إعدادات Cloudinary");
       }
     } catch (error) {
       console.error(error);
-      alert("حدث خطأ أثناء رفع الصورة.");
+      alert("حدث خطأ أثناء الرفع.");
     }
     setLoadingId(null);
   };
 
-  // دالة لتحديث حالة "عرض في الرئيسية" في الـ State
   const handleFeaturedChange = (reviewId, isChecked) => {
     setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, featured: isChecked } : r));
   };
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto", fontFamily: "sans-serif" }} dir="rtl">
+    <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto", fontFamily: "'Cairo', sans-serif" }} dir="rtl">
       <h2 style={{ color: "#3D2B1F", paddingBottom: "1rem", marginBottom: "2rem" }}>🕯️ إدارة آراء وتقييمات العملاء</h2>
       <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
         {reviews.map((r) => (
           <div key={r.id} style={{ background: "#fff", border: "1px solid #E8DDD0", borderRadius: "15px", padding: "1.5rem", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1.5rem" }}>
             <div style={{ flex: "1 1 400px" }}>
-              <h4 style={{ margin: "0 0 8px 0" }}>{r.customerName || "عميل حقيقي"}</h4>
+              <h4 style={{ margin: "0 0 8px 0" }}>{r.customerName || "عميل"}</h4>
               <p style={{ color: "#666", margin: 0 }}>"{r.comment || r.review}"</p>
             </div>
             
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1.2rem" }}>
-              
-              {/* زرار رفع الصورة الجديد بتصميم فخم ومدمج */}
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <input 
                   type="file" 
@@ -112,7 +106,7 @@ export default function AdminReviews() {
               <button 
                 onClick={() => handleUpdateReview(r.id, r.featured, r.imageUrl)}
                 disabled={loadingId === r.id}
-                style={{ background: "#111", color: "#fff", border: "none", padding: "10px 25px", borderRadius: "8px", cursor: "pointer", fontWeight: "bold", minWidth: "90px", transition: "0.2s" }}
+                style={{ background: "#111", color: "#fff", border: "none", padding: "10px 25px", borderRadius: "8px", cursor: "pointer", fontWeight: "bold", minWidth: "90px" }}
               >
                 {loadingId === r.id ? "⏳..." : "حفظ"}
               </button>
