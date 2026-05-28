@@ -19,16 +19,28 @@ export default function Cart() {
 
   const handleApply = async () => {
     const data = await validateCoupon(promo);
-    if (data) { setCoupon(data); setPromoMsg("✅ تم تطبيق الكوبون!"); }
-    else { setCoupon(null); setPromoMsg("❌ كوبون غير صالح"); }
+    if (data) { 
+      setCoupon(data); 
+      setPromoMsg("✅ تم تطبيق الكوبون!"); 
+    }
+    else { 
+      setCoupon(null); 
+      setPromoMsg("❌ كوبون غير صالح"); 
+    }
   };
 
+  // ─── الحسابات (مع فرض قيم أمان عشان الـ NaN ما تظهرش) ────────────────────
   const subtotal = items.reduce((acc, i) => acc + (parseFloat(i.price || 0) * i.qty), 0);
-  const discountAmount = coupon ? (subtotal * coupon.discount) / 100 : 0;
+  
+  // بنجيب الخصم كـ رقم، ولو مش موجود بنعتبره صفر
+  const discountPercent = coupon && coupon.discount ? parseFloat(coupon.discount) : 0;
+  const discountAmount = (subtotal * discountPercent) / 100;
+  
+  // الإجمالي بأمان
   const finalTotal = subtotal - discountAmount + (isGift ? giftFee : 0);
 
   const proceedToCheckout = () => {
-    navigate("/checkout", { state: { total: finalTotal, isGift, giftNote, discount: coupon?.discount || 0 } });
+    navigate("/checkout", { state: { total: finalTotal, isGift, giftNote, discount: discountPercent } });
   };
 
   return (
