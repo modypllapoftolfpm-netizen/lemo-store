@@ -12,25 +12,26 @@ export default function Home() {
   const [products, setProducts] = useState([]);
   const [settings, setSettings] = useState({});
   const [globalLoading, setGlobalLoading] = useState(true);
-  const [isContactOpen, setIsContactOpen] = useState(false);
 
   useEffect(() => {
     const unsubBanners = subscribeToBanners((data) => setBanners(data));
     const unsubCats = subscribeToCategories((data) => setCategories(data)); 
     const unsubProds = subscribeToProducts((data) => setProducts(data));
-    getSettings().then((data) => { setSettings(data || {}); setGlobalLoading(false); });
+    getSettings().then((data) => { 
+      setSettings(data || {}); 
+      setGlobalLoading(false); 
+    });
     return () => { unsubBanners(); unsubCats(); unsubProds(); };
   }, []);
 
   if (globalLoading) return (
     <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Cairo, sans-serif" }}>
-      جاري التحميل...
+      جاري تحميل Lemo Store...
     </div>
   );
 
   const heroBanner = banners.find(b => b.sectionKey === "hero") || {};
-  const bestSellers = products.filter(p => p.isBestSeller === true || p.bestSeller === true || p.bestSeller === "true");
-  const newProducts = products.filter(p => p.isNew === true);
+  const bestSellers = products.filter(p => p.isBestSeller === true || p.bestSeller === true);
   const defaultArchImg = "https://images.unsplash.com/photo-1602874801007-bd458bb1b8b6?q=80&w=800";
 
   // استدعاء نصوص الهيرو من الإعدادات
@@ -56,43 +57,23 @@ export default function Home() {
       <Navbar />
 
       <style>{`
-        .lemo-social-btn { display: flex; align-items: center; gap: 12px; padding: 12px 20px; text-decoration: none; color: #333; font-weight: 700; font-size: 0.95rem; background: #FAF8F5; border-radius: 10px; transition: all 0.25s ease; }
-        .lemo-social-btn:hover { background: #3D2B1F; color: #fff; }
-        .lemo-social-btn:hover svg { fill: #C9A96E !important; transform: scale(1.1); }
-        @keyframes popup { from { opacity: 0; transform: scale(0.9) translateY(15px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
       `}</style>
 
-      {/* Hero Section Dynamic */}
+      {/* Hero Section */}
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", padding: "4rem 8%", minHeight: "65vh", position: "relative" }}>
         <div style={{ flex: "1 1 400px", zIndex: 2 }}>
           <h2 style={{ fontSize: "2rem", color: "#6e4f3a", fontWeight: "900", marginBottom: "0.5rem" }}>Lemo Store</h2>
-          <h1 style={{ fontSize: "4rem", color: "#111", fontWeight: "900", lineHeight: "1.2", marginBottom: "1rem" }}>
-             {heroTitle}
-          </h1>
-          <p style={{ color: "#888", fontSize: "1rem", marginBottom: "2.5rem", lineHeight: "1.8", maxWidth: "80%" }}>
-            {heroDesc}
-          </p>
-          <Link to="/products" style={{ background: "#111", color: "#fff", padding: "14px 36px", borderRadius: "30px", textDecoration: "none", fontWeight: "bold", fontSize: "1.1rem" }}>
+          <h1 style={{ fontSize: "3.5rem", color: "#111", fontWeight: "900", lineHeight: "1.2", marginBottom: "1rem" }}>{heroTitle}</h1>
+          <p style={{ color: "#888", fontSize: "1rem", marginBottom: "2.5rem", lineHeight: "1.8", maxWidth: "80%" }}>{heroDesc}</p>
+          <Link to="/products" style={{ background: "#111", color: "#fff", padding: "14px 36px", borderRadius: "30px", textDecoration: "none", fontWeight: "bold" }}>
             {lang === "ar" ? "تسوق الآن" : "Shop Now"}
           </Link>
         </div>
-
         <div style={{ flex: "1 1 400px", display: "flex", justifyContent: "center", position: "relative", marginTop: "2rem" }}>
           <div style={{ position: "relative", width: "340px", height: "450px", border: "1px solid #111", borderRadius: "170px 170px 0 0", padding: "12px" }}>
             <img src={heroBanner.imageUrl || defaultArchImg} alt="Hero" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "158px 158px 0 0" }} />
           </div>
-        </div>
-      </div>
-
-      {/* Marquee Bar */}
-      <div style={{ background: "#111", padding: "14px 0", overflow: "hidden", whiteSpace: "nowrap", width: "100%", fontSize: "0.85rem", fontWeight: "800", color: "#fff" }}>
-        <div style={{ display: "inline-block", animation: "marquee 40s linear infinite" }}>
-          {[...Array(10)].map((_, i) => (
-            <span key={i} style={{ margin: "0 15px", textTransform: "uppercase", letterSpacing: "3px" }}>
-              SPECIAL GIFTS <span style={{ color: "#C9A96E" }}>✦</span> OFFERS <span style={{ color: "#C9A96E" }}>✦</span> CANDLES <span style={{ color: "#C9A96E" }}>✦</span>
-            </span>
-          ))}
         </div>
       </div>
 
@@ -105,7 +86,35 @@ export default function Home() {
         )}
       </div>
 
-      {/* ... باقي الكود (Categories, Best Sellers, Contact List) كما هو ... */}
+      {/* Categories Section */}
+      <div style={{ padding: "4rem 2rem", textAlign: "center" }}>
+        <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem" }}>{lang === "ar" ? "تصفح الأقسام" : "Browse Categories"}</h2>
+        <div style={{ display: "flex", justifyContent: "center", gap: "2.5rem", flexWrap: "wrap" }}>
+          {categories.map((cat) => (
+            <Link key={cat.id} to={`/products?category=${cat.slug || cat.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+              <div style={{ width: "180px", height: "240px", borderRadius: "100px 100px 0 0", overflow: "hidden", border: "1px solid #E8DDD0", transition: "transform 0.3s" }} onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
+                <img src={cat.imageUrl || "https://via.placeholder.com/200"} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
+              </div>
+              <h3 style={{ marginTop: "1.2rem", fontWeight: "700" }}>{field(cat, "name")}</h3>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* Best Sellers Section */}
+      {bestSellers.length > 0 && (
+        <div style={{ padding: "3rem 2rem", background: "#fff", textAlign: "center" }}>
+          <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem" }}>{lang === "ar" ? "⭐ الأكثر مبيعاً" : "⭐ Best Sellers"}</h2>
+          <div style={{ display: "flex", justifyContent: "center", gap: "1.5rem", flexWrap: "wrap" }}>
+            {bestSellers.map(p => <ProductCard key={p.id} product={p} />)}
+          </div>
+        </div>
+      )}
+
+      <footer style={{ background: "#111", color: "#fff", padding: "3rem 2rem", textAlign: "center" }}>
+        <p style={{ fontSize: "1.5rem", fontWeight: "800", margin: 0 }}>🕯️ Lemo Store</p>
+        <p style={{ opacity: 0.5, fontSize: "0.8rem", marginTop: "10px" }}>© 2026 جميع الحقوق محفوظة</p>
+      </footer>
     </div>
   );
 }

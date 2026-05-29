@@ -7,7 +7,7 @@ import {
   deleteProduct, 
   uploadMultipleImages 
 } from "../../firebase/products";
-import Navbar from "../../components/layout/Navbar"; // إضافة النبار لتوحيد الشكل
+import Navbar from "../../components/layout/Navbar";
 
 const AdminProducts = () => {
   const { t } = useLang();
@@ -144,8 +144,9 @@ const AdminProducts = () => {
       <div className="max-w-[1200px] mx-auto p-6 md:p-10 font-sans">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 pb-6 border-b border-[#E8DDD0]">
           <div>
-            <h1 className="text-3xl font-black text-[#3D2B1F] tracking-tight">إدارة منتجات ليمو لوكس</h1>
-            <p className="text-sm text-[#8B7355] mt-1">إدارة الألبومات، المخزون الذكي، ونسب الخصومات التسويقية</p>
+            {/* تم تصحيح الاسم هنا يا هندسة */}
+            <h1 className="text-3xl font-black text-[#3D2B1F] tracking-tight">إدارة منتجات Lemo Store</h1>
+            <p className="text-sm text-[#8B7355] mt-1">إدارة الألبومات، المخزون الذكي، والخصومات الخاصة بمنتجاتنا اليدوية</p>
           </div>
           <button 
             onClick={() => openModal()} 
@@ -219,12 +220,12 @@ const AdminProducts = () => {
           </div>
         )}
 
-        {/* Modal - تم تحسينه ليكون أكثر فخامة */}
         {showModal && (
           <div className="fixed inset-0 bg-[#3D2B1F]/60 backdrop-blur-md flex items-center justify-center z-[9999] p-4">
             <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[#E8DDD0]">
               <div className="flex justify-between items-center p-6 border-b border-[#FAF7F2] sticky top-0 bg-white z-10">
-                <h3 className="text-xl font-black text-[#3D2B1F]">{editId ? "📝 تحديث بيانات القطعة الفنية" : "✨ إضافة قطعة جديدة للمتجر"}</h3>
+                {/* تم تصحيح الاسم هنا أيضاً */}
+                <h3 className="text-xl font-black text-[#3D2B1F]">{editId ? `📝 تحديث قطعة في Lemo Store` : "✨ إضافة قطعة فنية جديدة"}</h3>
                 <button onClick={() => setShowModal(false)} className="w-10 h-10 rounded-full bg-[#FAF7F2] text-[#3D2B1F] text-2xl font-light hover:bg-[#E8DDD0] transition-all flex items-center justify-center">&times;</button>
               </div>
 
@@ -285,7 +286,7 @@ const AdminProducts = () => {
 
                 <div className="flex gap-4 pt-4 sticky bottom-0 bg-white">
                   <button type="submit" className="flex-1 p-4 rounded-2xl bg-[#3D2B1F] text-white font-black hover:bg-[#111] transition-all shadow-xl disabled:opacity-50" disabled={actionLoading}>
-                    {actionLoading ? "جاري الرفع والحفظ..." : "تأكيد وحفظ التغييرات"}
+                    {actionLoading ? "جاري الرفع والحفظ..." : "حفظ في Lemo Store"}
                   </button>
                 </div>
               </form>
