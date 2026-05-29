@@ -1,79 +1,75 @@
-import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "../firebase/config";
+import { useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/layout/Navbar";
 
 export default function CheckoutPage() {
-  const { items, clearCart } = useCart();
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  
-  // استقبلنا كل البيانات (بما فيها بيانات الإهداء)
-  const { discount, total, couponCode, isGift, giftNote } = location.state || { 
-    discount: 0, 
-    total: 0, 
-    couponCode: "",
-    isGift: false,
-    giftNote: "" 
-  };
-  
-  const [formData, setFormData] = useState({ name: "", phone: "", address: "" });
-  const [loading, setLoading] = useState(false);
-
-  const placeOrder = async () => {
-    if (!formData.name || !formData.phone) return alert("الرجاء إدخال البيانات");
-    setLoading(true);
-    
-    try {
-      // حفظ الطلب في الفايربيس مع بيانات الكوبون والإهداء
-      await addDoc(collection(db, "orders"), {
-        userId: user?.uid || "guest",
-        customerName: formData.name,
-        phone: formData.phone,
-        address: formData.address,
-        items: items,
-        totalPrice: total,             
-        couponCode: couponCode || null,
-        discountPercent: discount,
-        // بيانات الإهداء
-        isGift: isGift,
-        giftNote: giftNote,
-        //
-        status: "pending",
-        createdAt: serverTimestamp()
-      });
-      
-      clearCart();
-      navigate("/orders");
-    } catch (e) {
-      console.error(e);
-      alert("حدث خطأ، حاول مرة أخرى");
-    }
-    setLoading(false);
+  const { total, items, couponCode, discount, isGift, giftNote } = useLocation().state || { 
+    total: 0, items: [], couponCode: "", discount: 0, isGift: false, giftNote: "" 
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#FAF7F2", padding: "2rem", fontFamily: "Cairo" }} dir="rtl">
+    <div style={{ minHeight: "100vh", background: "#FAF7F2", paddingBottom: "4rem", fontFamily: "Cairo" }} dir="rtl">
       <Navbar />
-      <div style={{ maxWidth: "600px", margin: "2rem auto", background: "#fff", padding: "2rem", borderRadius: "15px" }}>
-        <h2>إتمام الطلب</h2>
-        <input placeholder="الاسم" onChange={(e) => setFormData({...formData, name: e.target.value})} style={{ display: "block", width: "100%", padding: "10px", margin: "10px 0" }} />
-        <input placeholder="رقم الهاتف" onChange={(e) => setFormData({...formData, phone: e.target.value})} style={{ display: "block", width: "100%", padding: "10px", margin: "10px 0" }} />
-        <input placeholder="العنوان" onChange={(e) => setFormData({...formData, address: e.target.value})} style={{ display: "block", width: "100%", padding: "10px", margin: "10px 0" }} />
+      
+      <div style={{ maxWidth: "600px", margin: "2rem auto", padding: "0 1.5rem" }}>
         
-        <div style={{ margin: "1rem 0", padding: "1rem", background: "#f9f9f9", borderRadius: "8px" }}>
-            <p>الإجمالي المطلوب: <strong>{total} ج.م</strong></p>
-            {couponCode && <p style={{ color: "green" }}>كود الخصم المستخدم: {couponCode} ({discount}%)</p>}
-            {isGift && <p style={{ color: "#3D2B1F" }}>🎁 طلب هدية مع رسالة: {giftNote}</p>}
+        {/* ملخص الطلب - عشان العميل يراجع اللي اختاره */}
+        <div style={{ background: "#fff", padding: "2rem", borderRadius: "24px", marginBottom: "2rem", border: "1px solid #E8DDD0", boxShadow: "0 5px 20px rgba(0,0,0,0.03)" }}>
+          <h3 style={{ color: "#3D2B1F", marginBottom: "1.5rem", textAlign: "center" }}>🛒 ملخص طلبك</h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "1.5rem" }}>
+             {items.map((item, idx) => (
+               <div key={idx} style={{ display: "flex", justifyContent: "space-between", color: "#666" }}>
+                 <span>{item.nameAr} (x{item.quantity})</span>
+                 <span>{item.price * item.quantity} ج.م</span>
+               </div>
+             ))}
+          </div>
+          <div style={{ borderTop: "1px solid #FAF7F2", paddingTop: "1rem", textAlign: "center" }}>
+            <p style={{ fontSize: "1.2rem", fontWeight: "800", color: "#3D2B1F" }}>الإجمالي: {total} ج.م</p>
+            {couponCode && <p style={{ color: "green", fontSize: "0.85rem" }}>كود الخصم: {couponCode} ({discount}%)</p>}
+          </div>
         </div>
 
-        <button onClick={placeOrder} disabled={loading} style={{ width: "100%", padding: "15px", background: "#3D2B1F", color: "#fff", border: "none", borderRadius: "8px" }}>
-          {loading ? "جاري الإرسال..." : "تأكيد الطلب"}
-        </button>
+        {/* الرسالة الفخمة وزر الواتساب */}
+        <div style={{ 
+          background: "#fff", 
+          padding: "3rem", 
+          borderRadius: "24px", 
+          border: "1px solid #E8DDD0", 
+          textAlign: "center", 
+          boxShadow: "0 10px 30px rgba(0,0,0,0.03)" 
+        }}>
+          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>✨</div>
+          <h2 style={{ color: "#3D2B1F", marginBottom: "1.5rem" }}>اللمسات الأخيرة</h2>
+          <p style={{ color: "#555", fontSize: "1.1rem", lineHeight: "1.8", marginBottom: "2.5rem" }}>
+            لأن كل قطعة في Lemo Store صنعت خصيصاً لك بلمسة فنية مميزة، يسعدنا التواصل معك لتنسيق كافة التفاصيل وضمان أن طلبك سيكون تماماً كما تخيلته. تواصل معنا الآن لإتمام اللمسات الأخيرة لطلبك.
+          </p>
+          
+          <a
+            href={`https://wa.me/201009633100?text=مرحباً، أريد إتمام طلبي من Lemo Store. الإجمالي: ${total} ج.م`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "12px",
+              background: "#25D366",
+              color: "#fff",
+              padding: "16px 40px",
+              borderRadius: "50px",
+              textDecoration: "none",
+              fontWeight: "900",
+              fontSize: "1.1rem",
+              transition: "transform 0.3s, background 0.3s"
+            }}
+            onMouseEnter={(e) => e.target.style.transform = "scale(1.05)"}
+            onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
+          >
+            <span>💬</span> تواصل عبر الواتساب
+          </a>
+        </div>
+
       </div>
     </div>
   );
