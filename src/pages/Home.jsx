@@ -34,7 +34,6 @@ export default function Home() {
   const bestSellers = products.filter(p => p.isBestSeller === true || p.bestSeller === true);
   const defaultArchImg = "https://images.unsplash.com/photo-1602874801007-bd458bb1b8b6?q=80&w=800";
 
-  // استدعاء نصوص الهيرو من الإعدادات
   const heroTitle = lang === "ar" ? (settings?.heroTitleAr || "الشموع الفاخرة والديكور") : (settings?.heroTitleEn || "Luxury Candles & Decor");
   const heroDesc = lang === "ar" ? (settings?.heroDescAr || "اكتشف مجموعتنا المميزة المصنوعة يدوياً من أجود الخامات العطرية الآمنة تماماً على منزلك وعائلتك.") : (settings?.heroDescEn || "Discover our unique collection handcrafted from the finest aromatic materials, completely safe for your home.");
 
@@ -74,6 +73,17 @@ export default function Home() {
           <div style={{ position: "relative", width: "340px", height: "450px", border: "1px solid #111", borderRadius: "170px 170px 0 0", padding: "12px" }}>
             <img src={heroBanner.imageUrl || defaultArchImg} alt="Hero" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "158px 158px 0 0" }} />
           </div>
+        </div>
+      </div>
+
+      {/* 🛠️ الشريط المتحرك (Marquee Bar) */}
+      <div style={{ background: "#fff", padding: "20px 0", overflow: "hidden", whiteSpace: "nowrap", borderTop: "1px solid #E8DDD0", borderBottom: "1px solid #E8DDD0" }}>
+        <div style={{ display: "inline-block", animation: "marquee 25s linear infinite" }}>
+            {[...categories, ...categories, ...categories].map((cat, i) => (
+              <span key={i} style={{ margin: "0 40px", fontWeight: "800", color: "#3D2B1F", fontSize: "1.1rem" }}>
+                ✦ {field(cat, "name")}
+              </span>
+            ))}
         </div>
       </div>
 

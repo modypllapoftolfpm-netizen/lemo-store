@@ -48,6 +48,14 @@ export default function AdminSettings() {
     width: "100%", padding: "12px", marginBottom: "15px", borderRadius: "10px", 
     border: "1px solid #E8DDD0", fontSize: "1rem", outline: "none", boxSizing: "border-box" 
   };
+  
+  const linkInputStyle = {
+    ...inputStyle,
+    direction: "ltr",
+    textAlign: "left",
+    fontFamily: "monospace"
+  };
+
   const labelStyle = { display: "block", marginBottom: "8px", fontWeight: "700", color: "#3D2B1F" };
 
   if (loading) return <div style={{ textAlign: "center", marginTop: "10rem", fontFamily: "Cairo" }}>جاري تحميل الإعدادات...</div>;
@@ -76,6 +84,23 @@ export default function AdminSettings() {
           
           <label style={labelStyle}>نص عرض الهدايا (عربي)</label>
           <input value={settings.giftPromoTextAr} onChange={(e) => setSettings({...settings, giftPromoTextAr: e.target.value})} style={inputStyle} />
+        </section>
+
+        {/* القسم الجديد: روابط التواصل الاجتماعي */}
+        <section style={{ marginBottom: "2rem", padding: "1.5rem", background: "#FAF8F5", borderRadius: "15px" }}>
+          <h3 style={{ color: "#C9A96E", marginBottom: "1.5rem" }}>📱 روابط التواصل الاجتماعي والاتصال</h3>
+          
+          <label style={labelStyle}>رقم الواتساب (مرفق بكود الدولة بدون +)</label>
+          <input value={settings.whatsapp} onChange={(e) => setSettings({...settings, whatsapp: e.target.value})} style={linkInputStyle} placeholder="201009633100" />
+          
+          <label style={labelStyle}>رابط حساب إنستجرام (Instagram)</label>
+          <input value={settings.instagram} onChange={(e) => setSettings({...settings, instagram: e.target.value})} style={linkInputStyle} placeholder="https://instagram.com/lemostore" />
+          
+          <label style={labelStyle}>رابط صفحة فيسبوك (Facebook)</label>
+          <input value={settings.facebook} onChange={(e) => setSettings({...settings, facebook: e.target.value})} style={linkInputStyle} placeholder="https://facebook.com/lemostore" />
+          
+          <label style={labelStyle}>البريد الإلكتروني (Email)</label>
+          <input value={settings.email} onChange={(e) => setSettings({...settings, email: e.target.value})} style={linkInputStyle} placeholder="info@lemostore.com" />
         </section>
 
         <button onClick={handleUpdate} style={{ width: "100%", padding: "18px", background: "#111", color: "#fff", border: "none", borderRadius: "12px", cursor: "pointer", fontWeight: "800", fontSize: "1.1rem", transition: "0.3s" }}>
