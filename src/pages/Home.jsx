@@ -76,18 +76,18 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 🛠️ الشريط المتحرك (Marquee Bar) */}
+      {/* 🛠️ الشريط المتحرك (إنجليزي دائماً) */}
       <div style={{ background: "#fff", padding: "20px 0", overflow: "hidden", whiteSpace: "nowrap", borderTop: "1px solid #E8DDD0", borderBottom: "1px solid #E8DDD0" }}>
         <div style={{ display: "inline-block", animation: "marquee 25s linear infinite" }}>
             {[...categories, ...categories, ...categories].map((cat, i) => (
-              <span key={i} style={{ margin: "0 40px", fontWeight: "800", color: "#3D2B1F", fontSize: "1.1rem" }}>
-                ✦ {field(cat, "name")}
+              <span key={i} style={{ margin: "0 40px", fontWeight: "800", color: "#3D2B1F", fontSize: "1.1rem", textTransform: "uppercase" }}>
+                ✦ {cat.nameEn || cat.nameAr}
               </span>
             ))}
         </div>
       </div>
 
-      {/* Promo Bar Dynamic */}
+      {/* Promo Bar */}
       <div style={{ background: "#C9A96E", color: "#fff", textAlign: "center", padding: "12px", fontSize: "0.95rem", fontWeight: "700" }}>
         {lang === "ar" ? (
           <>🚚 شحن مجاني على الطلبات فوق {settings?.freeShippingMin || 2000} ج.م | 🎁 {settings?.giftPromoTextAr || "تغليف هدايا مجاني فاخر"}</>
