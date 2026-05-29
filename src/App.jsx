@@ -18,11 +18,13 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminProducts from "./pages/admin/Products";
 import AdminOrders from "./pages/admin/Orders";
 import AdminBanners from "./pages/admin/Banners";
-import AdminSettings from "./pages/admin/Settings";
 import AdminReviews from "./pages/admin/AdminReviews";
 import AdminCoupons from "./pages/AdminCoupons"; 
-import AdminCategories from "./pages/admin/AdminCategories"; // استدعاء لوحة تحكم الفئات الجديدة
+import AdminCategories from "./pages/admin/AdminCategories"; 
 import NotFound from "./pages/NotFound";
+
+// 🛠️ التعديل هنا: استدعاء ملف الإعدادات من مكانه الصحيح اللي أنشأناه
+import AdminSettings from "./pages/AdminSettings";
 
 const PrivateRoute = ({ children }) => {
   const { isLoggedIn } = useAuth();
@@ -55,10 +57,13 @@ const AppRoutes = () => (
     <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
     <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
     <Route path="/admin/banners" element={<AdminRoute><AdminBanners /></AdminRoute>} />
-    <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
     <Route path="/admin/reviews" element={<AdminRoute><AdminReviews /></AdminRoute>} />
     <Route path="/admin/coupons" element={<AdminRoute><AdminCoupons /></AdminRoute>} /> 
-    <Route path="/admin/categories" element={<AdminRoute><AdminCategories /></AdminRoute>} /> {/* مسار الفئات الجديد */}
+    <Route path="/admin/categories" element={<AdminRoute><AdminCategories /></AdminRoute>} /> 
+    
+    {/* 🛠️ التعديل هنا: ربط الزرار بالمسار الصحيح للإعدادات */}
+    <Route path="/adminsettings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
+    <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
     
     <Route path="*" element={<NotFound />} />
   </Routes>

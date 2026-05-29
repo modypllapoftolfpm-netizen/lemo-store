@@ -154,7 +154,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* أزرار التنقل الجديدة - تم إضافة زر الفئات */}
+        {/* أزرار التنقل بدون التقييمات */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1.2rem", marginBottom: "3rem" }}>
           <Link to="/admin/products" style={navButtonStyle}>
             <span style={{ fontSize: "1.8rem" }}>📦</span> المنتجات
@@ -162,17 +162,11 @@ export default function AdminDashboard() {
           <Link to="/admin/orders" style={navButtonStyle}>
             <span style={{ fontSize: "1.8rem" }}>📋</span> الطلبات
           </Link>
-          
-          {/* الزرار المفقود للفئات */}
           <Link to="/admin/categories" style={navButtonStyle}>
             <span style={{ fontSize: "1.8rem" }}>🗂️</span> الفئات
           </Link>
-
           <Link to="/admin/banners" style={navButtonStyle}>
             <span style={{ fontSize: "1.8rem" }}>🖼️</span> البانرات
-          </Link>
-          <Link to="/admin/reviews" style={navButtonStyle}>
-            <span style={{ fontSize: "1.8rem" }}>⭐</span> التقييمات
           </Link>
           <Link to="/admin/coupons" style={{...navButtonStyle, background: "#C9A96E"}}>
             <span style={{ fontSize: "1.8rem" }}>🎟️</span> الكوبونات
