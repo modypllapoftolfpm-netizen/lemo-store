@@ -17,28 +17,37 @@ export default function Cart() {
   const [giftNote, setGiftNote] = useState("");
   const giftFee = 50;
 
+  // 1. حساب المجموع الكلي (Subtotal)
+  const subtotal = items.reduce((acc, i) => acc + (parseFloat(i.price || 0) * i.qty), 0);
+
   const handleApply = async () => {
-    const data = await validateCoupon(promo);
-    console.log("البيانات اللي رجعت من الفايربيز:", data);
+    // بنبعت الكود ومجموع السلة الحالي للدالة الذكية عشان تفحص الشروط
+    const result = await validateCoupon(promo, subtotal);
+    console.log("نتيجة فحص الكوبون المطور:", result);
     
-    // بنطمن إن الداتا موجودة وفيها قيمة discount
-    if (data && (data.discount !== undefined && data.discount !== null)) { 
-      setCoupon(data); 
-      setPromoMsg("✅ تم تطبيق الكوبون!"); 
+    if (result.valid) { 
+      setCoupon(result.data); // بنخزن بيانات الكوبون كاملة (المستند)
+      setPromoMsg(result.msg); 
     } else { 
       setCoupon(null); 
-      setPromoMsg("❌ كوبون غير صالح"); 
+      setPromoMsg(result.msg); // بنعرض رسالة الخطأ المحددة (منتهي، موقوف، لم يصل للحد الأدنى)
     }
   };
 
-  // 1. حساب المجموع الكلي (Subtotal)
-  const subtotal = items.reduce((acc, i) => acc + (parseFloat(i.price || 0) * i.qty), 0);
+  // 2. حساب قيمة الخصم الذكي بناءً على نوع الكوبون الجديد
+  let discountAmount = 0;
+  if (coupon) {
+    if (coupon.type === "percentage" || coupon.type === "global") {
+      // خصم نسبة مئوية
+      const discountVal = parseFloat(coupon.discount || 0);
+      discountAmount = (subtotal * discountVal) / 100;
+    } else if (coupon.type === "fixed") {
+      // خصم قيمة ثابتة (مثال: خصم 50 جنيه مباشر)
+      discountAmount = parseFloat(coupon.discount || 0);
+    }
+  }
   
-  // 2. حساب قيمة الخصم (بيقرأ الـ discount من الكوبون)
-  const discountVal = coupon ? parseFloat(coupon.discount || 0) : 0;
-  const discountAmount = (subtotal * discountVal) / 100;
-  
-  // 3. حساب الإجمالي النهائي (مع مراعاة تكلفة الهدية)
+  // 3. حساب الإجمالي النهائي (مع مراعاة تكلفة الهدية والتأكد إنه ميبقاش تحت الصفر)
   const finalTotal = Math.max(0, subtotal - discountAmount + (isGift ? giftFee : 0));
 
   const proceedToCheckout = () => {
@@ -48,7 +57,9 @@ export default function Cart() {
         subtotal: subtotal,
         isGift, 
         giftNote, 
-        discount: discountVal,
+        // بنمرر قيمة الخصم الفعلي المحسوب لصفحة الدفع
+        discount: discountAmount, 
+        couponCode: coupon ? coupon.code : null,
         items: items 
       } 
     });

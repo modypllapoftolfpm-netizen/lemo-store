@@ -20,7 +20,8 @@ import AdminOrders from "./pages/admin/Orders";
 import AdminBanners from "./pages/admin/Banners";
 import AdminSettings from "./pages/admin/Settings";
 import AdminReviews from "./pages/admin/AdminReviews";
-import AdminCoupons from "./pages/AdminCoupons"; // إضافة صفحة الكوبونات
+import AdminCoupons from "./pages/AdminCoupons"; 
+import AdminCategories from "./pages/admin/AdminCategories"; // استدعاء لوحة تحكم الفئات الجديدة
 import NotFound from "./pages/NotFound";
 
 const PrivateRoute = ({ children }) => {
@@ -56,7 +57,8 @@ const AppRoutes = () => (
     <Route path="/admin/banners" element={<AdminRoute><AdminBanners /></AdminRoute>} />
     <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
     <Route path="/admin/reviews" element={<AdminRoute><AdminReviews /></AdminRoute>} />
-    <Route path="/admin/coupons" element={<AdminRoute><AdminCoupons /></AdminRoute>} /> {/* إضافة المسار الجديد */}
+    <Route path="/admin/coupons" element={<AdminRoute><AdminCoupons /></AdminRoute>} /> 
+    <Route path="/admin/categories" element={<AdminRoute><AdminCategories /></AdminRoute>} /> {/* مسار الفئات الجديد */}
     
     <Route path="*" element={<NotFound />} />
   </Routes>

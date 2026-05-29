@@ -7,10 +7,12 @@ export default function AdminCoupons() {
   const [coupons, setCoupons] = useState([]);
   const [newCode, setNewCode] = useState("");
   const [newDiscount, setNewDiscount] = useState("");
+  const [discountType, setDiscountType] = useState("percentage"); // percentage أو fixed
+  const [minSubtotal, setMinSubtotal] = useState(0);
+  const [expiryDate, setExpiryDate] = useState("");
   const [type, setType] = useState("global"); // global, product, category
   const [targetId, setTargetId] = useState("");
 
-  // جلب الكوبونات من الفايربيس
   useEffect(() => {
     const q = query(collection(db, "coupons"), orderBy("code", "asc"));
     const unsub = onSnapshot(q, (snap) => {
@@ -19,61 +21,101 @@ export default function AdminCoupons() {
     return unsub;
   }, []);
 
-  // إضافة كوبون جديد
   const handleAdd = async () => {
-    if (!newCode || !newDiscount) return alert("الرجاء إدخال الكود ونسبة الخصم");
+    if (!newCode || !newDiscount) return alert("الرجاء إدخال الكود وقيمة الخصم");
     
     await addDoc(collection(db, "coupons"), {
-      code: newCode.toUpperCase(),
+      code: newCode.toUpperCase().trim(),
       discount: Number(newDiscount),
-      type: type,
+      type: discountType, // النوع الجديد (نسبة أو مبلغ ثابت)
+      couponScope: type, // النطاق (عام، منتج، فئة)
       targetId: targetId,
-      active: true
+      minSubtotal: Number(minSubtotal),
+      expiryDate: expiryDate,
+      active: true,
+      createdAt: new Date()
     });
     
-    setNewCode(""); 
-    setNewDiscount(""); 
-    setTargetId("");
-    alert("تم إضافة الكوبون بنجاح!");
+    // تصفير الحقول بعد الإضافة
+    setNewCode(""); setNewDiscount(""); setMinSubtotal(0); setExpiryDate(""); setTargetId("");
+    alert("✅ تم إضافة الكوبون المتطور بنجاح!");
   };
 
+  const inputStyle = { padding: "12px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "0.9rem" };
+
   return (
-    <div style={{ minHeight: "100vh", background: "#FAF7F2", padding: "2rem", fontFamily: "Cairo" }} dir="rtl">
+    <div style={{ minHeight: "100vh", background: "#FAF7F2", paddingBottom: "3rem", fontFamily: "Cairo" }} dir="rtl">
       <Navbar />
-      <div style={{ maxWidth: "800px", margin: "2rem auto", background: "#fff", padding: "2rem", borderRadius: "15px" }}>
-        <h2 style={{ color: "#3D2B1F" }}>إدارة الكوبونات (لوحة الأدمن)</h2>
+      <div style={{ maxWidth: "900px", margin: "2rem auto", background: "#fff", padding: "2.5rem", borderRadius: "20px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
+        <h2 style={{ color: "#3D2B1F", borderBottom: "2px solid #FAF7F2", paddingBottom: "1rem", marginBottom: "2rem" }}>🛠️ إدارة نظام الكوبونات المتطور</h2>
         
-        {/* فورمة الإضافة */}
-        <div style={{ background: "#f4f4f4", padding: "1.5rem", borderRadius: "10px", marginBottom: "2rem" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-            <input placeholder="كود الكوبون (مثال: LEMO20)" value={newCode} onChange={(e) => setNewCode(e.target.value)} style={{ padding: "10px" }} />
-            <input type="number" placeholder="نسبة الخصم %" value={newDiscount} onChange={(e) => setNewDiscount(e.target.value)} style={{ padding: "10px" }} />
-            
-            <select value={type} onChange={(e) => setType(e.target.value)} style={{ padding: "10px" }}>
-                <option value="global">خصم على الكل (Global)</option>
-                <option value="product">خصم على منتج محدد</option>
-                <option value="category">خصم على فئة محددة</option>
-            </select>
-            
+        <div style={{ background: "#fdfbf8", padding: "2rem", borderRadius: "15px", marginBottom: "2rem", border: "1px solid #f0e8df" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+              <label>كود الكوبون</label>
+              <input placeholder="مثال: LEMO2026" value={newCode} onChange={(e) => setNewCode(e.target.value)} style={inputStyle} />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+              <label>قيمة الخصم</label>
+              <div style={{ display: "flex", gap: "5px" }}>
+                <input type="number" placeholder="القيمة" value={newDiscount} onChange={(e) => setNewDiscount(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
+                <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} style={inputStyle}>
+                  <option value="percentage">% نسبة</option>
+                  <option value="fixed">مبلغ ثابت</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+              <label>الحد الأدنى للطلب (ج.م)</label>
+              <input type="number" value={minSubtotal} onChange={(e) => setMinSubtotal(e.target.value)} style={inputStyle} />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+              <label>تاريخ الانتهاء</label>
+              <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} style={inputStyle} />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+              <label>نطاق الكوبون</label>
+              <select value={type} onChange={(e) => setType(e.target.value)} style={inputStyle}>
+                  <option value="global">على المتجر بالكامل</option>
+                  <option value="product">على منتج معين</option>
+                  <option value="category">على قسم معين</option>
+              </select>
+            </div>
+
             {(type === "product" || type === "category") && (
-                <input placeholder="ID المنتج أو الفئة" value={targetId} onChange={(e) => setTargetId(e.target.value)} style={{ padding: "10px" }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <label>معرف الـ ID (للمنتج/القسم)</label>
+                <input placeholder="انسخ الـ ID هنا" value={targetId} onChange={(e) => setTargetId(e.target.value)} style={inputStyle} />
+              </div>
             )}
           </div>
-          <button onClick={handleAdd} style={{ marginTop: "1rem", width: "100%", padding: "10px", background: "#3D2B1F", color: "#fff", border: "none", borderRadius: "5px", cursor: "pointer" }}>
-            إضافة كوبون جديد
+
+          <button onClick={handleAdd} style={{ marginTop: "2rem", width: "100%", padding: "15px", background: "#3D2B1F", color: "#fff", border: "none", borderRadius: "10px", cursor: "pointer", fontWeight: "bold", fontSize: "1.1rem" }}>
+            إضافة الكوبون للنظام
           </button>
         </div>
 
-        {/* قائمة الكوبونات */}
-        <h3>الكوبونات الحالية:</h3>
-        <ul style={{ listStyle: "none", padding: 0 }}>
+        <h3>📦 الكوبونات الفعالة:</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "1rem" }}>
           {coupons.map(c => (
-            <li key={c.id} style={{ background: "#fff", padding: "10px", borderBottom: "1px solid #eee", display: "flex", justifyContent: "space-between" }}>
-              <span><strong>{c.code}</strong> - {c.discount}% ({c.type})</span>
-              <button onClick={() => deleteDoc(doc(db, "coupons", c.id))} style={{ background: "#ffcccc", border: "none", padding: "5px 10px", borderRadius: "5px", cursor: "pointer" }}>حذف</button>
-            </li>
+            <div key={c.id} style={{ background: "#fff", padding: "1.2rem", borderRadius: "12px", border: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <span style={{ background: "#3D2B1F", color: "#fff", padding: "4px 10px", borderRadius: "5px", marginLeft: "10px", fontWeight: "bold" }}>{c.code}</span>
+                <span style={{ color: "#666" }}>
+                  الخصم: <strong>{c.discount}{c.type === "percentage" ? "%" : " ج.م"}</strong> | 
+                  الحد الأدنى: <strong>{c.minSubtotal || 0} ج.م</strong>
+                </span>
+                {c.expiryDate && <div style={{ fontSize: "0.8rem", color: "#888", marginTop: "5px" }}>ينتهي في: {c.expiryDate}</div>}
+              </div>
+              <button onClick={() => deleteDoc(doc(db, "coupons", c.id))} style={{ background: "#FFE5E5", color: "#D32F2F", border: "none", padding: "8px 15px", borderRadius: "8px", cursor: "pointer", fontWeight: "bold" }}>حذف</button>
+            </div>
           ))}
-        </ul>
+          {coupons.length === 0 && <p style={{ textAlign: "center", color: "#999" }}>لا يوجد كوبونات حالياً.</p>}
+        </div>
       </div>
     </div>
   );
