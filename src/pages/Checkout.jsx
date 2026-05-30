@@ -7,16 +7,16 @@ import { useLang } from "../context/LangContext";
 import { createOrder } from "../firebase/orders";
 
 export default function Checkout() {
-  const { items, clearCart, getTotal } = useCart();
+  const { items, clearCart } = useCart();
   const { user, profile } = useAuth();
   const { t, lang } = useLang();
   const navigate = useNavigate();
   const location = useLocation();
   
+  // حساب الإجمالي يدوياً هنا لضمان عدم ظهور NaN أبداً حتى لو السعر متسجل كنص
   const discount = Number(location.state?.discount) || 0;
-  const { subtotal, total } = getTotal(discount);
-  const safeTotal = typeof total === "number" && !isNaN(total) ? total : 0;
-  const safeSubtotal = typeof subtotal === "number" && !isNaN(subtotal) ? subtotal : 0;
+  const safeSubtotal = items.reduce((acc, item) => acc + (Number(item.price) || 0) * (Number(item.qty) || 1), 0);
+  const safeTotal = Math.max(0, safeSubtotal - discount);
   
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -48,15 +48,16 @@ export default function Checkout() {
           image: i.image || "", 
         })),
         subtotal: safeSubtotal,
-        discount: safeSubtotal - safeTotal,
+        discount: discount,
         total: safeTotal,
         paymentMethod: "contact",
         status: "pending",
+        createdAt: new Date() // إضافة تاريخ الطلب لتجنب الأخطاء في صفحة طلباتي
       };
       
       await createOrder(orderData);
       clearCart();
-      setStep(3); 
+      setStep(3); // التحويل لخطوة الواتساب مباشرة بعد تسجيل الطلب
     } catch (err) {
       console.error(err);
       alert("حدث خطأ أثناء تسجيل الطلب، يرجى المحاولة مجدداً.");
@@ -96,7 +97,7 @@ export default function Checkout() {
               {step === 1 && (
                 <div style={{ background: "#fff", borderRadius: "20px", padding: "2rem", boxShadow: "0 10px 40px rgba(61,43,31,0.05)", border: "1px solid #E8DDD0" }}>
                   <h3 style={{ color: "#3D2B1F", marginBottom: "1.5rem", fontSize: "1.3rem", fontWeight: "800" }}>👤 بيانات التوصيل</h3>
-                  <label style={{ display: "block", marginBottom: "8px", color: "#666", fontWeight: "700", fontSize: "0.9rem" }}>الاسم الكريم</label>
+                  <label style={{ display: "block", marginBottom: "8px", color: "#666", fontWeight: "700", fontSize: "0.9rem" }}>الاسم</label>
                   <input name="name" value={form.name} onChange={handleChange} style={inputStyle} placeholder="أدخل اسمك بالكامل" />
                   <label style={{ display: "block", marginBottom: "8px", color: "#666", fontWeight: "700", fontSize: "0.9rem" }}>رقم الهاتف للتواصل</label>
                   <input name="phone" type="tel" value={form.phone} onChange={handleChange} style={inputStyle} placeholder="01xxxxxxxxx" />
@@ -172,7 +173,7 @@ export default function Checkout() {
               <h2 style={{ color: "#3D2B1F", marginBottom: "1.5rem", fontSize: "2.2rem", fontWeight: "900" }}>تم تسجيل طلبك بنجاح!</h2>
               <div style={{ width: "80px", height: "4px", background: "linear-gradient(135deg, #C9A96E, #b8925a)", margin: "0 auto 2rem", borderRadius: "2px" }}></div>
               <p style={{ color: "#555", fontSize: "1.2rem", lineHeight: "1.9", marginBottom: "3rem", fontWeight: "600" }}>
-                لأن كل قطعة في <span style={{ color: "#3D2B1F", fontWeight: "900" }}>Lemo Store</span> صنعت خصيصاً لك بلمسة فنية مميزة، <span style={{ color: "#C9A96E" }}> يسعدنا تواصلك معنا </span> لتنسيق كافة التفاصيل وضمان أن طلبك سيكون تماماً كما تخيلته. تواصل معنا الآن لإتمام اللمسات الأخيرة لطلبك.
+                لأن كل قطعة في <span style={{ color: "#3D2B1F", fontWeight: "900" }}>LEMO</span> صنعت خصيصاً لك بلمسة فنية مميزة، <span style={{ color: "#C9A96E" }}> يسعدنا تواصلك معنا </span> لتنسيق كافة التفاصيل وضمان أن طلبك سيكون تماماً كما تخيلته. تواصل معنا الآن لإتمام اللمسات الأخيرة لطلبك.
               </p>
               <a href={`https://wa.me/201009633100?text=أهلاً LEMO، قمت بتسجيل طلب باسم: ${form.name} وأريد استكمال اللمسات الأخيرة لطلبي.`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "12px", background: "#25D366", color: "#fff", padding: "18px 40px", borderRadius: "50px", textDecoration: "none", fontSize: "1.2rem", fontWeight: "800", boxShadow: "0 8px 25px rgba(37,211,102,0.35)", transition: "0.3s" }} onMouseOver={(e) => e.target.style.transform = "translateY(-3px)"} onMouseOut={(e) => e.target.style.transform = "translateY(0)"}>
                  <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
