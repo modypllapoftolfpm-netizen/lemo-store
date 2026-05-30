@@ -43,7 +43,8 @@ export default function ProductDetail() {
     try {
       await addReview({ productId: id, userId: user?.uid || "guest", ...reviewForm, visible: false });
       setReviewForm({ rating: 5, comment: "", customerName: "" });
-      alert("تم إرسال تقييمك بنجاح، سيتم مراجعته قريباً ✨");
+      // التعديل هنا: الرسالة اللي طلبتها
+      alert("تم إرسال تقييمك بنجاح! شكراً لمشاركتنا رأيك ✨");
     } catch (err) {
       alert("حدث خطأ أثناء إرسال التقييم");
     }
@@ -106,13 +107,12 @@ export default function ProductDetail() {
            </div>
         </div>
 
-        {/* 🛠️ نظام التقييمات */}
+        {/* نظام التقييمات */}
         <div style={{ background: "#fff", padding: "2.5rem", borderRadius: "24px", marginTop: "2rem", border: "1px solid #E8DDD0", boxShadow: "0 10px 40px rgba(0,0,0,0.03)" }}>
           <h2 style={{ color: "#3D2B1F", fontWeight: "900", marginBottom: "2rem", display: "flex", alignItems: "center", gap: "10px" }}>
             ⭐ آراء عملائنا المميزين
           </h2>
 
-          {/* عرض التقييمات */}
           {visibleReviews.length === 0 ? (
             <p style={{ color: "#8B7355", textAlign: "center", padding: "2rem", background: "#FAF8F5", borderRadius: "12px", fontWeight: "bold" }}>لا توجد تقييمات حتى الآن. كن أول من يشاركنا رأيه!</p>
           ) : (
@@ -125,7 +125,6 @@ export default function ProductDetail() {
                   </div>
                   <p style={{ color: "#555", margin: "0 0 15px 0", lineHeight: "1.7" }}>{rev.comment}</p>
                   
-                  {/* زرار التحكم للأدمن فقط */}
                   {isAdmin && (
                     <div style={{ borderTop: "1px dashed #E8DDD0", paddingTop: "10px", textAlign: "left" }}>
                       <button 
@@ -141,7 +140,6 @@ export default function ProductDetail() {
             </div>
           )}
 
-          {/* فورم إضافة تقييم */}
           <form onSubmit={handleReview} style={{ borderTop: "2px solid #F0E8DF", paddingTop: "2rem" }}>
             <h3 style={{ color: "#8B7355", marginBottom: "1.5rem", fontWeight: "800" }}>أضف تقييمك لقطعتك الخاصة</h3>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
@@ -156,10 +154,9 @@ export default function ProductDetail() {
             </div>
             <textarea value={reviewForm.comment} onChange={(e) => setReviewForm({...reviewForm, comment: e.target.value})} placeholder="شاركنا رأيك في جودة وتفاصيل المنتج..." style={{ ...inputStyle, minHeight: "100px", resize: "none", marginBottom: "1rem" }} required />
             <button type="submit" disabled={submitting} style={{ background: "linear-gradient(135deg, #C9A96E, #b8925a)", color: "#fff", padding: "14px 30px", border: "none", borderRadius: "10px", fontWeight: "bold", fontSize: "1.1rem", cursor: "pointer", width: "fit-content" }}>
-              {submitting ? "جاري الإرسال..." : "إرسال التقييم للمراجعة ✉️"}
+              {submitting ? "جاري الإرسال..." : "إرسال التقييم ✉️"}
             </button>
           </form>
-
         </div>
       </div>
     </div>

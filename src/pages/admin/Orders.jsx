@@ -9,7 +9,10 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    const unsub = subscribeToAllOrders(setOrders);
+    const unsub = subscribeToAllOrders((data) => {
+      console.log("🔥 الطلبات اللي جاية من الفايربيز:", data); // عشان نطمن إن الداتا بتوصل
+      setOrders(data);
+    });
     return unsub;
   }, []);
 
@@ -20,9 +23,11 @@ export default function AdminOrders() {
         <h1 style={{ color: "#3D2B1F", marginBottom: "2rem", fontWeight: "900" }}>📋 إدارة الطلبات</h1>
         
         <div style={{ background: "#fff", borderRadius: "20px", overflow: "hidden", boxShadow: "0 10px 40px rgba(0,0,0,0.03)", border: "1px solid #E8DDD0" }}>
-          {orders.length === 0 && <p style={{ textAlign: "center", padding: "3rem", color: "#8B7355", fontSize: "1.2rem", fontWeight: "bold" }}>لا توجد طلبات بعد</p>}
+          {(!orders || orders.length === 0) && (
+            <p style={{ textAlign: "center", padding: "3rem", color: "#8B7355", fontSize: "1.2rem", fontWeight: "bold" }}>لا توجد طلبات بعد</p>
+          )}
           
-          {orders.map((order) => {
+          {orders && orders.map((order) => {
             const orderTotal = Number(order.total) || Number(order.subtotal) || 0;
             // عشان نقرأ الحالة صح سواء متسجلة بالطريقة القديمة أو الجديدة
             const currentStatus = order.orderStatus || order.status || "pending";
@@ -31,16 +36,16 @@ export default function AdminOrders() {
               <div key={order.id} style={{ padding: "1.5rem", borderBottom: "1px solid #E8DDD0" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "10px", marginBottom: "15px" }}>
                   
-                  {/* بيانات العميل (مع دعم الطلبات القديمة والجديدة) */}
+                  {/* بيانات العميل */}
                   <div>
                     <p style={{ margin: "0 0 8px", fontWeight: "900", color: "#3D2B1F", fontSize: "1.1rem" }}>
                       طلب رقم: #{order.id.slice(-8).toUpperCase()}
                     </p>
                     <p style={{ margin: "0 0 4px", color: "#555", fontSize: "1rem", fontWeight: "bold" }}>
-                      👤 {order.userName || order.name || "بدون اسم"} — 📞 <span dir="ltr">{order.userPhone || order.phone || "بدون رقم"}</span>
+                      👤 {order.userName || order.name || order.customerName || "بدون اسم"} — 📞 <span dir="ltr">{order.userPhone || order.phone || order.customerPhone || "بدون رقم"}</span>
                     </p>
                     <p style={{ margin: "0", color: "#8B7355", fontSize: "0.95rem" }}>
-                      📍 {order.address || "بدون عنوان"}
+                      📍 {order.address || order.shippingAddress || "بدون عنوان"}
                     </p>
                     {order.createdAt && order.createdAt.toDate && (
                       <p style={{ margin: "4px 0 0", color: "#A89A8E", fontSize: "0.85rem" }}>
