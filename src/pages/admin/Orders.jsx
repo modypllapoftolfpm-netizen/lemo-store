@@ -23,25 +23,25 @@ export default function AdminOrders() {
           {orders.length === 0 && <p style={{ textAlign: "center", padding: "3rem", color: "#8B7355", fontSize: "1.2rem", fontWeight: "bold" }}>لا توجد طلبات بعد</p>}
           
           {orders.map((order) => {
-            // تأمين السعر عشان لو الطلب قديم ومفيش فيه total يكتب 0
             const orderTotal = Number(order.total) || Number(order.subtotal) || 0;
+            // عشان نقرأ الحالة صح سواء متسجلة بالطريقة القديمة أو الجديدة
+            const currentStatus = order.orderStatus || order.status || "pending";
             
             return (
               <div key={order.id} style={{ padding: "1.5rem", borderBottom: "1px solid #E8DDD0" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "10px", marginBottom: "15px" }}>
                   
-                  {/* بيانات العميل */}
+                  {/* بيانات العميل (مع دعم الطلبات القديمة والجديدة) */}
                   <div>
                     <p style={{ margin: "0 0 8px", fontWeight: "900", color: "#3D2B1F", fontSize: "1.1rem" }}>
                       طلب رقم: #{order.id.slice(-8).toUpperCase()}
                     </p>
                     <p style={{ margin: "0 0 4px", color: "#555", fontSize: "1rem", fontWeight: "bold" }}>
-                      👤 {order.userName || "بدون اسم"} — 📞 <span dir="ltr">{order.userPhone || "بدون رقم"}</span>
+                      👤 {order.userName || order.name || "بدون اسم"} — 📞 <span dir="ltr">{order.userPhone || order.phone || "بدون رقم"}</span>
                     </p>
                     <p style={{ margin: "0", color: "#8B7355", fontSize: "0.95rem" }}>
                       📍 {order.address || "بدون عنوان"}
                     </p>
-                    {/* إضافة وقت الطلب لو متسجل */}
                     {order.createdAt && order.createdAt.toDate && (
                       <p style={{ margin: "4px 0 0", color: "#A89A8E", fontSize: "0.85rem" }}>
                         🕒 {order.createdAt.toDate().toLocaleString('ar-EG')}
@@ -49,14 +49,13 @@ export default function AdminOrders() {
                     )}
                   </div>
 
-                  {/* الإجمالي وتغيير الحالة */}
+                  {/* الإجمالي وتغيير الحالة المربوط بالفايربيز صح */}
                   <div style={{ textAlign: "left", minWidth: "150px" }}>
                     <p style={{ margin: "0 0 10px", fontWeight: "900", color: "#C9A96E", fontSize: "1.3rem" }}>
                       {orderTotal} ج.م
                     </p>
                     <select 
-                      // تم تصحيح الاسم هنا لـ order.status عشان يقرأ من الداتابيز صح
-                      value={order.status || "pending"} 
+                      value={currentStatus} 
                       onChange={(e) => updateOrderStatus(order.id, e.target.value)} 
                       style={{
                         width: "100%", padding: "8px 12px", borderRadius: "10px",
@@ -71,11 +70,10 @@ export default function AdminOrders() {
                   </div>
                 </div>
 
-                {/* المنتجات (شكل جديد احترافي) */}
                 <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", background: "#FAF8F5", padding: "15px", borderRadius: "12px" }}>
                   {order.items?.map((item, i) => (
                     <span key={i} style={{ background: "#fff", padding: "6px 15px", borderRadius: "8px", fontSize: "0.95rem", color: "#3D2B1F", fontWeight: "bold", border: "1px solid #E8DDD0", display: "flex", alignItems: "center", gap: "8px" }}>
-                      {item.nameAr || "منتج"} <span style={{ color: "#C9A96E" }}>× {item.qty}</span>
+                      {item.nameAr || item.name || "منتج"} <span style={{ color: "#C9A96E" }}>× {item.qty || item.quantity || 1}</span>
                     </span>
                   ))}
                 </div>

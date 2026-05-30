@@ -34,8 +34,9 @@ export default function Home() {
   const bestSellers = products.filter(p => p.isBestSeller === true || p.bestSeller === true);
   const defaultArchImg = "https://images.unsplash.com/photo-1602874801007-bd458bb1b8b6?q=80&w=800";
 
-  const heroTitle = lang === "ar" ? (settings?.heroTitleAr || "الشموع الفاخرة والديكور") : (settings?.heroTitleEn || "Luxury Candles & Decor");
-  const heroDesc = lang === "ar" ? (settings?.heroDescAr || "اكتشف مجموعتنا المميزة المصنوعة يدوياً من أجود الخامات العطرية الآمنة تماماً على منزلك وعائلتك.") : (settings?.heroDescEn || "Discover our unique collection handcrafted from the finest aromatic materials, completely safe for your home.");
+  // 🛠️ ربط النصوص بالمتغيرات اللي ضفناها في AdminSettings
+  const heroTitle = lang === "ar" ? (settings?.heroTitle || "LEMO STORE… بنبيع إحساس مش منتجات") : (settings?.heroTitleEn || "Lemo Store... Selling feelings, not just products");
+  const heroDesc = lang === "ar" ? (settings?.heroDesc || "اكتشف مجموعتنا المميزة المصنوعة يدوياً من أجود الخامات العطرية الآمنة تماماً على منزلك وعائلتك.") : (settings?.heroDescEn || "Discover our unique collection handcrafted from the finest aromatic materials, completely safe for your home and family.");
 
   const ProductCard = ({ product }) => (
     <Link to={`/products/${product.id}`} style={{ textDecoration: "none", color: "inherit", width: "220px" }}>
@@ -64,7 +65,7 @@ export default function Home() {
         <div style={{ flex: "1 1 400px", zIndex: 2 }}>
           <h2 style={{ fontSize: "2rem", color: "#6e4f3a", fontWeight: "900", marginBottom: "0.5rem" }}>Lemo Store</h2>
           <h1 style={{ fontSize: "3.5rem", color: "#111", fontWeight: "900", lineHeight: "1.2", marginBottom: "1rem" }}>{heroTitle}</h1>
-          <p style={{ color: "#888", fontSize: "1rem", marginBottom: "2.5rem", lineHeight: "1.8", maxWidth: "80%" }}>{heroDesc}</p>
+          <p style={{ color: "#888", fontSize: "1.1rem", marginBottom: "2.5rem", lineHeight: "1.8", maxWidth: "85%" }}>{heroDesc}</p>
           <Link to="/products" style={{ background: "#111", color: "#fff", padding: "14px 36px", borderRadius: "30px", textDecoration: "none", fontWeight: "bold" }}>
             {lang === "ar" ? "تسوق الآن" : "Shop Now"}
           </Link>
@@ -87,12 +88,12 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Promo Bar */}
+      {/* 🛠️ Promo Bar المربوط بالإعدادات */}
       <div style={{ background: "#C9A96E", color: "#fff", textAlign: "center", padding: "12px", fontSize: "0.95rem", fontWeight: "700" }}>
         {lang === "ar" ? (
-          <>🚚 شحن مجاني على الطلبات فوق {settings?.freeShippingMin || 2000} ج.م | 🎁 {settings?.giftPromoTextAr || "تغليف هدايا مجاني فاخر"}</>
+          <>🚚 شحن مجاني على الطلبات فوق {settings?.freeShippingLimit || 500} ج.م | 🎁 تغليف هدايا فاخر بـ {settings?.giftFee || 50} ج.م فقط</>
         ) : (
-          <>🚚 Free Shipping on orders over {settings?.freeShippingMin || 2000} EGP | 🎁 {settings?.giftPromoTextEn || "Luxury Gift Wrapping Included"}</>
+          <>🚚 Free Shipping on orders over {settings?.freeShippingLimit || 500} EGP | 🎁 Luxury Gift Wrapping for just {settings?.giftFee || 50} EGP</>
         )}
       </div>
 
