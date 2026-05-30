@@ -164,10 +164,9 @@ export default function Products() {
             <p style={{ fontWeight: "600", fontSize: "1.1rem" }}>{t.noResults}</p>
           </div>
         ) : (
-          <div style={{ display: "flex", gap: "2rem 1.5rem", flexWrap: "wrap", justifyContent: "flex-start" }}>
+          <div style={{ display: "flex", gap: "2rem 1.5rem", flexWrap: "wrap", justifyItems: "flex-start" }}>
             {filtered.map((p) => {
-              const hasDiscount = p.discount > 0;
-              const finalPrice = hasDiscount ? p.price - (p.price * (p.discount / 100)) : p.price;
+              const hasOldPrice = p.oldPrice && p.oldPrice > p.price;
               const imageUrl = getDisplayImage(p.imageUrl);
 
               return (
@@ -186,19 +185,19 @@ export default function Products() {
                     {/* شارات المنتجات الرقيقة الفخمة */}
                     <div style={{ position: "absolute", top: "12px", right: "12px", left: "12px", display: "flex", justifyContent: "space-between", alignItems: "center", pointerEvents: "none" }}>
                       <div>
-                        {hasDiscount && (
+                        {hasOldPrice && (
                           <span style={{ background: "#E74C3C", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "700" }}>
-                            -{p.discount}%
+                            {lang === "ar" ? "تخفيض" : "Sale"}
                           </span>
                         )}
-                        {p.isNew && !hasDiscount && (
+                        {p.isNew && !hasOldPrice && (
                           <span style={{ background: "#C9A96E", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "700" }}>
                             {t.products.new}
                           </span>
                         )}
                       </div>
                       {p.isBestSeller && (
-                        <span style={{ background: "#111", color: "#fff", width: "26px", height: "26px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem" }}>
+                        <span style={{ background: "#111", color: "#fff", width: "26px", height: "26px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem", boxShadow: "0 2px 5px rgba(0,0,0,0.2)" }}>
                           ✦
                         </span>
                       )}
@@ -238,18 +237,21 @@ export default function Products() {
                         {field(p, "name")}
                       </h3>
                       
-                      {hasDiscount ? (
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "4px 0" }}>
-                          <span style={{ color: "#E74C3C", fontWeight: "800", fontSize: "1.1rem" }}>{finalPrice} {t.currency}</span>
-                          <span style={{ color: "#A08A75", textDecoration: "line-through", fontSize: "0.85rem" }}>{p.price}</span>
-                        </div>
-                      ) : (
-                        <p style={{ color: "#C9A96E", fontWeight: "800", margin: "4px 0", fontSize: "1.1rem" }}>{p.price} {t.currency}</p>
-                      )}
+                      {/* السعر الحالي مع السعر القديم (لو موجود) */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "4px 0" }}>
+                        <span style={{ color: hasOldPrice ? "#E74C3C" : "#C9A96E", fontWeight: "900", fontSize: "1.1rem" }}>
+                          {p.price} {t.currency}
+                        </span>
+                        {hasOldPrice && (
+                          <span style={{ color: "#A89A8E", textDecoration: "line-through", fontSize: "0.85rem", fontWeight: "600" }}>
+                            {p.oldPrice} {t.currency}
+                          </span>
+                        )}
+                      </div>
 
                       {p.showStock && p.stock > 0 && p.stock <= 10 && (
                         <p style={{ color: "#E67E22", fontSize: "0.75rem", fontWeight: "700", margin: "8px 0 0 0", display: "flex", alignItems: "center", gap: "4px" }}>
-                          ⏳ {lang === "ar" ? `متبقي قطعتين فقط!` : `Only ${p.stock} left!`}
+                          ⏳ {lang === "ar" ? `متبقي ${p.stock} فقط!` : `Only ${p.stock} left!`}
                         </p>
                       )}
                     </div>
