@@ -6,9 +6,10 @@ export default function AdminSettings() {
   const [settings, setSettings] = useState({
     storeNameAr: "متجر ليمو",
     storeNameEn: "Lemo Store",
-    // 🛠️ تم إضافة حقول الصفحة الرئيسية
     heroTitle: "LEMO STORE… بنبيع إحساس مش منتجات",
     heroDesc: "اكتشف مجموعتنا المميزة المصنوعة يدوياً من أجود الخامات العطرية الآمنة تماماً على منزلك وعائلتك.",
+    // 👈 ضفنا المتغير ده عشان شريط الإعلانات
+    announcementText: "🚚 شحن مجاني على الطلبات فوق 2000 ج.م | 🎁 تغليف هدايا فاخر بـ 50 ج.م فقط", 
     primaryColor: "#C9A96E",
     darkColor: "#111111",
     bgColor: "#FAF8F5",
@@ -27,7 +28,7 @@ export default function AdminSettings() {
       if (data && Object.keys(data).length > 0) {
         setSettings(prev => ({ ...prev, ...data }));
       }
-      setLoading(false);
+      loading && setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
 
@@ -63,7 +64,15 @@ export default function AdminSettings() {
         <h1 style={{ color: "#111", marginBottom: "2rem" }}>⚙️ إعدادات المتجر</h1>
         <form onSubmit={handleSubmit} style={{ background: "#fff", borderRadius: "24px", padding: "2.5rem", boxShadow: "0 4px 25px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           
-          {/* 🛠️ قسم نصوص الصفحة الرئيسية */}
+          {/* 👈 المربع الجديد للتحكم في شريط الإعلانات */}
+          <div style={{ background: "#FFF9E6", padding: "1.5rem", borderRadius: "16px", border: "1px solid #FFE699" }}>
+            <h3 style={{ marginTop: 0, color: "#B8860B" }}>📢 شريط الإعلانات (العروض)</h3>
+            <div>
+              <label style={{ fontWeight: "700", color: "#8B7355" }}>النص الظاهر في الشريط أسفل القسم الرئيسي</label>
+              <input name="announcementText" value={settings.announcementText} onChange={handleChange} placeholder="اكتب العرض هنا (مثال: شحن مجاني...)" style={inputStyle} />
+            </div>
+          </div>
+
           <div style={{ background: "#FAF8F5", padding: "1.5rem", borderRadius: "16px", border: "1px solid #E8DDD0" }}>
             <h3 style={{ marginTop: 0, color: "#3D2B1F" }}>✨ نصوص الواجهة (Hero)</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>

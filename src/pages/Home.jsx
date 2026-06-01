@@ -90,10 +90,14 @@ export default function Home() {
 
       {/* 🛠️ Promo Bar المربوط بالإعدادات */}
       <div style={{ background: "#C9A96E", color: "#fff", textAlign: "center", padding: "12px", fontSize: "0.95rem", fontWeight: "700" }}>
-        {lang === "ar" ? (
-          <>🚚 شحن مجاني على الطلبات فوق {settings?.freeShippingLimit || 500} ج.م | 🎁 تغليف هدايا فاخر بـ {settings?.giftFee || 50} ج.م فقط</>
+        {settings?.announcementText ? (
+          <>{settings.announcementText}</>
         ) : (
-          <>🚚 Free Shipping on orders over {settings?.freeShippingLimit || 500} EGP | 🎁 Luxury Gift Wrapping for just {settings?.giftFee || 50} EGP</>
+          lang === "ar" ? (
+            <>🚚 شحن مجاني على الطلبات فوق {settings?.freeShippingLimit || 500} ج.م | 🎁 تغليف هدايا فاخر بـ {settings?.giftFee || 50} ج.م فقط</>
+          ) : (
+            <>🚚 Free Shipping on orders over {settings?.freeShippingLimit || 500} EGP | 🎁 Luxury Gift Wrapping for just {settings?.giftFee || 50} EGP</>
+          )
         )}
       </div>
 
