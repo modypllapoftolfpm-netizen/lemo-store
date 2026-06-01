@@ -31,6 +31,7 @@ export default function CheckoutPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({ name: "", phone: "", address: "" });
+  const [orderId, setOrderId] = useState(""); // 👈 حالة جديدة لحفظ رقم الطلب للعميل
 
   const handleOrder = async (e) => {
     e.preventDefault();
@@ -47,7 +48,7 @@ export default function CheckoutPage() {
         address: formData.address,
         items: actualItems.map(i => ({
           productId: i.id || i.productId || "unknown",
-          nameAr: i.nameAr || "منتج",
+          nameAr: i.nameAr || i.name || "منتج", // 👈 خلينا الاسم يتبعت صح للأدمن
           price: Number(i.price) || 0,
           qty: Number(i.quantity || i.qty) || 1
         })),
@@ -60,7 +61,12 @@ export default function CheckoutPage() {
         createdAt: new Date()
       };
 
-      await createOrder(orderData); // حفظ في الداتابيز
+      // 👈 استلام الـ ID بعد إنشاء الطلب
+      const docRef = await createOrder(orderData); 
+      if (docRef && docRef.id) {
+        setOrderId(docRef.id.slice(-8).toUpperCase()); // حفظ آخر 8 حروف
+      }
+
       if (clearCart) clearCart(); // تفريغ السلة
       setStep(2); // الانتقال لخطوة رسالة النجاح والواتساب
     } catch (err) {
@@ -95,7 +101,7 @@ export default function CheckoutPage() {
                    const price = Number(item.price) || 0;
                    return (
                      <div key={idx} style={{ display: "flex", justifyContent: "space-between", color: "#555", fontWeight: "bold", paddingBottom: "10px", borderBottom: "1px dashed #FAF8F5" }}>
-                       <span>{item.nameAr} (x{qty})</span>
+                       <span>{item.nameAr || item.name} (x{qty})</span>
                        <span style={{ color: "#C9A96E" }}>{price * qty} ج.م</span>
                      </div>
                    );
@@ -138,14 +144,21 @@ export default function CheckoutPage() {
         {step === 2 && (
           <div style={{ background: "#fff", padding: "4rem 2rem", borderRadius: "24px", border: "1px solid #E8DDD0", textAlign: "center", boxShadow: "0 10px 40px rgba(0,0,0,0.05)", animation: "fadeIn 0.5s" }}>
             <div style={{ fontSize: "5rem", marginBottom: "1rem" }}>✨</div>
-            <h2 style={{ color: "#3D2B1F", marginBottom: "1rem", fontSize: "2rem", fontWeight: "900" }}>تم تسجيل طلبك المبدئي بنجاح!</h2>
+            <h2 style={{ color: "#3D2B1F", marginBottom: "1rem", fontSize: "2rem", fontWeight: "900" }}>تم تسجيل طلبك بنجاح!</h2>
+            
+            {/* 👈 هنا بنعرض رقم الطلب للعميل */}
+            <h3 style={{ color: "#C9A96E", marginBottom: "1.5rem", fontSize: "1.5rem", fontWeight: "bold", background: "#FAF8F5", padding: "10px", borderRadius: "12px", display: "inline-block" }}>
+              رقم طلبك: #{orderId}
+            </h3>
+
             <div style={{ width: "60px", height: "4px", background: "#C9A96E", margin: "0 auto 1.5rem", borderRadius: "2px" }}></div>
             <p style={{ color: "#555", fontSize: "1.1rem", lineHeight: "1.8", marginBottom: "3rem", fontWeight: "600", maxWidth: "600px", margin: "0 auto 3rem" }}>
               لأن كل قطعة في <strong style={{ color: "#3D2B1F" }}>Lemo Store</strong> صنعت خصيصاً لك بلمسة فنية مميزة، يسعدنا التواصل معك لتنسيق كافة التفاصيل وضمان أن طلبك سيكون تماماً كما تخيلته. تواصل معنا الآن لإتمام اللمسات الأخيرة لطلبك.
             </p>
             
+            {/* 👈 تعديل رسالة الواتساب عشان يكون فيها رقم الطلب */}
             <a
-              href={`https://wa.me/201009633100?text=أهلاً Lemo Store، قمت بتسجيل طلب باسم: ${formData.name} وأريد استكمال اللمسات الأخيرة لطلبي.`}
+              href={`https://wa.me/201009633100?text=أهلاً Lemo Store، قمت بتسجيل طلب رقم #${orderId} باسم: ${formData.name} وأريد استكمال اللمسات الأخيرة لطلبي.`}
               target="_blank"
               rel="noopener noreferrer"
               style={{
