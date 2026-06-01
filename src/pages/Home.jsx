@@ -88,16 +88,12 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 🛠️ Promo Bar المربوط بالإعدادات */}
+      {/* 🛠️ Promo Bar المربوط بالإعدادات (تم تثبيت النص وجعل الأرقام ديناميكية) */}
       <div style={{ background: "#C9A96E", color: "#fff", textAlign: "center", padding: "12px", fontSize: "0.95rem", fontWeight: "700" }}>
-        {settings?.announcementText ? (
-          <>{settings.announcementText}</>
+        {lang === "ar" ? (
+          <>🚚 شحن مجاني على الطلبات فوق {settings?.freeShippingLimit || 500} ج.م | 🎁 تغليف هدايا فاخر بـ {settings?.giftFee || 50} ج.م فقط</>
         ) : (
-          lang === "ar" ? (
-            <>🚚 شحن مجاني على الطلبات فوق {settings?.freeShippingLimit || 500} ج.م | 🎁 تغليف هدايا فاخر بـ {settings?.giftFee || 50} ج.م فقط</>
-          ) : (
-            <>🚚 Free Shipping on orders over {settings?.freeShippingLimit || 500} EGP | 🎁 Luxury Gift Wrapping for just {settings?.giftFee || 50} EGP</>
-          )
+          <>🚚 Free Shipping on orders over {settings?.freeShippingLimit || 500} EGP | 🎁 Luxury Gift Wrapping for just {settings?.giftFee || 50} EGP</>
         )}
       </div>
 
