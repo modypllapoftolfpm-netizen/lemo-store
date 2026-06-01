@@ -43,7 +43,6 @@ export default function ProductDetail() {
     try {
       await addReview({ productId: id, userId: user?.uid || "guest", ...reviewForm, visible: false });
       setReviewForm({ rating: 5, comment: "", customerName: "" });
-      // التعديل هنا: الرسالة اللي طلبتها
       alert("تم إرسال تقييمك بنجاح! شكراً لمشاركتنا رأيك ✨");
     } catch (err) {
       alert("حدث خطأ أثناء إرسال التقييم");
@@ -69,34 +68,60 @@ export default function ProductDetail() {
   return (
     <div style={{ minHeight: "100vh", background: "#FAF8F5", fontFamily: "Cairo, sans-serif" }} dir={lang === "ar" ? "rtl" : "ltr"}>
       <Navbar />
-      <div style={{ maxWidth: "1000px", margin: "2rem auto", padding: "0 1.5rem" }}>
+      
+      {/* 📱 أكواد التجاوب مع الموبايل */}
+      <style>{`
+        .pd-container { max-width: 1000px; margin: 2rem auto; padding: 0 1.5rem; }
+        .pd-card { background: #fff; padding: 2.5rem; border-radius: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 3rem; border: 1px solid #E8DDD0; box-shadow: 0 10px 40px rgba(0,0,0,0.03); }
+        .pd-title { color: #3D2B1F; margin: 0 0 15px 0; font-weight: 900; font-size: 2.2rem; line-height: 1.3; }
+        .pd-price-box { margin-bottom: 20px; display: flex; align-items: baseline; gap: 15px; background: #FAF8F5; padding: 15px; border-radius: 12px; border: 1px solid #F0E8DF; }
+        .pd-price { font-size: 2.2rem; color: #C9A96E; font-weight: 900; }
+        .pd-old-price { text-decoration: line-through; color: #A89A8E; font-size: 1.2rem; font-weight: bold; }
+        .pd-desc { color: #666; line-height: 1.8; margin-bottom: 25px; font-size: 1.05rem; }
+        .review-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+        .stock-badge { background: #FFF9E6; color: #B8860B; padding: 12px 20px; border-radius: 12px; font-size: 0.95rem; font-weight: bold; margin-bottom: 1.5rem; border: 1px solid #FFE699; display: flex; align-items: center; gap: 8px; }
+
+        /* 📱 إعدادات الموبايل (شاشات أصغر من 768px) */
+        @media (max-width: 768px) {
+          .pd-container { padding: 0 1rem; margin: 1rem auto; }
+          .pd-card { padding: 1.2rem; gap: 1.5rem; border-radius: 16px; grid-template-columns: 1fr; }
+          .pd-title { font-size: 1.6rem; margin-bottom: 10px; }
+          .pd-price-box { flex-direction: column; gap: 5px; padding: 12px; }
+          .pd-price { font-size: 1.8rem; }
+          .pd-desc { font-size: 0.95rem; margin-bottom: 20px; }
+          .review-grid { grid-template-columns: 1fr; }
+          .stock-badge { font-size: 0.85rem; padding: 10px; flex-direction: column; text-align: center; }
+        }
+      `}</style>
+
+      <div className="pd-container">
         
-        <div style={{ background: "#fff", padding: "2.5rem", borderRadius: "24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "3rem", border: "1px solid #E8DDD0", boxShadow: "0 10px 40px rgba(0,0,0,0.03)" }}>
+        <div className="pd-card">
            {/* صور المنتج */}
            <div>
               <img src={activeImg} style={{ width: "100%", borderRadius: "15px", marginBottom: "15px", objectFit: "cover", aspectRatio: "1/1", border: "1px solid #F0E8DF" }} alt={field(product, "name")} />
-              <div style={{ display: "flex", gap: "10px", overflowX: "auto" }}>
+              <div style={{ display: "flex", gap: "10px", overflowX: "auto", paddingBottom: "5px" }}>
                 {Array.isArray(product.imageUrl) && product.imageUrl.map((img, i) => (
-                  <img key={i} src={img} onClick={() => setActiveImg(img)} style={{ width: "70px", height: "70px", objectFit: "cover", cursor: "pointer", borderRadius: "10px", border: activeImg === img ? "3px solid #C9A96E" : "1px solid #E8DDD0", transition: "0.3s" }} />
+                  <img key={i} src={img} onClick={() => setActiveImg(img)} style={{ width: "70px", height: "70px", minWidth: "70px", objectFit: "cover", cursor: "pointer", borderRadius: "10px", border: activeImg === img ? "3px solid #C9A96E" : "1px solid #E8DDD0", transition: "0.3s" }} alt="thumbnail" />
                 ))}
               </div>
            </div>
 
            {/* تفاصيل المنتج */}
            <div>
-             <h1 style={{ color: "#3D2B1F", margin: "0 0 15px 0", fontWeight: "900", fontSize: "2rem" }}>{field(product, "name")}</h1>
+             <h1 className="pd-title">{field(product, "name")}</h1>
              
-             <div style={{ marginBottom: "20px", display: "flex", alignItems: "baseline", gap: "15px", background: "#FAF8F5", padding: "15px", borderRadius: "12px", border: "1px solid #F0E8DF" }}>
-               <span style={{ fontSize: "2rem", color: "#C9A96E", fontWeight: "900" }}>{product.price} ج.م</span>
+             <div className="pd-price-box">
+               <span className="pd-price">{product.price} ج.م</span>
                {product.oldPrice > 0 && (
-                 <span style={{ textDecoration: "line-through", color: "#A89A8E", fontSize: "1.2rem", fontWeight: "bold" }}>{product.oldPrice} ج.م</span>
+                 <span className="pd-old-price">{product.oldPrice} ج.م</span>
                )}
              </div>
 
-             <p style={{ color: "#666", lineHeight: "1.8", marginBottom: "25px", fontSize: "1.05rem" }}>{field(product, "desc")}</p>
+             <p className="pd-desc">{field(product, "desc")}</p>
 
              {product.showStock && product.stock > 0 && (
-               <div style={{ background: "#FFF9E6", color: "#B8860B", padding: "12px 20px", borderRadius: "12px", fontSize: "0.95rem", fontWeight: "bold", marginBottom: "1.5rem", border: "1px solid #FFE699", display: "flex", alignItems: "center", gap: "8px" }}>
+               <div className="stock-badge">
                  🔥 متبقي {product.stock} قطعة فقط في المخزن!
                </div>
              )}
@@ -108,22 +133,22 @@ export default function ProductDetail() {
         </div>
 
         {/* نظام التقييمات */}
-        <div style={{ background: "#fff", padding: "2.5rem", borderRadius: "24px", marginTop: "2rem", border: "1px solid #E8DDD0", boxShadow: "0 10px 40px rgba(0,0,0,0.03)" }}>
-          <h2 style={{ color: "#3D2B1F", fontWeight: "900", marginBottom: "2rem", display: "flex", alignItems: "center", gap: "10px" }}>
+        <div className="pd-card" style={{ marginTop: "2rem" }}>
+          <h2 style={{ color: "#3D2B1F", fontWeight: "900", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "10px", fontSize: "1.5rem" }}>
             ⭐ آراء عملائنا المميزين
           </h2>
 
           {visibleReviews.length === 0 ? (
             <p style={{ color: "#8B7355", textAlign: "center", padding: "2rem", background: "#FAF8F5", borderRadius: "12px", fontWeight: "bold" }}>لا توجد تقييمات حتى الآن. كن أول من يشاركنا رأيه!</p>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", marginBottom: "3rem" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "2rem" }}>
               {visibleReviews.map(rev => (
-                <div key={rev.id} style={{ padding: "1.5rem", background: "#FAF8F5", borderRadius: "16px", border: "1px solid #F0E8DF", opacity: rev.visible ? 1 : 0.6, transition: "0.3s" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px", alignItems: "center" }}>
-                    <span style={{ fontWeight: "900", color: "#3D2B1F", fontSize: "1.1rem" }}>👤 {rev.customerName || "عميل مميز"}</span>
-                    <span style={{ color: "#C9A96E", fontSize: "1.2rem", letterSpacing: "2px" }}>{"★".repeat(rev.rating)}{"☆".repeat(5-rev.rating)}</span>
+                <div key={rev.id} style={{ padding: "1.2rem", background: "#FAF8F5", borderRadius: "16px", border: "1px solid #F0E8DF", opacity: rev.visible ? 1 : 0.6, transition: "0.3s" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                    <span style={{ fontWeight: "900", color: "#3D2B1F", fontSize: "1.05rem" }}>👤 {rev.customerName || "عميل مميز"}</span>
+                    <span style={{ color: "#C9A96E", fontSize: "1.1rem", letterSpacing: "2px" }}>{"★".repeat(rev.rating)}{"☆".repeat(5-rev.rating)}</span>
                   </div>
-                  <p style={{ color: "#555", margin: "0 0 15px 0", lineHeight: "1.7" }}>{rev.comment}</p>
+                  <p style={{ color: "#555", margin: "0 0 15px 0", lineHeight: "1.7", fontSize: "0.95rem" }}>{rev.comment}</p>
                   
                   {isAdmin && (
                     <div style={{ borderTop: "1px dashed #E8DDD0", paddingTop: "10px", textAlign: "left" }}>
@@ -140,9 +165,9 @@ export default function ProductDetail() {
             </div>
           )}
 
-          <form onSubmit={handleReview} style={{ borderTop: "2px solid #F0E8DF", paddingTop: "2rem" }}>
-            <h3 style={{ color: "#8B7355", marginBottom: "1.5rem", fontWeight: "800" }}>أضف تقييمك لقطعتك الخاصة</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+          <form onSubmit={handleReview} style={{ borderTop: "2px solid #F0E8DF", paddingTop: "1.5rem" }}>
+            <h3 style={{ color: "#8B7355", marginBottom: "1rem", fontWeight: "800", fontSize: "1.2rem" }}>أضف تقييمك لقطعتك الخاصة</h3>
+            <div className="review-grid">
               <input name="customerName" value={reviewForm.customerName} onChange={(e) => setReviewForm({...reviewForm, customerName: e.target.value})} placeholder="الاسم" style={inputStyle} required />
               <select value={reviewForm.rating} onChange={(e) => setReviewForm({...reviewForm, rating: Number(e.target.value)})} style={inputStyle}>
                 <option value={5}>⭐⭐⭐⭐⭐ ممتاز جداً</option>
@@ -153,7 +178,7 @@ export default function ProductDetail() {
               </select>
             </div>
             <textarea value={reviewForm.comment} onChange={(e) => setReviewForm({...reviewForm, comment: e.target.value})} placeholder="شاركنا رأيك في جودة وتفاصيل المنتج..." style={{ ...inputStyle, minHeight: "100px", resize: "none", marginBottom: "1rem" }} required />
-            <button type="submit" disabled={submitting} style={{ background: "linear-gradient(135deg, #C9A96E, #b8925a)", color: "#fff", padding: "14px 30px", border: "none", borderRadius: "10px", fontWeight: "bold", fontSize: "1.1rem", cursor: "pointer", width: "fit-content" }}>
+            <button type="submit" disabled={submitting} style={{ background: "linear-gradient(135deg, #C9A96E, #b8925a)", color: "#fff", padding: "14px 30px", border: "none", borderRadius: "10px", fontWeight: "bold", fontSize: "1.1rem", cursor: "pointer", width: "100%", maxWidth: "300px" }}>
               {submitting ? "جاري الإرسال..." : "إرسال التقييم ✉️"}
             </button>
           </form>
