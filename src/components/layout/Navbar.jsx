@@ -79,32 +79,54 @@ export default function Navbar() {
 
   return (
     <>
-      {/* ستايلات الـ Media Queries للموبايل والكمبيوتر */}
+      {/* 📱 ستايلات الـ Amazon Drawer للموبايل */}
       <style>{`
         .nav-links-desktop { display: flex; gap: 2rem; align-items: center; }
         .nav-actions-desktop { display: flex; align-items: center; gap: 10px; }
-        .burger-menu-btn { display: none; background: transparent; border: none; cursor: pointer; font-size: 1.5rem; color: #3D2B1F; }
+        .burger-menu-btn { display: none; background: transparent; border: none; cursor: pointer; font-size: 1.8rem; color: #3D2B1F; margin-inline-end: 10px; padding: 0; }
         
+        /* 📱 إعدادات الموبايل (أمازون ستايل) */
         @media (max-width: 768px) {
           .nav-links-desktop { display: none; }
           .burger-menu-btn { display: block; }
           .nav-actions-desktop .lang-btn, .nav-actions-desktop .logout-btn { display: none; }
         }
         
-        .mobile-menu {
-          display: none; position: fixed; top: 75px; left: 0; width: 100%; background: #fff;
-          border-bottom: 1px solid #f0e8df; padding: 1.5rem; box-sizing: border-box; z-index: 999;
-          flex-direction: column; gap: 1.2rem; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        /* 🖤 الخلفية المظلمة (Overlay) */
+        .mobile-overlay {
+          visibility: hidden; opacity: 0; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.6); z-index: 1000; transition: all 0.3s ease;
         }
-        .mobile-menu.open { display: flex; }
+        .mobile-overlay.open { visibility: visible; opacity: 1; }
+
+        /* 🛒 القائمة الجانبية (Drawer) */
+        .mobile-drawer {
+          position: fixed; top: 0; bottom: 0; width: 280px; background: #fff;
+          z-index: 1001; transition: transform 0.3s ease;
+          display: flex; flex-direction: column; padding: 0;
+          box-shadow: 0 0 20px rgba(0,0,0,0.2); overflow-y: auto;
+        }
+        /* تظبيط اتجاه السحب حسب اللغة */
+        [dir="rtl"] .mobile-drawer { right: 0; transform: translateX(100%); }
+        [dir="rtl"] .mobile-drawer.open { transform: translateX(0); }
+        [dir="ltr"] .mobile-drawer { left: 0; transform: translateX(-100%); }
+        [dir="ltr"] .mobile-drawer.open { transform: translateX(0); }
+
+        .drawer-header {
+          background: #FAF8F5; padding: 20px; border-bottom: 1px solid #E8DDD0;
+          display: flex; justify-content: space-between; align-items: center;
+        }
+        .drawer-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #111; padding: 0; }
+        .drawer-links { display: flex; flex-direction: column; padding: 20px; gap: 15px; }
+        .drawer-link { font-size: 1.1rem; color: #3D2B1F; text-decoration: none; font-weight: 700; border-bottom: 1px solid #f5f5f5; padding-bottom: 12px; }
       `}</style>
 
-      <nav style={{ background: "#fff", borderBottom: "1px solid #f0e8df", padding: "0 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", height: "75px", position: "sticky", top: 0, zIndex: 1000, fontFamily: "Cairo, sans-serif" }}>
+      <nav dir={lang === "ar" ? "rtl" : "ltr"} style={{ background: "#fff", borderBottom: "1px solid #f0e8df", padding: "0 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", height: "75px", position: "sticky", top: 0, zIndex: 999, fontFamily: "Cairo, sans-serif" }}>
         
-        {/* اليسار أو اليمين حسب اللغة: اللوجو وقائمة الموبايل */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <button className="burger-menu-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            {mobileMenuOpen ? "✕" : "☰"}
+        {/* اليسار أو اليمين: زرار الموبايل + اللوجو */}
+        <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+          <button className="burger-menu-btn" onClick={() => setMobileMenuOpen(true)}>
+            ☰
           </button>
           <Link to="/" style={{ textDecoration: "none" }}><LemoLogo /></Link>
         </div>
@@ -159,22 +181,34 @@ export default function Navbar() {
         <GlobalFloatingContact links={links} />
       </nav>
 
-      {/* القائمة المنسدلة الخاصة بالموبايل فقط */}
-      <div className={`mobile-menu ${mobileMenuOpen ? "open" : ""}`}>
-        <Link to="/" style={{ textDecoration: "none", color: "#3D2B1F", fontWeight: "700" }}>{t.nav.home}</Link>
-        <Link to="/products" style={{ textDecoration: "none", color: "#3D2B1F", fontWeight: "700" }}>{t.nav.products}</Link>
-        {isLoggedIn && <Link to="/orders" style={{ textDecoration: "none", color: "#3D2B1F", fontWeight: "700" }}>{t.nav.orders}</Link>}
-        {isAdmin && <Link to="/admin" style={{ textDecoration: "none", color: "#C9A96E", fontWeight: "700" }}>⚙️ {t.nav.admin}</Link>}
-        <hr style={{ width: "80%", border: "0", borderTop: "1px solid #f0e8df", margin: "5px auto" }} />
-        <div style={{ display: "flex", justifyContent: "center", gap: "15px" }}>
-          <button onClick={toggleLang} style={{ background: "#FAF8F5", border: "1px solid #E8DDD0", padding: "8px 20px", borderRadius: "20px", cursor: "pointer", fontWeight: "700" }}>
-            {lang === "ar" ? "English" : "عربي"}
-          </button>
-          {isLoggedIn ? (
-            <button onClick={handleLogout} style={{ background: "#ff4d4d", color: "#fff", border: "none", padding: "8px 20px", borderRadius: "20px", cursor: "pointer" }}>{t.nav.logout}</button>
-          ) : (
-            <Link to="/login" style={{ background: "#3D2B1F", color: "#fff", padding: "8px 20px", borderRadius: "20px", textDecoration: "none" }}>{t.nav.login}</Link>
-          )}
+      {/* 📱 القائمة الجانبية (Amazon Style Drawer) للموبايل */}
+      <div dir={lang === "ar" ? "rtl" : "ltr"}>
+        {/* الخلفية المظلمة */}
+        <div className={`mobile-overlay ${mobileMenuOpen ? "open" : ""}`} onClick={() => setMobileMenuOpen(false)}></div>
+        
+        {/* الدرج الجانبي */}
+        <div className={`mobile-drawer ${mobileMenuOpen ? "open" : ""}`}>
+          <div className="drawer-header">
+            <LemoLogo />
+            <button className="drawer-close-btn" onClick={() => setMobileMenuOpen(false)}>✕</button>
+          </div>
+          <div className="drawer-links">
+            <Link to="/" className="drawer-link" onClick={() => setMobileMenuOpen(false)}>{t.nav.home}</Link>
+            <Link to="/products" className="drawer-link" onClick={() => setMobileMenuOpen(false)}>{t.nav.products}</Link>
+            {isLoggedIn && <Link to="/orders" className="drawer-link" onClick={() => setMobileMenuOpen(false)}>{t.nav.orders}</Link>}
+            {isAdmin && <Link to="/admin" className="drawer-link" style={{ color: "#C9A96E" }} onClick={() => setMobileMenuOpen(false)}>⚙️ {t.nav.admin}</Link>}
+            
+            <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "10px" }}>
+              <button onClick={() => { toggleLang(); setMobileMenuOpen(false); }} style={{ background: "#FAF8F5", border: "1px solid #E8DDD0", padding: "12px", borderRadius: "8px", cursor: "pointer", fontWeight: "700" }}>
+                {lang === "ar" ? "English" : "عربي"}
+              </button>
+              {isLoggedIn ? (
+                <button onClick={handleLogout} style={{ background: "#ff4d4d", color: "#fff", border: "none", padding: "12px", borderRadius: "8px", cursor: "pointer", fontWeight: "bold" }}>{t.nav.logout}</button>
+              ) : (
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)} style={{ background: "#3D2B1F", color: "#fff", padding: "12px", borderRadius: "8px", textDecoration: "none", textAlign: "center", fontWeight: "bold" }}>{t.nav.login}</Link>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </>
