@@ -8,7 +8,6 @@ export default function AdminSettings() {
     storeNameEn: "Lemo Store",
     heroTitle: "LEMO STORE… بنبيع إحساس مش منتجات",
     heroDesc: "اكتشف مجموعتنا المميزة المصنوعة يدوياً من أجود الخامات العطرية الآمنة تماماً على منزلك وعائلتك.",
-    // 👈 ضفنا المتغير ده عشان شريط الإعلانات
     announcementText: "🚚 شحن مجاني على الطلبات فوق 2000 ج.م | 🎁 تغليف هدايا فاخر بـ 50 ج.م فقط", 
     primaryColor: "#C9A96E",
     darkColor: "#111111",
@@ -28,7 +27,7 @@ export default function AdminSettings() {
       if (data && Object.keys(data).length > 0) {
         setSettings(prev => ({ ...prev, ...data }));
       }
-      loading && setLoading(false);
+      setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
 
@@ -64,7 +63,21 @@ export default function AdminSettings() {
         <h1 style={{ color: "#111", marginBottom: "2rem" }}>⚙️ إعدادات المتجر</h1>
         <form onSubmit={handleSubmit} style={{ background: "#fff", borderRadius: "24px", padding: "2.5rem", boxShadow: "0 4px 25px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           
-          {/* 👈 المربع الجديد للتحكم في شريط الإعلانات */}
+          {/* 🛠️ القسم الجديد: بيانات المتجر الأساسية لعنوان المتصفح */}
+          <div style={{ background: "#FAF8F5", padding: "1.5rem", borderRadius: "16px", border: "1px solid #E8DDD0" }}>
+            <h3 style={{ marginTop: 0, color: "#3D2B1F" }}>🏷️ بيانات المتجر الأساسية (تظهر في تبويب المتصفح)</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <div>
+                <label style={{ fontWeight: "700", color: "#666" }}>اسم المتجر (عربي)</label>
+                <input name="storeNameAr" value={settings.storeNameAr} onChange={handleChange} style={inputStyle} />
+              </div>
+              <div>
+                <label style={{ fontWeight: "700", color: "#666" }}>اسم المتجر (إنجليزي)</label>
+                <input name="storeNameEn" value={settings.storeNameEn} onChange={handleChange} style={inputStyle} />
+              </div>
+            </div>
+          </div>
+
           <div style={{ background: "#FFF9E6", padding: "1.5rem", borderRadius: "16px", border: "1px solid #FFE699" }}>
             <h3 style={{ marginTop: 0, color: "#B8860B" }}>📢 شريط الإعلانات (العروض)</h3>
             <div>
@@ -77,7 +90,7 @@ export default function AdminSettings() {
             <h3 style={{ marginTop: 0, color: "#3D2B1F" }}>✨ نصوص الواجهة (Hero)</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               <div>
-                <label style={{ fontWeight: "700", color: "#666" }}>العنوان الرئيسي</label>
+                <label style={{ fontWeight: "700", color: "#666" }}>العنوان الرئيسي (الجملة الكبيرة)</label>
                 <input name="heroTitle" value={settings.heroTitle} onChange={handleChange} style={inputStyle} />
               </div>
               <div>
