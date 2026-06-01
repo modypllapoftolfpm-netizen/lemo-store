@@ -34,7 +34,6 @@ export default function Home() {
   const bestSellers = products.filter(p => p.isBestSeller === true || p.bestSeller === true);
   const defaultArchImg = "https://images.unsplash.com/photo-1602874801007-bd458bb1b8b6?q=80&w=800";
 
-  // 🛠️ ربط النصوص بالمتغيرات اللي ضفناها في AdminSettings
   const heroTitle = lang === "ar" ? (settings?.heroTitle || "LEMO STORE… بنبيع إحساس مش منتجات") : (settings?.heroTitleEn || "Lemo Store... Selling feelings, not just products");
   const heroDesc = lang === "ar" ? (settings?.heroDesc || "اكتشف مجموعتنا المميزة المصنوعة يدوياً من أجود الخامات العطرية الآمنة تماماً على منزلك وعائلتك.") : (settings?.heroDescEn || "Discover our unique collection handcrafted from the finest aromatic materials, completely safe for your home and family.");
 
@@ -77,7 +76,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 🛠️ الشريط المتحرك (إنجليزي دائماً) */}
+      {/* الشريط المتحرك */}
       <div style={{ background: "#fff", padding: "20px 0", overflow: "hidden", whiteSpace: "nowrap", borderTop: "1px solid #E8DDD0", borderBottom: "1px solid #E8DDD0" }}>
         <div style={{ display: "inline-block", animation: "marquee 25s linear infinite" }}>
             {[...categories, ...categories, ...categories].map((cat, i) => (
@@ -88,13 +87,9 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 🛠️ Promo Bar المربوط بالإعدادات (تم تثبيت النص وجعل الأرقام ديناميكية) */}
+      {/* 🛠️ Promo Bar المربوط بالنص الحر */}
       <div style={{ background: "#C9A96E", color: "#fff", textAlign: "center", padding: "12px", fontSize: "0.95rem", fontWeight: "700" }}>
-        {lang === "ar" ? (
-          <>🚚 شحن مجاني على الطلبات فوق {settings?.freeShippingLimit || 500} ج.م | 🎁 تغليف هدايا فاخر بـ {settings?.giftFee || 50} ج.م فقط</>
-        ) : (
-          <>🚚 Free Shipping on orders over {settings?.freeShippingLimit || 500} EGP | 🎁 Luxury Gift Wrapping for just {settings?.giftFee || 50} EGP</>
-        )}
+        {settings?.announcementText || (lang === "ar" ? "🚚 شحن مجاني على الطلبات فوق 2000 ج.م | 🎁 تغليف هدايا فاخر بـ 50 ج.م فقط" : "🚚 Free Shipping on orders over 2000 EGP | 🎁 Luxury Gift Wrapping for just 50 EGP")}
       </div>
 
       {/* Categories Section */}
