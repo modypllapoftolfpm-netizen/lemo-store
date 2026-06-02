@@ -3,13 +3,14 @@ import { collection, addDoc, getDocs, doc, deleteDoc, query, where, updateDoc } 
 
 // 1. إضافة كوبون جديد متطور (للأدمن)
 export const addCoupon = async (couponData) => {
-  // الكود بيتوقع Object جواه: code, discount, type, minSubtotal, expiryDate
   await addDoc(collection(db, "coupons"), {
     code: couponData.code.toUpperCase().trim(),
     discount: parseFloat(couponData.discount || 0),
     type: couponData.type || "percentage", // percentage أو fixed
     minSubtotal: parseFloat(couponData.minSubtotal || 0),
     expiryDate: couponData.expiryDate || null, // صيغة YYYY-MM-DD
+    scope: couponData.scope || "all",          // 🔴 النطاق (الكل - قسم - منتج)
+    targetIds: couponData.targetIds || [],     // 🔴 مصفوفة المنتجات/الأقسام المحددة
     active: true,
     createdAt: new Date(),
   });
@@ -52,7 +53,7 @@ export const validateCoupon = async (code, currentSubtotal) => {
 
   // فحص 2: هل انتهت صلاحيته؟
   if (coupon.expiryDate) {
-    const today = new Date().toISOString().split('T')[0]; // بيجيب تاريخ النهاردة YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
     if (today > coupon.expiryDate) {
       return { valid: false, msg: "❌ هذا الكوبون منتهي الصلاحية" };
     }
