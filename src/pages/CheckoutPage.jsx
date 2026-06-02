@@ -151,7 +151,7 @@ export default function CheckoutPage() {
                    const qty = Number(item.quantity || item.qty) || 1;
                    const price = Number(item.price) || 0;
                    return (
-                     <div key={idx} style={{ display: "flex", justify-content: "space-between", color: "#555", fontWeight: "bold", paddingBottom: "10px", borderBottom: "1px dashed #FAF8F5" }}>
+                     <div key={idx} style={{ display: "flex", justifyContent: "space-between", color: "#555", fontWeight: "bold", paddingBottom: "10px", borderBottom: "1px dashed #FAF8F5" }}>
                        <span style={{flex: 1, paddingLeft: "10px"}}>{item.nameAr || item.name} (x{qty})</span>
                        <span style={{ color: "#C9A96E", whiteSpace: "nowrap" }}>{price * qty} ج.م</span>
                      </div>
