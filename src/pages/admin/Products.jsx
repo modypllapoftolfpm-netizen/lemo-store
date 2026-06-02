@@ -7,11 +7,13 @@ import {
   deleteProduct, 
   uploadMultipleImages 
 } from "../../firebase/products";
+import { subscribeToCategories } from "../../firebase/settings"; // 🔴 جلب الفئات من الداتابيز
 import Navbar from "../../components/layout/Navbar";
 
 const AdminProducts = () => {
   const { t } = useLang();
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]); // 🔴 حالة حفظ الفئات
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState("");
@@ -22,7 +24,7 @@ const AdminProducts = () => {
   const [formData, setFormData] = useState({
     nameAr: "", nameEn: "", descAr: "", descEn: "", 
     price: "", oldPrice: "", stock: "", showStock: true,
-    category: "scented", isNew: false, isBestSeller: false
+    category: "", isNew: false, isBestSeller: false
   });
 
   const [imageFiles, setImageFiles] = useState([]);
@@ -32,11 +34,19 @@ const AdminProducts = () => {
 
   useEffect(() => {
     setLoading(true);
-    const unsub = subscribeToProducts((data) => {
+    const unsubProducts = subscribeToProducts((data) => {
       setProducts(data);
       setLoading(false);
     });
-    return unsub;
+    // 🔴 الاشتراك في الفئات عشان أي تغيير يسمع هنا فوراً
+    const unsubCategories = subscribeToCategories((data) => {
+      setCategories(data);
+    });
+    
+    return () => {
+      unsubProducts();
+      unsubCategories();
+    };
   }, []);
 
   const handleImageChange = (e) => {
@@ -66,7 +76,7 @@ const AdminProducts = () => {
         oldPrice: product.oldPrice || "", 
         stock: product.stock !== undefined ? product.stock : "",
         showStock: product.showStock !== undefined ? product.showStock : true,
-        category: product.category || "scented",
+        category: product.category || "",
         isNew: product.isNew || false,
         isBestSeller: product.isBestSeller || false
       });
@@ -79,7 +89,8 @@ const AdminProducts = () => {
       setFormData({ 
         nameAr: "", nameEn: "", descAr: "", descEn: "", 
         price: "", oldPrice: "", stock: "", showStock: true,
-        category: "scented", isNew: false, isBestSeller: false 
+        category: categories.length > 0 ? (categories[0].slug || categories[0].id) : "", // يختار أول فئة كافتراضي
+        isNew: false, isBestSeller: false 
       });
       setExistingUrls([]);
       setExistingPaths([]);
@@ -139,6 +150,12 @@ const AdminProducts = () => {
     return imgField || "https://via.placeholder.com/60";
   };
 
+  // 🔴 دالة عشان تجيب اسم القسم بالعربي في الجدول بدل ما يعرض الـ slug
+  const getCategoryName = (slugOrId) => {
+    const cat = categories.find(c => c.slug === slugOrId || c.id === slugOrId);
+    return cat ? cat.nameAr : slugOrId;
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF8F5]" dir="rtl">
       <Navbar />
@@ -188,8 +205,9 @@ const AdminProducts = () => {
                     </td>
                     <td className="p-4 font-bold text-base">{p.nameAr}</td>
                     <td className="p-4">
+                      {/* 🔴 استخدام الدالة لعرض اسم القسم */}
                       <span className="bg-[#FAF7F2] px-3 py-1 rounded-full text-[#8B7355] border border-[#E8DDD0]">
-                        {p.category === "scented" ? "شموع معطرة" : p.category === "decorative" ? "شموع ديكورية" : p.category === "gifts" ? "هدايا فخمة" : "مرطبات الجسم"}
+                        {getCategoryName(p.category)}
                       </span>
                     </td>
                     <td className="p-4 font-black text-[#3D2B1F]">{p.price} ج.م</td>
@@ -272,11 +290,14 @@ const AdminProducts = () => {
 
                 <div>
                   <label className="block text-xs font-black text-[#8B7355] mb-2">القسم</label>
-                  <select name="category" value={formData.category} onChange={handleChange} className="w-full p-3.5 rounded-xl border-2 border-[#FAF7F2] bg-white font-bold outline-none focus:border-[#C9A96E]">
-                    <option value="scented">شموع معطرة</option>
-                    <option value="decorative">شموع ديكورية</option>
-                    <option value="gifts">هدايا فخمة</option>
-                    <option value="body">مرطبات الجسم</option>
+                  {/* 🔴 القائمة بقت تسحب من الأقسام اللي إنت ضايفها ديناميكياً */}
+                  <select name="category" value={formData.category} onChange={handleChange} className="w-full p-3.5 rounded-xl border-2 border-[#FAF7F2] bg-white font-bold outline-none focus:border-[#C9A96E]" required>
+                    <option value="" disabled>اختر القسم...</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.slug || cat.id}>
+                        {cat.nameAr}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
