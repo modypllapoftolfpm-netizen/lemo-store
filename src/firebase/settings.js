@@ -23,7 +23,7 @@ export const subscribeToSettings = (callback) => {
   });
 };
 
-// ─── إدارة المنتجات (الجديد) ──────────────────────────────────────────────────
+// ─── إدارة المنتجات ──────────────────────────────────────────────────
 export const subscribeToProducts = (callback) => {
   const q = query(collection(db, "products"));
   return onSnapshot(q, (snap) => {
@@ -31,14 +31,23 @@ export const subscribeToProducts = (callback) => {
   });
 };
 
-// ─── دالة مساعدة لرفع صور البنرات كـ Base64 ──────
+// ─── دالة رفع صور البنرات (تم التعديل لرفعها على Cloudinary لحماية الداتابيز) ──────
 export const uploadBannerImage = async (file) => {
-  return new Promise((resolve, reject) => {
-    const fileReader = new FileReader();
-    fileReader.readAsDataURL(file);
-    fileReader.onload = () => { resolve({ url: fileReader.result, path: "inline_" + Date.now() }); };
-    fileReader.onerror = (error) => { reject(error); };
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "lemo_store"); 
+
+  const res = await fetch("https://api.cloudinary.com/v1_1/dakjxjp0l/image/upload", {
+    method: "POST",
+    body: formData,
   });
+
+  if (!res.ok) {
+    throw new Error("فشل رفع صورة البنر على Cloudinary");
+  }
+
+  const data = await res.json();
+  return { url: data.secure_url, path: data.public_id };
 };
 
 // ─── إدارة الفئات ──────────────────────────────────────────
