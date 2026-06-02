@@ -2,37 +2,52 @@ import {
   collection, doc, addDoc, updateDoc, deleteDoc,
   getDoc, getDocs, onSnapshot, query, where, orderBy, serverTimestamp,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import { db, storage } from "./config";
+import { db } from "./config";
 
 const COL = "products";
 
-// ─── دالة رفع صور متعددة ──────────────────────────────────────────────────
+// 🔴🔴 بيانات Cloudinary الخاصة بك 🔴🔴
+const CLOUDINARY_CLOUD_NAME = "dakjxjp0l"; 
+const CLOUDINARY_UPLOAD_PRESET = "lemo_store"; 
+
+// ─── دالة رفع صور متعددة (Cloudinary) ──────────────────────────
 export const uploadMultipleImages = async (files, productId) => {
   const urls = [];
-  const paths = [];
+  const paths = []; 
+  
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    const path = `products/${productId}_${Date.now()}_idx_${i}`;
-    const storageRef = ref(storage, path);
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
-    urls.push(url);
-    paths.push(path);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+
+    // إرسال الصورة لـ Cloudinary
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("فشل رفع الصورة على Cloudinary، تأكد من اسم الكلاود والـ Preset.");
+    }
+
+    const data = await response.json();
+    urls.push(data.secure_url); // رابط الصورة المباشر
+    paths.push(data.public_id); // الـ ID بتاع الصورة في كلاوديناري
   }
   return { urls, paths };
 };
 
-// ─── دالة حذف الصور ───────────────────────────────────────────────────────
+// ─── دالة حذف الصور (معدلة للأمان) ───────────────────────────────────────
 export const deleteProductImages = async (imagePaths) => {
-  if (!imagePaths) return;
-  const pathsArray = Array.isArray(imagePaths) ? imagePaths : [imagePaths];
-  for (const path of pathsArray) {
-    if (path) {
-      const storageRef = ref(storage, path);
-      await deleteObject(storageRef).catch((err) => console.log("Delete skipped:", err));
-    }
-  }
+  // Cloudinary يمنع حذف الصور من واجهة المستخدم (الفرونت إند) لدواعي أمنية
+  // تم تعطيل كود الحذف هنا حتى لا يحدث خطأ عند حذف المنتج.
+  // سيتم مسح بيانات المنتج من الموقع، والصورة تظل في Cloudinary كأرشيف.
+  console.log("تم تخطي الحذف من Cloudinary للأمان. الـ IDs:", imagePaths);
+  return Promise.resolve();
 };
 
 // ─── الدوال الأساسية للمنتجات ───────────────────────────────────────────────
@@ -54,7 +69,6 @@ export const deleteProduct = async (id, imagePaths) => {
   return await deleteDoc(doc(db, COL, id));
 };
 
-// ─── دالة جلب منتج واحد (التي تسببت في الخطأ) ──────────────────────────────
 export const getProduct = async (id) => {
   const snap = await getDoc(doc(db, COL, id));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
