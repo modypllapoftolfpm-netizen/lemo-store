@@ -8,7 +8,7 @@ const COL = "products";
 
 // 🔴🔴 بيانات Cloudinary الخاصة بك 🔴🔴
 const CLOUDINARY_CLOUD_NAME = "dakjxjp0l"; 
-const CLOUDINARY_UPLOAD_PRESET = "lemo_store"; 
+const CLOUDINARY_UPLOAD_PRESET = "lemo store"; 
 
 // ─── دالة رفع صور متعددة (Cloudinary) ──────────────────────────
 export const uploadMultipleImages = async (files, productId) => {
