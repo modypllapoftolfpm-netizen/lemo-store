@@ -50,14 +50,12 @@ const AdminProducts = () => {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    // دمج الصور الجديدة مع القديمة بدل ما يمسح اللي اخترته قبل كده
     setImageFiles(prev => [...prev, ...files]);
     
     const urls = files.map(file => URL.createObjectURL(file));
     setPreviews(prev => [...prev, ...urls]);
   };
 
-  // 🔴 دالة لحذف صورة جديدة لسه مختارها (قبل الرفع)
   const removeNewImage = (index) => {
     const newFiles = [...imageFiles];
     newFiles.splice(index, 1);
@@ -68,7 +66,6 @@ const AdminProducts = () => {
     setPreviews(newPreviews);
   };
 
-  // 🔴 دالة لحذف صورة قديمة من منتج موجود (أثناء التعديل)
   const removeExistingImage = (index) => {
     const newUrls = [...existingUrls];
     newUrls.splice(index, 1);
@@ -128,13 +125,13 @@ const AdminProducts = () => {
 
     try {
       const productData = {
-        nameAr: formData.nameAr,
+        nameAr: formData.nameAr || "منتج بدون اسم", // اسم افتراضي لو سابه فاضي
         nameEn: formData.nameEn,
         descAr: formData.descAr,
         descEn: formData.descEn,
-        price: Number(formData.price),
+        price: formData.price ? Number(formData.price) : 0,
         oldPrice: formData.oldPrice ? Number(formData.oldPrice) : null,
-        stock: Number(formData.stock),
+        stock: formData.stock ? Number(formData.stock) : 0,
         showStock: formData.showStock,
         category: formData.category,
         isNew: formData.isNew,
@@ -145,17 +142,20 @@ const AdminProducts = () => {
       let finalPaths = [...existingPaths];
 
       if (!editId) {
-        if (imageFiles.length === 0) throw new Error("برجاء اختيار صورة واحدة على الأقل للمنتج الجديد");
+        // إنشاء المنتج في الداتا بيز (بدون قيود رفع الصور)
         const docRef = await addProduct({ ...productData, imageUrl: [], imagePath: [] });
-        const uploaded = await uploadMultipleImages(imageFiles, docRef.id);
-        await updateProduct(docRef.id, { imageUrl: uploaded.urls, imagePath: uploaded.paths });
+        
+        // لو اختار صور هيرفعها، لو لأ هيكمل عادي
+        if (imageFiles.length > 0) {
+          const uploaded = await uploadMultipleImages(imageFiles, docRef.id);
+          await updateProduct(docRef.id, { imageUrl: uploaded.urls, imagePath: uploaded.paths });
+        }
       } else {
         if (imageFiles.length > 0) {
           const uploaded = await uploadMultipleImages(imageFiles, editId);
           finalUrls = [...finalUrls, ...uploaded.urls];
           finalPaths = [...finalPaths, ...uploaded.paths];
         }
-        // تحديث المنتج بالصور النهائية (القديمة المتبقية + الجديدة)
         await updateProduct(editId, { ...productData, imageUrl: finalUrls, imagePath: finalPaths });
       }
       
@@ -225,7 +225,7 @@ const AdminProducts = () => {
                         )}
                       </div>
                     </td>
-                    <td className="p-4 font-bold text-base">{p.nameAr}</td>
+                    <td className="p-4 font-bold text-base">{p.nameAr === "منتج بدون اسم" ? <span className="text-gray-400 italic">بدون اسم</span> : p.nameAr}</td>
                     <td className="p-4">
                       <span className="bg-[#FAF7F2] px-3 py-1 rounded-full text-[#8B7355] border border-[#E8DDD0]">
                         {getCategoryName(p.category)}
@@ -269,8 +269,8 @@ const AdminProducts = () => {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs font-black text-[#8B7355] uppercase tracking-widest mb-2">الاسم بالعربي</label>
-                    <input type="text" name="nameAr" value={formData.nameAr} onChange={handleChange} className="w-full p-3.5 rounded-xl border-2 border-[#FAF7F2] focus:border-[#C9A96E] outline-none" required />
+                    <label className="block text-xs font-black text-[#8B7355] uppercase tracking-widest mb-2">الاسم بالعربي (اختياري)</label>
+                    <input type="text" name="nameAr" value={formData.nameAr} onChange={handleChange} className="w-full p-3.5 rounded-xl border-2 border-[#FAF7F2] focus:border-[#C9A96E] outline-none" />
                   </div>
                   <div>
                     <label className="block text-xs font-black text-[#8B7355] uppercase tracking-widest mb-2">الاسم بالإنجليزي (اختياري)</label>
@@ -280,8 +280,8 @@ const AdminProducts = () => {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs font-black text-[#8B7355] uppercase tracking-widest mb-2">الوصف بالعربي</label>
-                    <textarea name="descAr" value={formData.descAr} onChange={handleChange} rows="3" className="w-full p-3.5 rounded-xl border-2 border-[#FAF7F2] focus:border-[#C9A96E] outline-none resize-none" required></textarea>
+                    <label className="block text-xs font-black text-[#8B7355] uppercase tracking-widest mb-2">الوصف بالعربي (اختياري)</label>
+                    <textarea name="descAr" value={formData.descAr} onChange={handleChange} rows="3" className="w-full p-3.5 rounded-xl border-2 border-[#FAF7F2] focus:border-[#C9A96E] outline-none resize-none"></textarea>
                   </div>
                   <div>
                     <label className="block text-xs font-black text-[#8B7355] uppercase tracking-widest mb-2">الوصف بالإنجليزي (اختياري)</label>
@@ -291,22 +291,29 @@ const AdminProducts = () => {
 
                 <div className="bg-[#FAF8F5] p-6 rounded-2xl grid grid-cols-2 md:grid-cols-3 gap-6">
                   <div>
-                    <label className="block text-xs font-black text-[#3D2B1F] mb-2">السعر الحالي (ج.م)</label>
-                    <input type="number" name="price" value={formData.price} onChange={handleChange} className="w-full p-3 rounded-xl border border-[#E8DDD0] bg-white font-bold" required />
+                    <label className="block text-xs font-black text-[#3D2B1F] mb-2">السعر الحالي (اختياري)</label>
+                    <input type="number" name="price" value={formData.price} onChange={handleChange} className="w-full p-3 rounded-xl border border-[#E8DDD0] bg-white font-bold" />
                   </div>
                   <div>
                     <label className="block text-xs font-black text-red-600 mb-2">السعر القديم (اختياري)</label>
                     <input type="number" name="oldPrice" value={formData.oldPrice} onChange={handleChange} className="w-full p-3 rounded-xl border border-red-100 bg-white font-bold text-red-600" />
                   </div>
                   <div className="col-span-2 md:col-span-1">
-                    <label className="block text-xs font-black text-[#3D2B1F] mb-2">المخزون</label>
-                    <input type="number" name="stock" value={formData.stock} onChange={handleChange} className="w-full p-3 rounded-xl border border-[#E8DDD0] bg-white font-bold" required />
+                    {/* 🔴 مربع إظهار المخزون تم نقله هنا بجوار المخزون */}
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="text-xs font-black text-[#3D2B1F]">المخزون</label>
+                      <label className="flex items-center gap-1 text-[11px] font-bold cursor-pointer text-[#C9A96E]">
+                        <input type="checkbox" name="showStock" checked={formData.showStock} onChange={handleChange} className="w-3.5 h-3.5 rounded accent-[#C9A96E]" /> 
+                        إظهار للعميل
+                      </label>
+                    </div>
+                    <input type="number" name="stock" value={formData.stock} onChange={handleChange} placeholder="اختياري" className="w-full p-3 rounded-xl border border-[#E8DDD0] bg-white font-bold" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black text-[#8B7355] mb-2">القسم</label>
-                  <select name="category" value={formData.category} onChange={handleChange} className="w-full p-3.5 rounded-xl border-2 border-[#FAF7F2] bg-white font-bold outline-none focus:border-[#C9A96E]" required>
+                  <label className="block text-xs font-black text-[#8B7355] mb-2">القسم (اختياري)</label>
+                  <select name="category" value={formData.category} onChange={handleChange} className="w-full p-3.5 rounded-xl border-2 border-[#FAF7F2] bg-white font-bold outline-none focus:border-[#C9A96E]">
                     <option value="" disabled>اختر القسم...</option>
                     {categories.map(cat => (
                       <option key={cat.id} value={cat.slug || cat.id}>{cat.nameAr}</option>
@@ -315,10 +322,9 @@ const AdminProducts = () => {
                 </div>
 
                 <div className="border-2 border-dashed border-[#E8DDD0] p-6 rounded-2xl text-center">
-                  <label className="block text-sm font-black text-[#3D2B1F] mb-4">ألبوم صور القطعة (صور متعددة)</label>
+                  <label className="block text-sm font-black text-[#3D2B1F] mb-4">ألبوم صور القطعة (اختياري)</label>
                   <input type="file" multiple accept="image/*" onChange={handleImageChange} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#3D2B1F] file:text-white hover:file:bg-[#111] cursor-pointer" />
                   
-                  {/* عرض الصور القديمة المرفوعة مسبقاً (مع زرار الحذف) */}
                   {existingUrls.length > 0 && (
                     <div className="mt-4 text-xs font-bold text-gray-500 text-right">الصور الحالية:</div>
                   )}
@@ -331,7 +337,6 @@ const AdminProducts = () => {
                     ))}
                   </div>
 
-                  {/* عرض الصور الجديدة اللي لسه هتترفع (مع زرار الحذف) */}
                   {previews.length > 0 && (
                     <div className="mt-4 text-xs font-bold text-green-600 text-right">الصور الجديدة المراد إضافتها:</div>
                   )}
