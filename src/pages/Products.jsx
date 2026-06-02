@@ -5,23 +5,35 @@ import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useLang } from "../context/LangContext";
 import { subscribeToProducts } from "../firebase/products";
+import { subscribeToCategories } from "../firebase/settings"; // 🔴 استدعاء الأقسام من الداتا بيز
 
 export default function Products() {
   const { t, field, lang } = useLang();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]); // 🔴 حالة حفظ الأقسام
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const category = searchParams.get("category") || "all";
 
   useEffect(() => {
-    const unsub = subscribeToProducts((data) => {
+    // جلب المنتجات
+    const unsubProducts = subscribeToProducts((data) => {
       setProducts(data);
       setLoading(false);
     });
-    return unsub;
+    
+    // 🔴 جلب الأقسام
+    const unsubCategories = subscribeToCategories((data) => {
+      setCategories(data);
+    });
+
+    return () => {
+      unsubProducts();
+      unsubCategories();
+    };
   }, []);
 
   const filtered = products.filter((p) => {
@@ -55,7 +67,6 @@ export default function Products() {
     <div style={{ minHeight: "100vh", background: "#FAF8F5", paddingBottom: "4rem" }} dir={lang === "ar" ? "rtl" : "ltr"}>
       <Navbar />
       
-      {/* ستايل الأنيميشن والتأثيرات الفاخرة المضافة للكروت */}
       <style>{`
         .lemo-product-card {
           background: #fff;
@@ -124,7 +135,6 @@ export default function Products() {
           <span>🕯️</span> {t.nav.products}
         </h1>
 
-        {/* حقل البحث الأنيق */}
         <div style={{ position: "relative", marginBottom: "2rem" }}>
           <input
             value={search}
@@ -139,22 +149,40 @@ export default function Products() {
           />
         </div>
 
-        {/* الفئات بألوان بوتيك هادئة وفخمة */}
+        {/* 🔴 الفئات الديناميكية المسحوبة من الداتا بيز */}
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "3rem" }}>
-          {["all", "gifts", "scented", "decorative", "body"].map((cat) => (
-            <button 
-              key={cat} 
-              onClick={() => setSearchParams(cat === "all" ? {} : { category: cat })} 
-              className="category-filter-btn"
-              style={{
-                border: category === cat ? "1px solid #111" : "1px solid #E8DDD0",
-                background: category === cat ? "#111" : "#fff",
-                color: category === cat ? "#fff" : "#3D2B1F",
-              }}
-            >
-              {t.categories[cat]}
-            </button>
-          ))}
+          
+          {/* زرار "الكل" الثابت */}
+          <button 
+            onClick={() => setSearchParams({})} 
+            className="category-filter-btn"
+            style={{
+              border: category === "all" ? "1px solid #111" : "1px solid #E8DDD0",
+              background: category === "all" ? "#111" : "#fff",
+              color: category === "all" ? "#fff" : "#3D2B1F",
+            }}
+          >
+            {t.categories?.all || (lang === "ar" ? "الكل" : "All")}
+          </button>
+
+          {/* طباعة الأقسام الحقيقية */}
+          {categories.map((cat) => {
+            const catId = cat.slug || cat.id;
+            return (
+              <button 
+                key={catId} 
+                onClick={() => setSearchParams({ category: catId })} 
+                className="category-filter-btn"
+                style={{
+                  border: category === catId ? "1px solid #111" : "1px solid #E8DDD0",
+                  background: category === catId ? "#111" : "#fff",
+                  color: category === catId ? "#fff" : "#3D2B1F",
+                }}
+              >
+                {lang === "ar" ? cat.nameAr : (cat.nameEn || cat.nameAr)}
+              </button>
+            );
+          })}
         </div>
 
         {/* شبكة عرض المنتجات المتجاوبة */}
@@ -172,7 +200,6 @@ export default function Products() {
               return (
                 <div key={p.id} className="lemo-product-card">
                   
-                  {/* حاوية الصورة والـ Badges الذكية */}
                   <div className="lemo-img-container">
                     <Link to={`/products/${p.id}`}>
                       {imageUrl ? (
@@ -182,7 +209,6 @@ export default function Products() {
                       )}
                     </Link>
                     
-                    {/* شارات المنتجات الرقيقة الفخمة */}
                     <div style={{ position: "absolute", top: "12px", right: "12px", left: "12px", display: "flex", justifyContent: "space-between", alignItems: "center", pointerEvents: "none" }}>
                       <div>
                         {hasOldPrice && (
@@ -203,7 +229,6 @@ export default function Products() {
                       )}
                     </div>
 
-                    {/* الأزرار التفاعلية المخفية (تظهر بـ Hover أنيق) */}
                     <div className="lemo-action-overlay">
                       <button 
                         onClick={() => addToCart(p)} 
@@ -230,14 +255,12 @@ export default function Products() {
                     </div>
                   </div>
                   
-                  {/* بيانات المنتج (العنوان والسعر) بتنسيق راقي جداً */}
                   <Link to={`/products/${p.id}`} style={{ textDecoration: "none" }}>
                     <div style={{ padding: "1.2rem 1rem" }}>
                       <h3 style={{ margin: "0 0 6px 0", color: "#111", fontSize: "1rem", fontWeight: "700", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {field(p, "name")}
                       </h3>
                       
-                      {/* السعر الحالي مع السعر القديم (لو موجود) */}
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "4px 0" }}>
                         <span style={{ color: hasOldPrice ? "#E74C3C" : "#C9A96E", fontWeight: "900", fontSize: "1.1rem" }}>
                           {p.price} {t.currency}
