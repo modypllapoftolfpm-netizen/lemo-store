@@ -7,13 +7,13 @@ import {
   deleteProduct, 
   uploadMultipleImages 
 } from "../../firebase/products";
-import { subscribeToCategories } from "../../firebase/settings"; // 🔴 جلب الفئات من الداتابيز
+import { subscribeToCategories } from "../../firebase/settings";
 import Navbar from "../../components/layout/Navbar";
 
 const AdminProducts = () => {
   const { t } = useLang();
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]); // 🔴 حالة حفظ الفئات
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState("");
@@ -38,7 +38,6 @@ const AdminProducts = () => {
       setProducts(data);
       setLoading(false);
     });
-    // 🔴 الاشتراك في الفئات عشان أي تغيير يسمع هنا فوراً
     const unsubCategories = subscribeToCategories((data) => {
       setCategories(data);
     });
@@ -51,9 +50,33 @@ const AdminProducts = () => {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    setImageFiles(files);
+    // دمج الصور الجديدة مع القديمة بدل ما يمسح اللي اخترته قبل كده
+    setImageFiles(prev => [...prev, ...files]);
+    
     const urls = files.map(file => URL.createObjectURL(file));
-    setPreviews(urls);
+    setPreviews(prev => [...prev, ...urls]);
+  };
+
+  // 🔴 دالة لحذف صورة جديدة لسه مختارها (قبل الرفع)
+  const removeNewImage = (index) => {
+    const newFiles = [...imageFiles];
+    newFiles.splice(index, 1);
+    setImageFiles(newFiles);
+
+    const newPreviews = [...previews];
+    newPreviews.splice(index, 1);
+    setPreviews(newPreviews);
+  };
+
+  // 🔴 دالة لحذف صورة قديمة من منتج موجود (أثناء التعديل)
+  const removeExistingImage = (index) => {
+    const newUrls = [...existingUrls];
+    newUrls.splice(index, 1);
+    setExistingUrls(newUrls);
+
+    const newPaths = [...existingPaths];
+    newPaths.splice(index, 1);
+    setExistingPaths(newPaths);
   };
 
   const handleChange = (e) => {
@@ -89,7 +112,7 @@ const AdminProducts = () => {
       setFormData({ 
         nameAr: "", nameEn: "", descAr: "", descEn: "", 
         price: "", oldPrice: "", stock: "", showStock: true,
-        category: categories.length > 0 ? (categories[0].slug || categories[0].id) : "", // يختار أول فئة كافتراضي
+        category: categories.length > 0 ? (categories[0].slug || categories[0].id) : "", 
         isNew: false, isBestSeller: false 
       });
       setExistingUrls([]);
@@ -132,14 +155,14 @@ const AdminProducts = () => {
           finalUrls = [...finalUrls, ...uploaded.urls];
           finalPaths = [...finalPaths, ...uploaded.paths];
         }
+        // تحديث المنتج بالصور النهائية (القديمة المتبقية + الجديدة)
         await updateProduct(editId, { ...productData, imageUrl: finalUrls, imagePath: finalPaths });
       }
       
       setShowModal(false);
     } catch (err) {
       console.error("Error saving product:", err);
-      setError(err.message || "حدث خطأ أثناء الحفظ. تأكد من اتصالك بالإنترنت ومن حجم الصور.");
-      alert(err.message || "حدث خطأ أثناء الحفظ. تأكد من اتصالك بالإنترنت ومن حجم الصور.");
+      setError(err.message || "حدث خطأ أثناء الحفظ.");
     } finally {
       setActionLoading(false);
     }
@@ -150,7 +173,6 @@ const AdminProducts = () => {
     return imgField || "https://via.placeholder.com/60";
   };
 
-  // 🔴 دالة عشان تجيب اسم القسم بالعربي في الجدول بدل ما يعرض الـ slug
   const getCategoryName = (slugOrId) => {
     const cat = categories.find(c => c.slug === slugOrId || c.id === slugOrId);
     return cat ? cat.nameAr : slugOrId;
@@ -164,11 +186,11 @@ const AdminProducts = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 pb-6 border-b border-[#E8DDD0]">
           <div>
             <h1 className="text-3xl font-black text-[#3D2B1F] tracking-tight">إدارة منتجات Lemo Store</h1>
-            <p className="text-sm text-[#8B7355] mt-1">إدارة الألبومات، المخزون الذكي، والخصومات الخاصة بمنتجاتنا اليدوية</p>
+            <p className="text-sm text-[#8B7355] mt-1">إدارة الألبومات، المخزون الذكي، والخصومات</p>
           </div>
           <button 
             onClick={() => openModal()} 
-            className="bg-[#3D2B1F] hover:bg-[#111] text-white font-bold px-8 py-3.5 rounded-xl shadow-lg transition-all duration-300 active:scale-95 text-sm"
+            className="bg-[#3D2B1F] hover:bg-[#111] text-white font-bold px-8 py-3.5 rounded-xl shadow-lg transition-all"
           >
             + إضافة قطعة فنية جديدة
           </button>
@@ -192,7 +214,7 @@ const AdminProducts = () => {
               </thead>
               <tbody className="divide-y divide-[#FAF7F2] text-sm text-[#2C1810]">
                 {products.map((p) => (
-                  <tr key={p.id} className="hover:bg-[#FAF8F5] transition-colors duration-200">
+                  <tr key={p.id} className="hover:bg-[#FAF8F5] transition-colors">
                     <td className="p-4 text-center">
                       <div className="relative w-14 h-16 mx-auto">
                         <img src={getDisplayImage(p.imageUrl)} alt="" className="w-full h-full object-cover rounded-lg border border-[#E8DDD0]" />
@@ -205,18 +227,13 @@ const AdminProducts = () => {
                     </td>
                     <td className="p-4 font-bold text-base">{p.nameAr}</td>
                     <td className="p-4">
-                      {/* 🔴 استخدام الدالة لعرض اسم القسم */}
                       <span className="bg-[#FAF7F2] px-3 py-1 rounded-full text-[#8B7355] border border-[#E8DDD0]">
                         {getCategoryName(p.category)}
                       </span>
                     </td>
                     <td className="p-4 font-black text-[#3D2B1F]">{p.price} ج.م</td>
                     <td className="p-4">
-                      {p.oldPrice ? (
-                        <span className="text-gray-400 font-bold line-through">{p.oldPrice} ج.م</span>
-                      ) : (
-                        <span className="text-gray-300">-</span>
-                      )}
+                      {p.oldPrice ? <span className="text-gray-400 font-bold line-through">{p.oldPrice} ج.م</span> : <span className="text-gray-300">-</span>}
                     </td>
                     <td className="p-4">
                       <div className="flex flex-col">
@@ -228,8 +245,8 @@ const AdminProducts = () => {
                     </td>
                     <td className="p-4 text-center">
                       <div className="flex justify-center gap-2">
-                        <button onClick={() => openModal(p)} className="bg-[#FAF7F2] text-[#3D2B1F] px-4 py-2 rounded-lg font-bold hover:bg-[#E8DDD0] transition-all">تعديل</button>
-                        <button onClick={() => { if(confirm("هل تود حذف المنتج نهائياً؟")) deleteProduct(p.id, p.imagePath) }} className="bg-red-50 text-red-500 px-4 py-2 rounded-lg font-bold hover:bg-red-100 transition-all">حذف</button>
+                        <button onClick={() => openModal(p)} className="bg-[#FAF7F2] text-[#3D2B1F] px-4 py-2 rounded-lg font-bold hover:bg-[#E8DDD0]">تعديل</button>
+                        <button onClick={() => { if(confirm("هل تود حذف المنتج نهائياً؟")) deleteProduct(p.id, p.imagePath) }} className="bg-red-50 text-red-500 px-4 py-2 rounded-lg font-bold hover:bg-red-100">حذف</button>
                       </div>
                     </td>
                   </tr>
@@ -244,32 +261,31 @@ const AdminProducts = () => {
             <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[#E8DDD0]">
               <div className="flex justify-between items-center p-6 border-b border-[#FAF7F2] sticky top-0 bg-white z-10">
                 <h3 className="text-xl font-black text-[#3D2B1F]">{editId ? `📝 تحديث قطعة في Lemo Store` : "✨ إضافة قطعة فنية جديدة"}</h3>
-                <button onClick={() => setShowModal(false)} className="w-10 h-10 rounded-full bg-[#FAF7F2] text-[#3D2B1F] text-2xl font-light hover:bg-[#E8DDD0] transition-all flex items-center justify-center">&times;</button>
+                <button onClick={() => setShowModal(false)} className="w-10 h-10 rounded-full bg-[#FAF7F2] text-[#3D2B1F] text-2xl font-light hover:bg-[#E8DDD0] flex items-center justify-center">&times;</button>
               </div>
 
               <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                
                 {error && <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl text-sm font-bold text-center">{error}</div>}
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-xs font-black text-[#8B7355] uppercase tracking-widest mb-2">الاسم بالعربي</label>
-                    <input type="text" name="nameAr" value={formData.nameAr} onChange={handleChange} className="w-full p-3.5 rounded-xl border-2 border-[#FAF7F2] focus:border-[#C9A96E] outline-none transition-all" required />
+                    <input type="text" name="nameAr" value={formData.nameAr} onChange={handleChange} className="w-full p-3.5 rounded-xl border-2 border-[#FAF7F2] focus:border-[#C9A96E] outline-none" required />
                   </div>
                   <div>
                     <label className="block text-xs font-black text-[#8B7355] uppercase tracking-widest mb-2">الاسم بالإنجليزي (اختياري)</label>
-                    <input type="text" name="nameEn" value={formData.nameEn} onChange={handleChange} className="w-full p-3.5 rounded-xl border-2 border-[#FAF7F2] focus:border-[#C9A96E] outline-none transition-all" />
+                    <input type="text" name="nameEn" value={formData.nameEn} onChange={handleChange} className="w-full p-3.5 rounded-xl border-2 border-[#FAF7F2] focus:border-[#C9A96E] outline-none" />
                   </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-xs font-black text-[#8B7355] uppercase tracking-widest mb-2">الوصف بالعربي</label>
-                    <textarea name="descAr" value={formData.descAr} onChange={handleChange} rows="3" className="w-full p-3.5 rounded-xl border-2 border-[#FAF7F2] focus:border-[#C9A96E] outline-none transition-all resize-none" required placeholder="وصف القطعة ومكوناتها..."></textarea>
+                    <textarea name="descAr" value={formData.descAr} onChange={handleChange} rows="3" className="w-full p-3.5 rounded-xl border-2 border-[#FAF7F2] focus:border-[#C9A96E] outline-none resize-none" required></textarea>
                   </div>
                   <div>
                     <label className="block text-xs font-black text-[#8B7355] uppercase tracking-widest mb-2">الوصف بالإنجليزي (اختياري)</label>
-                    <textarea name="descEn" value={formData.descEn} onChange={handleChange} rows="3" className="w-full p-3.5 rounded-xl border-2 border-[#FAF7F2] focus:border-[#C9A96E] outline-none transition-all resize-none" placeholder="Description..."></textarea>
+                    <textarea name="descEn" value={formData.descEn} onChange={handleChange} rows="3" className="w-full p-3.5 rounded-xl border-2 border-[#FAF7F2] focus:border-[#C9A96E] outline-none resize-none"></textarea>
                   </div>
                 </div>
 
@@ -280,7 +296,7 @@ const AdminProducts = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-black text-red-600 mb-2">السعر القديم (اختياري)</label>
-                    <input type="number" name="oldPrice" value={formData.oldPrice} onChange={handleChange} placeholder="يظهر مشطوباً" className="w-full p-3 rounded-xl border border-red-100 bg-white font-bold text-red-600 placeholder-red-300" />
+                    <input type="number" name="oldPrice" value={formData.oldPrice} onChange={handleChange} className="w-full p-3 rounded-xl border border-red-100 bg-white font-bold text-red-600" />
                   </div>
                   <div className="col-span-2 md:col-span-1">
                     <label className="block text-xs font-black text-[#3D2B1F] mb-2">المخزون</label>
@@ -290,13 +306,10 @@ const AdminProducts = () => {
 
                 <div>
                   <label className="block text-xs font-black text-[#8B7355] mb-2">القسم</label>
-                  {/* 🔴 القائمة بقت تسحب من الأقسام اللي إنت ضايفها ديناميكياً */}
                   <select name="category" value={formData.category} onChange={handleChange} className="w-full p-3.5 rounded-xl border-2 border-[#FAF7F2] bg-white font-bold outline-none focus:border-[#C9A96E]" required>
                     <option value="" disabled>اختر القسم...</option>
                     {categories.map(cat => (
-                      <option key={cat.id} value={cat.slug || cat.id}>
-                        {cat.nameAr}
-                      </option>
+                      <option key={cat.id} value={cat.slug || cat.id}>{cat.nameAr}</option>
                     ))}
                   </select>
                 </div>
@@ -305,13 +318,31 @@ const AdminProducts = () => {
                   <label className="block text-sm font-black text-[#3D2B1F] mb-4">ألبوم صور القطعة (صور متعددة)</label>
                   <input type="file" multiple accept="image/*" onChange={handleImageChange} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#3D2B1F] file:text-white hover:file:bg-[#111] cursor-pointer" />
                   
-                  {(previews.length > 0 || (editId && existingUrls.length > 0)) && (
-                    <div className="flex gap-3 flex-wrap mt-6 justify-center">
-                      {(previews.length > 0 ? previews : existingUrls).map((url, idx) => (
-                        <img key={idx} src={url} alt="" className="w-16 h-16 object-cover rounded-xl border-2 border-[#C9A96E] shadow-sm" />
-                      ))}
-                    </div>
+                  {/* عرض الصور القديمة المرفوعة مسبقاً (مع زرار الحذف) */}
+                  {existingUrls.length > 0 && (
+                    <div className="mt-4 text-xs font-bold text-gray-500 text-right">الصور الحالية:</div>
                   )}
+                  <div className="flex gap-3 flex-wrap mt-2 justify-center">
+                    {existingUrls.map((url, idx) => (
+                      <div key={`old-${idx}`} className="relative group">
+                        <img src={url} alt="" className="w-16 h-16 object-cover rounded-xl border-2 border-[#C9A96E] shadow-sm opacity-80" />
+                        <button type="button" onClick={() => removeExistingImage(idx)} className="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-md hover:scale-110 transition-transform">X</button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* عرض الصور الجديدة اللي لسه هتترفع (مع زرار الحذف) */}
+                  {previews.length > 0 && (
+                    <div className="mt-4 text-xs font-bold text-green-600 text-right">الصور الجديدة المراد إضافتها:</div>
+                  )}
+                  <div className="flex gap-3 flex-wrap mt-2 justify-center">
+                    {previews.map((url, idx) => (
+                      <div key={`new-${idx}`} className="relative group">
+                        <img src={url} alt="" className="w-16 h-16 object-cover rounded-xl border-2 border-green-500 shadow-sm" />
+                        <button type="button" onClick={() => removeNewImage(idx)} className="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-md hover:scale-110 transition-transform">X</button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="flex gap-4 p-4 bg-[#FAF7F2] rounded-xl">
