@@ -19,7 +19,6 @@ const AdminProducts = () => {
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
   
-  // تم تعديل الـ State لإضافة oldPrice بدلاً من discount
   const [formData, setFormData] = useState({
     nameAr: "", nameEn: "", descAr: "", descEn: "", 
     price: "", oldPrice: "", stock: "", showStock: true,
@@ -64,7 +63,7 @@ const AdminProducts = () => {
         descAr: product.descAr || "",
         descEn: product.descEn || "",
         price: product.price || "",
-        oldPrice: product.oldPrice || "", // استدعاء السعر القديم
+        oldPrice: product.oldPrice || "", 
         stock: product.stock !== undefined ? product.stock : "",
         showStock: product.showStock !== undefined ? product.showStock : true,
         category: product.category || "scented",
@@ -100,7 +99,7 @@ const AdminProducts = () => {
         descAr: formData.descAr,
         descEn: formData.descEn,
         price: Number(formData.price),
-        oldPrice: formData.oldPrice ? Number(formData.oldPrice) : null, // حفظ السعر القديم
+        oldPrice: formData.oldPrice ? Number(formData.oldPrice) : null,
         stock: Number(formData.stock),
         showStock: formData.showStock,
         category: formData.category,
@@ -108,27 +107,38 @@ const AdminProducts = () => {
         isBestSeller: formData.isBestSeller,
       };
 
-      if (editId) {
-        let finalUrls = [...existingUrls];
-        let finalPaths = [...existingPaths];
+      let finalUrls = [...existingUrls];
+      let finalPaths = [...existingPaths];
 
+      // لو منتج جديد لازم نرفع الصور الأول عشان نرفقها مع بيانات المنتج في عملية حفظ واحدة
+      if (!editId) {
+        if (imageFiles.length === 0) throw new Error("برجاء اختيار صورة واحدة على الأقل للمنتج الجديد");
+        
+        // ننشئ المنتج ببيانات الصور كـ Arrays فاضية عشان ناخد الـ ID
+        const docRef = await addProduct({ ...productData, imageUrl: [], imagePath: [] });
+        
+        // نرفع الصور على الـ ID الجديد
+        const uploaded = await uploadMultipleImages(imageFiles, docRef.id);
+        
+        // نحدث المنتج بالصور
+        await updateProduct(docRef.id, { imageUrl: uploaded.urls, imagePath: uploaded.paths });
+      } else {
+        // لو بنعدل منتج موجود
         if (imageFiles.length > 0) {
           const uploaded = await uploadMultipleImages(imageFiles, editId);
           finalUrls = [...finalUrls, ...uploaded.urls];
           finalPaths = [...finalPaths, ...uploaded.paths];
         }
-
         await updateProduct(editId, { ...productData, imageUrl: finalUrls, imagePath: finalPaths });
-      } else {
-        if (imageFiles.length === 0) throw new Error("برجاء اختيار صورة واحدة على الأقل للمنتج الجديد");
-        const docRef = await addProduct({ ...productData, imageUrl: [], imagePath: [] });
-        const uploaded = await uploadMultipleImages(imageFiles, docRef.id);
-        await updateProduct(docRef.id, { imageUrl: uploaded.urls, imagePath: uploaded.paths });
       }
+      
       setShowModal(false);
     } catch (err) {
-      setError(err.message || "حدث خطأ أثناء الحفظ");
+      console.error("Error saving product:", err);
+      setError(err.message || "حدث خطأ أثناء الحفظ. تأكد من اتصالك بالإنترنت ومن حجم الصور.");
+      alert(err.message || "حدث خطأ أثناء الحفظ. تأكد من اتصالك بالإنترنت ومن حجم الصور.");
     } finally {
+      // السطر ده هو السحر اللي هيمنع الزرار يعلق مهما حصل
       setActionLoading(false);
     }
   };
@@ -230,6 +240,9 @@ const AdminProducts = () => {
 
               <form onSubmit={handleSubmit} className="p-8 space-y-6">
                 
+                {/* عرض الإيرور لو موجود */}
+                {error && <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl text-sm font-bold text-center">{error}</div>}
+
                 {/* صف الأسماء */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
@@ -242,7 +255,7 @@ const AdminProducts = () => {
                   </div>
                 </div>
 
-                {/* صف الوصف (الجديد) */}
+                {/* صف الوصف */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-xs font-black text-[#8B7355] uppercase tracking-widest mb-2">الوصف بالعربي</label>
