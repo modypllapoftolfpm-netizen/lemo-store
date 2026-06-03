@@ -4,11 +4,11 @@
 
 /* ─── Custom Fonts ─────────────────────────────────────────────────────── */
 @font-face {
-  font-family: 'ZYAEA';
-  src: url('/fonts/ZYAEA-Ambidextrous.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
+    font-family: 'Milligram Arabic';
+    src: url('/fonts/Milligram-Arabic-Medium-TRIAL.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
 }
 
 /* ─── LEMO Brand CSS Variables ─────────────────────────────────────────── */
