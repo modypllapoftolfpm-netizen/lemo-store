@@ -109,7 +109,7 @@ const AdminProducts = () => {
       setFormData({ 
         nameAr: "", nameEn: "", descAr: "", descEn: "", 
         price: "", oldPrice: "", stock: "", showStock: true,
-        category: categories.length > 0 ? (categories[0].slug || categories[0].id) : "", 
+        category: categories.length > 0 ? (categories[0].slug || categories[0].id || categories[0].nameAr) : "", 
         isNew: false, isBestSeller: false 
       });
       setExistingUrls([]);
@@ -125,7 +125,7 @@ const AdminProducts = () => {
 
     try {
       const productData = {
-        nameAr: formData.nameAr || "منتج بدون اسم", // اسم افتراضي لو سابه فاضي
+        nameAr: formData.nameAr || "منتج بدون اسم",
         nameEn: formData.nameEn,
         descAr: formData.descAr,
         descEn: formData.descEn,
@@ -133,19 +133,19 @@ const AdminProducts = () => {
         oldPrice: formData.oldPrice ? Number(formData.oldPrice) : null,
         stock: formData.stock ? Number(formData.stock) : 0,
         showStock: formData.showStock,
-        category: formData.category,
+        category: formData.category, // القسم المختار حالياً
         isNew: formData.isNew,
         isBestSeller: formData.isBestSeller,
       };
+
+      // 🖥️ سطر تتبع ذكي عشان تشوف البيانات وهي رايحة للفايربيز في الـ Console
+      console.log("🚀 جاري إرسال البيانات المحدثة للفايربيز:", productData);
 
       let finalUrls = [...existingUrls];
       let finalPaths = [...existingPaths];
 
       if (!editId) {
-        // إنشاء المنتج في الداتا بيز (بدون قيود رفع الصور)
         const docRef = await addProduct({ ...productData, imageUrl: [], imagePath: [] });
-        
-        // لو اختار صور هيرفعها، لو لأ هيكمل عادي
         if (imageFiles.length > 0) {
           const uploaded = await uploadMultipleImages(imageFiles, docRef.id);
           await updateProduct(docRef.id, { imageUrl: uploaded.urls, imagePath: uploaded.paths });
@@ -160,6 +160,7 @@ const AdminProducts = () => {
       }
       
       setShowModal(false);
+      alert("✅ تم حفظ وتحديث المنتج بنجاح!");
     } catch (err) {
       console.error("Error saving product:", err);
       setError(err.message || "حدث خطأ أثناء الحفظ.");
@@ -174,7 +175,9 @@ const AdminProducts = () => {
   };
 
   const getCategoryName = (slugOrId) => {
-    const cat = categories.find(c => c.slug === slugOrId || c.id === slugOrId);
+    if (!slugOrId) return "-";
+    // فحص مرن يبحث بالـ slug أو الـ id أو الاسم الحرفي عشان نضمن العرض الصحيح في الجدول
+    const cat = categories.find(c => c.slug === slugOrId || c.id === slugOrId || c.nameAr === slugOrId || c.nameEn === slugOrId);
     return cat ? cat.nameAr : slugOrId;
   };
 
@@ -192,7 +195,7 @@ const AdminProducts = () => {
             onClick={() => openModal()} 
             className="bg-[#3D2B1F] hover:bg-[#111] text-white font-bold px-8 py-3.5 rounded-xl shadow-lg transition-all"
           >
-            + إضافة قطعة فنية جديدة
+            + قطعة فنية جديدة
           </button>
         </div>
 
@@ -246,7 +249,7 @@ const AdminProducts = () => {
                     <td className="p-4 text-center">
                       <div className="flex justify-center gap-2">
                         <button onClick={() => openModal(p)} className="bg-[#FAF7F2] text-[#3D2B1F] px-4 py-2 rounded-lg font-bold hover:bg-[#E8DDD0]">تعديل</button>
-                        <button onClick={() => { if(confirm("هل تود حذف المنتج نهائياً؟")) deleteProduct(p.id, p.imagePath) }} className="bg-red-50 text-red-500 px-4 py-2 rounded-lg font-bold hover:bg-red-100">حذف</button>
+                        <button onClick={() => { if(window.confirm("هل تود حذف المنتج نهائياً؟")) deleteProduct(p.id, p.imagePath) }} className="bg-red-50 text-red-500 px-4 py-2 rounded-lg font-bold hover:bg-red-100">حذف</button>
                       </div>
                     </td>
                   </tr>
@@ -299,7 +302,6 @@ const AdminProducts = () => {
                     <input type="number" name="oldPrice" value={formData.oldPrice} onChange={handleChange} className="w-full p-3 rounded-xl border border-red-100 bg-white font-bold text-red-600" />
                   </div>
                   <div className="col-span-2 md:col-span-1">
-                    {/* 🔴 مربع إظهار المخزون تم نقله هنا بجوار المخزون */}
                     <div className="flex justify-between items-center mb-2">
                       <label className="text-xs font-black text-[#3D2B1F]">المخزون</label>
                       <label className="flex items-center gap-1 text-[11px] font-bold cursor-pointer text-[#C9A96E]">
@@ -316,7 +318,8 @@ const AdminProducts = () => {
                   <select name="category" value={formData.category} onChange={handleChange} className="w-full p-3.5 rounded-xl border-2 border-[#FAF7F2] bg-white font-bold outline-none focus:border-[#C9A96E]">
                     <option value="" disabled>اختر القسم...</option>
                     {categories.map(cat => (
-                      <option key={cat.id} value={cat.slug || cat.id}>{cat.nameAr}</option>
+                      /* 🔴 هنا السر: بنخلي القيمة تدعم السلوج أو الاسم الفعلي عشان يطابق نظام الفلترة القديم والجديد للـ Frontend */
+                      <option key={cat.id} value={cat.slug || cat.nameEn || cat.id}>{cat.nameAr}</option>
                     ))}
                   </select>
                 </div>
