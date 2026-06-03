@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Custom Fonts ─────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'ZYAEA';
+  src: url('/fonts/ZYAEA-Ambidextrous.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ─── LEMO Brand CSS Variables ─────────────────────────────────────────── */
 :root {
   --lemo-cream:   #FAF7F2;
@@ -29,26 +38,27 @@ body {
 /* ─── Arabic font (RTL) ────────────────────────────────────────────────── */
 [dir="rtl"] body,
 [dir="rtl"] * {
-  font-family: 'Cairo', sans-serif;
+  /* خلينا ZYAEA هو الأساسي و Cairo كبديل احتياطي */
+  font-family: 'ZYAEA', 'Cairo', sans-serif !important;
 }
 
 /* ─── English font (LTR) ───────────────────────────────────────────────── */
 [dir="ltr"] body,
 [dir="ltr"] * {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'ZYAEA', 'DM Sans', sans-serif !important;
 }
 
 /* ─── Display headings (both languages) ────────────────────────────────── */
 h1, h2, h3, .font-display {
-  font-family: 'Playfair Display', serif;
+  font-family: 'ZYAEA', 'Playfair Display', serif !important;
 }
 
 [dir="rtl"] h1,
 [dir="rtl"] h2,
 [dir="rtl"] h3,
 [dir="rtl"] .font-display {
-  font-family: 'Cairo', sans-serif;
-  font-weight: 700;
+  font-family: 'ZYAEA', 'Cairo', sans-serif !important;
+  font-weight: normal; /* خليناها normal عشان الخط ده فخم ومش بيحتاج بولد بزيادة */
 }
 
 /* ─── Scrollbar ────────────────────────────────────────────────────────── */
