@@ -20,7 +20,6 @@ export default function CheckoutPage() {
   // الاعتماد على السلة لو موجودة، أو المنتجات الممررة
   const actualItems = cartItems?.length > 0 ? cartItems : passedItems;
 
-  // 🛠️ الحل الجذري لمشكلة الـ NaN (حساب الإجمالي يدوياً وبأمان)
   const safeSubtotal = actualItems.reduce((acc, item) => {
     const price = Number(item.price) || 0;
     const qty = Number(item.quantity || item.qty) || 1; 
@@ -40,8 +39,14 @@ export default function CheckoutPage() {
     }
     
     setLoading(true);
+
+    // 🛠️ الحل الجذري: توليد كود الطلب يدوياً قبل الإرسال لضمان وجوده
+    const generatedOrderId = Math.random().toString(36).substr(2, 8).toUpperCase();
+    setOrderId(generatedOrderId);
+
     try {
       const orderData = {
+        orderId: generatedOrderId, // تم حفظ الكود داخل فايربيز
         userId: user?.uid || "guest",
         userName: formData.name,
         userPhone: formData.phone,
@@ -61,10 +66,7 @@ export default function CheckoutPage() {
         createdAt: new Date()
       };
 
-      const docRef = await createOrder(orderData); 
-      if (docRef && docRef.id) {
-        setOrderId(docRef.id.slice(-8).toUpperCase());
-      }
+      await createOrder(orderData); 
 
       if (clearCart) clearCart(); 
       setStep(2); 
@@ -75,18 +77,17 @@ export default function CheckoutPage() {
     setLoading(false);
   };
 
-  const inputStyle = {
-    width: "100%", padding: "14px", marginBottom: "15px", 
-    borderRadius: "12px", border: "2px solid #F0E8DF", 
-    background: "#FCFAFC", boxSizing: "border-box", 
-    outline: "none", fontFamily: "Cairo", color: "#3D2B1F", fontSize: "1rem"
-  };
+  // 🛠️ الحل الجذري لمشكلة الألوان: كلاس Tailwind يجبر النص يكون أسود والخلفية بيضاء
+  const inputClass = "w-full p-4 mb-4 bg-white text-black border-2 border-[#E8DDD0] rounded-xl focus:outline-none focus:border-[#C9A96E] font-bold text-lg transition-colors placeholder-gray-400";
+
+  // تجهيز رسالة الواتساب وتشفيرها لضمان عدم ظهور أخطاء في الرابط
+  const whatsappMessage = `أهلاً Lemo Store، قمت بتسجيل طلب رقم #${orderId} باسم: ${formData.name} وأريد استكمال اللمسات الأخيرة لطلبي.\nالإجمالي: ${safeTotal} ج.م`;
+  const whatsappLink = `https://wa.me/201009633100?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#FAF8F5", paddingBottom: "4rem", fontFamily: "Cairo, sans-serif" }} dir="rtl">
+    <div className="min-h-screen bg-[#FAF8F5] pb-16 font-sans" dir="rtl">
       <Navbar />
       
-      {/* 📱 أكواد الـ CSS للتجاوب مع الموبايل */}
       <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
@@ -120,10 +121,9 @@ export default function CheckoutPage() {
           box-shadow: 0 5px 20px rgba(37,211,102,0.3);
         }
 
-        /* تعديلات شاشات الموبايل */
         @media (max-width: 768px) {
           .checkout-layout {
-            flex-direction: column; /* الفورم الأول وبعدين الملخص */
+            flex-direction: column; 
             gap: 1.5rem;
           }
           .form-section, .summary-section {
@@ -132,39 +132,39 @@ export default function CheckoutPage() {
             padding: 1.5rem;
             box-sizing: border-box;
           }
-          .summary-section { position: static; } /* إلغاء التثبيت على الموبايل عشان الشاشة متتعلقش */
+          .summary-section { position: static; } 
           .success-box { padding: 2rem 1rem; }
           .whatsapp-btn { width: 100%; box-sizing: border-box; font-size: 1rem; padding: 16px 20px; }
         }
       `}</style>
 
-      <div style={{ maxWidth: "1000px", margin: "2rem auto", padding: "0 1.5rem" }}>
+      <div className="max-w-5xl mx-auto mt-8 px-6">
         
         {step === 1 && (
           <div className="checkout-layout">
             
             {/* ملخص الطلب */}
             <div className="summary-section">
-              <h3 style={{ color: "#3D2B1F", marginBottom: "1.5rem", textAlign: "center", fontWeight: "900" }}>🛒 ملخص طلبك</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.95rem" }}>
+              <h3 className="text-[#3D2B1F] mb-6 text-center font-black text-xl">🛒 ملخص طلبك</h3>
+              <div className="flex flex-col gap-3 text-sm">
                  {actualItems.map((item, idx) => {
                    const qty = Number(item.quantity || item.qty) || 1;
                    const price = Number(item.price) || 0;
                    return (
-                     <div key={idx} style={{ display: "flex", justifyContent: "space-between", color: "#555", fontWeight: "bold", paddingBottom: "10px", borderBottom: "1px dashed #FAF8F5" }}>
-                       <span style={{flex: 1, paddingLeft: "10px"}}>{item.nameAr || item.name} (x{qty})</span>
-                       <span style={{ color: "#C9A96E", whiteSpace: "nowrap" }}>{price * qty} ج.م</span>
+                     <div key={idx} className="flex justify-between text-gray-700 font-bold pb-2 border-b border-dashed border-[#FAF8F5]">
+                       <span className="flex-1 pl-2">{item.nameAr || item.name} (x{qty})</span>
+                       <span className="text-[#C9A96E] whitespace-nowrap">{price * qty} ج.م</span>
                      </div>
                    );
                  })}
               </div>
-              <div style={{ background: "#FAF8F5", padding: "1rem", borderRadius: "12px", marginTop: "1rem" }}>
+              <div className="bg-[#FAF8F5] p-4 rounded-xl mt-4">
                 {discount > 0 && (
-                  <div style={{ display: "flex", justifyContent: "space-between", color: "#E74C3C", marginBottom: "5px", fontWeight: "bold" }}>
+                  <div className="flex justify-between text-[#E74C3C] mb-1 font-bold">
                     <span>خصم:</span> <span>- {discount} ج.م</span>
                   </div>
                 )}
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "1.2rem", fontWeight: "900", color: "#3D2B1F" }}>
+                <div className="flex justify-between text-xl font-black text-[#3D2B1F]">
                   <span>الإجمالي:</span> <span>{safeTotal} ج.م</span>
                 </div>
               </div>
@@ -172,18 +172,18 @@ export default function CheckoutPage() {
 
             {/* فورم إدخال البيانات */}
             <div className="form-section">
-               <h3 style={{ color: "#3D2B1F", marginBottom: "1.5rem", fontWeight: "900" }}>بيانات التوصيل</h3>
+               <h3 className="text-[#3D2B1F] mb-6 font-black text-xl">بيانات التوصيل</h3>
                <form onSubmit={handleOrder}>
-                 <label style={{ display: "block", marginBottom: "8px", color: "#8B7355", fontWeight: "bold", fontSize: "0.9rem" }}>الاسم</label>
-                 <input placeholder="أدخل الاسم بالكامل" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} style={inputStyle} />
+                 <label className="block mb-2 text-[#8B7355] font-bold text-sm">الاسم</label>
+                 <input placeholder="أدخل الاسم بالكامل" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className={inputClass} />
                  
-                 <label style={{ display: "block", marginBottom: "8px", color: "#8B7355", fontWeight: "bold", fontSize: "0.9rem" }}>رقم الهاتف</label>
-                 <input placeholder="01xxxxxxxxx" required type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} style={{...inputStyle, textAlign: "right"}} />
+                 <label className="block mb-2 text-[#8B7355] font-bold text-sm">رقم الهاتف</label>
+                 <input placeholder="01xxxxxxxxx" required type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className={`${inputClass} text-right`} dir="ltr" />
                  
-                 <label style={{ display: "block", marginBottom: "8px", color: "#8B7355", fontWeight: "bold", fontSize: "0.9rem" }}>العنوان بالتفصيل</label>
-                 <textarea placeholder="المحافظة، المنطقة، الشارع..." required value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} style={{ ...inputStyle, height: "100px", resize: "none" }} />
+                 <label className="block mb-2 text-[#8B7355] font-bold text-sm">العنوان بالتفصيل</label>
+                 <textarea placeholder="المحافظة، المنطقة، الشارع..." required value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className={`${inputClass} h-28 resize-none`} />
                  
-                 <button type="submit" disabled={loading} style={{ width: "100%", background: "linear-gradient(135deg, #C9A96E, #b8925a)", color: "#fff", padding: "16px", borderRadius: "12px", border: "none", fontSize: "1.1rem", fontWeight: "bold", cursor: loading ? "not-allowed" : "pointer", transition: "0.3s", boxShadow: "0 4px 15px rgba(201,169,110,0.3)", marginTop: "10px" }}>
+                 <button type="submit" disabled={loading} className="w-full bg-gradient-to-br from-[#C9A96E] to-[#b8925a] text-white p-4 rounded-xl font-bold text-lg cursor-pointer hover:shadow-lg transition-all mt-2 disabled:opacity-50">
                    {loading ? "جاري تسجيل الطلب..." : "متابعة لتأكيد الطلب ➔"}
                  </button>
                </form>
@@ -191,28 +191,28 @@ export default function CheckoutPage() {
           </div>
         )}
 
-        {/* 🛠️ خطوة الواتساب (تظهر فقط بعد التأكيد) */}
+        {/* خطوة الواتساب */}
         {step === 2 && (
           <div className="success-box">
-            <div style={{ fontSize: "5rem", marginBottom: "1rem" }}>✨</div>
-            <h2 style={{ color: "#3D2B1F", marginBottom: "1rem", fontSize: "2rem", fontWeight: "900" }}>تم تسجيل طلبك بنجاح!</h2>
+            <div className="text-7xl mb-4">✨</div>
+            <h2 className="text-[#3D2B1F] mb-4 text-3xl font-black">تم تسجيل طلبك بنجاح!</h2>
             
-            <h3 style={{ color: "#C9A96E", marginBottom: "1.5rem", fontSize: "1.5rem", fontWeight: "bold", background: "#FAF8F5", padding: "10px", borderRadius: "12px", display: "inline-block" }}>
+            <h3 className="text-[#C9A96E] mb-6 text-2xl font-bold bg-[#FAF8F5] p-3 rounded-xl inline-block">
               رقم طلبك: #{orderId}
             </h3>
 
-            <div style={{ width: "60px", height: "4px", background: "#C9A96E", margin: "0 auto 1.5rem", borderRadius: "2px" }}></div>
-            <p style={{ color: "#555", fontSize: "1.1rem", lineHeight: "1.8", marginBottom: "3rem", fontWeight: "600", maxWidth: "600px", margin: "0 auto 3rem" }}>
-              لأن كل قطعة في <strong style={{ color: "#3D2B1F" }}>Lemo Store</strong> صنعت خصيصاً لك بلمسة فنية مميزة، يسعدنا التواصل معك لتنسيق كافة التفاصيل وضمان أن طلبك سيكون تماماً كما تخيلته. تواصل معنا الآن لإتمام اللمسات الأخيرة لطلبك.
+            <div className="w-16 h-1 bg-[#C9A96E] mx-auto mb-6 rounded-full"></div>
+            <p className="text-gray-600 text-lg leading-relaxed mb-10 font-bold max-w-2xl mx-auto">
+              لأن كل قطعة في <strong className="text-[#3D2B1F]">Lemo Store</strong> صنعت خصيصاً لك بلمسة فنية مميزة، يسعدنا التواصل معك لتنسيق كافة التفاصيل وضمان أن طلبك سيكون تماماً كما تخيلته. تواصل معنا الآن لإتمام اللمسات الأخيرة لطلبك.
             </p>
             
             <a
-              href={`https://wa.me/201009633100?text=أهلاً Lemo Store، قمت بتسجيل طلب رقم #${orderId} باسم: ${formData.name} وأريد استكمال اللمسات الأخيرة لطلبي.`}
+              href={whatsappLink}
               target="_blank"
               rel="noopener noreferrer"
               className="whatsapp-btn"
             >
-              <span>💬</span> تواصلك معنا عبر الواتساب
+              <span className="text-2xl">💬</span> تواصلك معنا عبر الواتساب
             </a>
           </div>
         )}
