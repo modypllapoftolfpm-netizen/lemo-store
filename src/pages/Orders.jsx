@@ -66,7 +66,8 @@ export default function Orders() {
                 <div key={order.id} style={{ background: "#fff", padding: "2rem", borderRadius: "16px", border: "1px solid #E8DDD0", boxShadow: "0 4px 15px rgba(0,0,0,0.03)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", borderBottom: "1px dashed #E8DDD0", paddingBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
                     <div>
-                      <span style={{ color: "#8B7355", fontSize: "1rem", fontWeight: "bold" }}>رقم الطلب: #{order.id.slice(0, 8).toUpperCase()}</span>
+                      {/* هنا التعديل الوحيد عشان يظهر الـ ID اليدوي أو الـ ID بتاع فايربيز */}
+                      <span style={{ color: "#8B7355", fontSize: "1rem", fontWeight: "bold" }}>رقم الطلب: #{order.orderId || order.id.slice(0, 8).toUpperCase()}</span>
                       <div style={{ color: "#3D2B1F", fontWeight: "900", marginTop: "8px", fontSize: "1.3rem" }}>
                         الإجمالي: <span style={{ color: "#C9A96E" }}>{orderTotal} ج.م</span>
                       </div>
