@@ -9,12 +9,21 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
+    // تشغيل الاشتراك مرة واحدة فقط عند فتح الصفحة لضمان استقرار الداتا
     const unsub = subscribeToAllOrders((data) => {
-      console.log("🔥 الطلبات اللي جاية من الفايربيز:", data);
-      setOrders(data);
+      console.log("🔥 الداتا المستلمة:", data);
+      if (data) {
+        setOrders(data);
+      }
     });
-    return unsub;
-  }, []);
+
+    // الـ cleanup يضمن إغلاق الاتصال عند مغادرة الصفحة
+    return () => {
+      if (typeof unsub === 'function') {
+        unsub();
+      }
+    };
+  }, []); 
 
   return (
     <div style={{ minHeight: "100vh", background: "#FAF8F5", fontFamily: "'Cairo', sans-serif" }} dir="rtl">
@@ -35,7 +44,7 @@ export default function AdminOrders() {
               <div key={order.id} style={{ padding: "1.5rem", borderBottom: "1px solid #E8DDD0" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "10px", marginBottom: "15px" }}>
                   
-                  {/* بيانات العميل - التعديل هنا ليعرض الـ ID الموحد */}
+                  {/* بيانات العميل - يعرض الـ ID الموحد */}
                   <div>
                     <p style={{ margin: "0 0 8px", fontWeight: "900", color: "#3D2B1F", fontSize: "1.1rem" }}>
                       طلب رقم: #{order.orderId || order.id.slice(-8).toUpperCase()}
