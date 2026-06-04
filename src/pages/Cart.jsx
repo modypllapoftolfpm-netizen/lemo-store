@@ -147,7 +147,8 @@ export default function Cart() {
               <span style={{ fontWeight: "bold" }}>تغليف هدايا فخم (+{giftFee} ج.م)</span>
             </label>
             
-            {isGift && <textarea placeholder="اكتب رسالة الإهداء..." value={giftNote} onChange={(e) => setGiftNote(e.target.value)} style={{ width: "100%", marginBottom: "1.5rem", padding: "14px", borderRadius: "10px", border: "none", boxSizing: "border-box", fontFamily: "Cairo", outline: "none", resize: "none", height: "80px" }} />}
+            {/* 🛠️ التعديل تم هنا: إضافة الألوان لخانة رسالة الإهداء */}
+            {isGift && <textarea placeholder="اكتب رسالة الإهداء..." value={giftNote} onChange={(e) => setGiftNote(e.target.value)} style={{ width: "100%", marginBottom: "1.5rem", padding: "14px", borderRadius: "10px", border: "none", boxSizing: "border-box", fontFamily: "Cairo", outline: "none", resize: "none", height: "80px", color: "#3D2B1F", backgroundColor: "#FFFFFF" }} />}
 
             <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "1.5rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.8rem", fontWeight: "bold", color: "#ccc" }}>
