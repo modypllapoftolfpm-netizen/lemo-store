@@ -10,7 +10,7 @@ export default function AdminOrders() {
 
   useEffect(() => {
     const unsub = subscribeToAllOrders((data) => {
-      console.log("🔥 الطلبات اللي جاية من الفايربيز:", data); // عشان نطمن إن الداتا بتوصل
+      console.log("🔥 الطلبات اللي جاية من الفايربيز:", data);
       setOrders(data);
     });
     return unsub;
@@ -29,17 +29,16 @@ export default function AdminOrders() {
           
           {orders && orders.map((order) => {
             const orderTotal = Number(order.total) || Number(order.subtotal) || 0;
-            // عشان نقرأ الحالة صح سواء متسجلة بالطريقة القديمة أو الجديدة
             const currentStatus = order.orderStatus || order.status || "pending";
             
             return (
               <div key={order.id} style={{ padding: "1.5rem", borderBottom: "1px solid #E8DDD0" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "10px", marginBottom: "15px" }}>
                   
-                  {/* بيانات العميل */}
+                  {/* بيانات العميل - التعديل هنا ليعرض الـ ID الموحد */}
                   <div>
                     <p style={{ margin: "0 0 8px", fontWeight: "900", color: "#3D2B1F", fontSize: "1.1rem" }}>
-                      طلب رقم: #{order.id.slice(-8).toUpperCase()}
+                      طلب رقم: #{order.orderId || order.id.slice(-8).toUpperCase()}
                     </p>
                     <p style={{ margin: "0 0 4px", color: "#555", fontSize: "1rem", fontWeight: "bold" }}>
                       👤 {order.userName || order.name || order.customerName || "بدون اسم"} — 📞 <span dir="ltr">{order.userPhone || order.phone || order.customerPhone || "بدون رقم"}</span>
@@ -54,7 +53,7 @@ export default function AdminOrders() {
                     )}
                   </div>
 
-                  {/* الإجمالي وتغيير الحالة المربوط بالفايربيز صح */}
+                  {/* الإجمالي وتغيير الحالة */}
                   <div style={{ textAlign: "left", minWidth: "150px" }}>
                     <p style={{ margin: "0 0 10px", fontWeight: "900", color: "#C9A96E", fontSize: "1.3rem" }}>
                       {orderTotal} ج.م
@@ -67,8 +66,6 @@ export default function AdminOrders() {
                         border: "2px solid #F0E8DF", background: "#FCFAFC", color: "#3D2B1F",
                         fontWeight: "bold", cursor: "pointer", outline: "none", transition: "0.3s"
                       }}
-                      onFocus={(e) => e.target.style.borderColor = "#C9A96E"}
-                      onBlur={(e) => e.target.style.borderColor = "#F0E8DF"}
                     >
                       {statusOptions.map((s) => <option key={s} value={s}>{statusAr[s]}</option>)}
                     </select>
