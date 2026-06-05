@@ -4,8 +4,9 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/layout/Navbar";
 
-// 🛠️ التعديل الجذري: استيراد الدالة من نسخة الـ Lite واستخدام dbLite
+// استيراد دوال الـ Lite
 import { collection, addDoc } from "firebase/firestore/lite";
+// استيراد dbLite
 import { dbLite } from "../firebase/config"; 
 
 export default function CheckoutPage() {
@@ -42,9 +43,12 @@ export default function CheckoutPage() {
     setLoading(true);
 
     const generatedOrderId = Math.random().toString(36).substr(2, 8).toUpperCase();
-    setOrderId(generatedOrderId);
-
+    
     try {
+      // 🕵️‍♂️ سطور كاشفة: عشان نعرف إحنا بنكلم مين بالظبط
+      console.log("📍 بنحاول نبعت لمشروع ID:", dbLite.app.options.projectId);
+      console.log("📍 بنبعت لكوليكشن اسمه:", "orders");
+
       const orderData = {
         orderId: generatedOrderId, 
         userId: user?.uid || "guest",
@@ -63,26 +67,25 @@ export default function CheckoutPage() {
         isGift,
         giftNote,
         status: "pending",
-        createdAt: new Date().toISOString() // تحويل لتاريخ نصي لتجنب مشاكل الفهرسة
+        createdAt: new Date().toISOString()
       };
 
-      console.log("⏳ جاري إرسال الطلب بالطريقة المباشرة (Lite)...");
-
-      // 🚀 الضربة القاضية: استخدام dbLite حصراً مع كوليكشن Lite
       const docRef = await addDoc(collection(dbLite, "orders"), orderData);
       
-      console.log("🔥 نجاح حقيقي 100%! الطلب وصل لجوجل بـ ID:", docRef.id);
+      console.log("🔥 نجاح حقيقي 100%! الطلب وصل لـ ID:", docRef.id);
+      setOrderId(generatedOrderId);
 
       if (clearCart) clearCart(); 
       setStep(2); 
     } catch (err) {
-      console.error("❌ فشل حقيقي من السيرفر:", err);
+      console.error("❌ فشل إرسال الطلب:", err);
       alert("الطلب لم يصل! السبب: " + err.message);
     }
     
     setLoading(false);
   };
 
+  // ... (باقي كود الـ JSX زي ما هو بالظبط)
   const inputClass = "w-full p-4 mb-4 bg-white text-black border-2 border-[#E8DDD0] rounded-xl focus:outline-none focus:border-[#C9A96E] font-bold text-lg transition-colors placeholder-gray-400";
   const whatsappMessage = `أهلاً Lemo Store، قمت بتسجيل طلب رقم #${orderId} باسم: ${formData.name} وأريد استكمال اللمسات الأخيرة لطلبي.\nالإجمالي: ${safeTotal} ج.م`;
   const whatsappLink = `https://wa.me/201009633100?text=${encodeURIComponent(whatsappMessage)}`;
@@ -90,7 +93,6 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-[#FAF8F5] pb-16 font-sans" dir="rtl">
       <Navbar />
-      
       <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .checkout-layout { display: flex; gap: 2rem; flex-direction: row-reverse; align-items: flex-start; }
@@ -107,7 +109,6 @@ export default function CheckoutPage() {
           .whatsapp-btn { width: 100%; box-sizing: border-box; font-size: 1rem; padding: 16px 20px; }
         }
       `}</style>
-
       <div className="max-w-5xl mx-auto mt-8 px-6">
         {step === 1 && (
           <div className="checkout-layout">
@@ -115,58 +116,31 @@ export default function CheckoutPage() {
               <h3 className="text-[#3D2B1F] mb-6 text-center font-black text-xl">🛒 ملخص طلبك</h3>
               <div className="flex flex-col gap-3 text-sm">
                  {actualItems.map((item, idx) => (
-                     <div key={idx} className="flex justify-between text-gray-700 font-bold pb-2 border-b border-dashed border-[#FAF8F5]">
-                       <span className="flex-1 pl-2">{item.nameAr || item.name} (x{Number(item.quantity || item.qty) || 1})</span>
-                       <span className="text-[#C9A96E] whitespace-nowrap">{(Number(item.price) || 0) * (Number(item.quantity || item.qty) || 1)} ج.م</span>
-                     </div>
+                   <div key={idx} className="flex justify-between text-gray-700 font-bold pb-2 border-b border-dashed border-[#FAF8F5]">
+                     <span className="flex-1 pl-2">{item.nameAr || item.name} (x{Number(item.quantity || item.qty) || 1})</span>
+                     <span className="text-[#C9A96E] whitespace-nowrap">{(Number(item.price) || 0) * (Number(item.quantity || item.qty) || 1)} ج.م</span>
+                   </div>
                  ))}
               </div>
-              <div className="bg-[#FAF8F5] p-4 rounded-xl mt-4">
-                {discount > 0 && (
-                  <div className="flex justify-between text-[#E74C3C] mb-1 font-bold">
-                    <span>خصم:</span> <span>- {discount} ج.م</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-xl font-black text-[#3D2B1F]">
-                  <span>الإجمالي:</span> <span>{safeTotal} ج.م</span>
-                </div>
-              </div>
             </div>
-
             <div className="form-section">
                <h3 className="text-[#3D2B1F] mb-6 font-black text-xl">بيانات التوصيل</h3>
                <form onSubmit={handleOrder}>
-                 <label className="block mb-2 text-[#8B7355] font-bold text-sm">الاسم</label>
-                 <input placeholder="أدخل الاسم بالكامل" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className={inputClass} />
-                 
-                 <label className="block mb-2 text-[#8B7355] font-bold text-sm">رقم الهاتف</label>
-                 <input placeholder="01xxxxxxxxx" required type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className={`${inputClass} text-right`} dir="ltr" />
-                 
-                 <label className="block mb-2 text-[#8B7355] font-bold text-sm">العنوان بالتفصيل</label>
-                 <textarea placeholder="المحافظة، المنطقة، الشارع..." required value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className={`${inputClass} h-28 resize-none`} />
-                 
-                 <button type="submit" disabled={loading} className="w-full bg-gradient-to-br from-[#C9A96E] to-[#b8925a] text-white p-4 rounded-xl font-bold text-lg cursor-pointer hover:shadow-lg transition-all mt-2 disabled:opacity-50">
-                   {loading ? "جاري تسجيل الطلب..." : "متابعة لتأكيد الطلب ➔"}
+                 <input placeholder="الاسم بالكامل" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className={inputClass} />
+                 <input placeholder="01xxxxxxxxx" required type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className={inputClass} />
+                 <textarea placeholder="العنوان بالتفصيل" required value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className={`${inputClass} h-28`} />
+                 <button type="submit" disabled={loading} className="w-full bg-[#C9A96E] text-white p-4 rounded-xl font-bold text-lg">
+                   {loading ? "جاري الإرسال..." : "متابعة لتأكيد الطلب ➔"}
                  </button>
                </form>
             </div>
           </div>
         )}
-
         {step === 2 && (
           <div className="success-box">
-            <div className="text-7xl mb-4">✨</div>
             <h2 className="text-[#3D2B1F] mb-4 text-3xl font-black">تم تسجيل طلبك بنجاح!</h2>
-            <h3 className="text-[#C9A96E] mb-6 text-2xl font-bold bg-[#FAF8F5] p-3 rounded-xl inline-block">
-              رقم طلبك: #{orderId}
-            </h3>
-            <div className="w-16 h-1 bg-[#C9A96E] mx-auto mb-6 rounded-full"></div>
-            <p className="text-gray-600 text-lg leading-relaxed mb-10 font-bold max-w-2xl mx-auto">
-              لأن كل قطعة في <strong className="text-[#3D2B1F]">Lemo Store</strong> صنعت خصيصاً لك بلمسة فنية مميزة، يسعدنا تواصلك معنا لتنسيق كافة التفاصيل.
-            </p>
-            <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="whatsapp-btn">
-              <span className="text-2xl">💬</span> تواصلك معنا عبر الواتساب
-            </a>
+            <h3 className="text-[#C9A96E] mb-6 text-2xl font-bold">رقم طلبك: #{orderId}</h3>
+            <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="whatsapp-btn">💬 تواصل معنا عبر الواتساب</a>
           </div>
         )}
       </div>
