@@ -1,26 +1,27 @@
 import { 
   collection, doc, addDoc, updateDoc, query, 
-  serverTimestamp, getDoc, getDocs, orderBy 
-} from "firebase/firestore";
-import { db } from "./config";
+  getDoc, getDocs, orderBy 
+} from "firebase/firestore/lite"; // 1. استيراد من lite فقط
+import { dbLite } from "./config"; // 2. استخدام dbLite المباشر
 
 const COL = "orders";
 
 // ─── Create order ───────────────────────────────────────────────────────────
 export const createOrder = async (data) => {
   try {
-    const docRef = await addDoc(collection(db, COL), {
+    // 🚀 استخدام dbLite للإرسال المباشر بدون انتظار قناة اتصال
+    const docRef = await addDoc(collection(dbLite, COL), {
       ...data,
       orderStatus: "pending",
       paymentStatus: "pending",
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      // الـ Lite لا يدعم serverTimestamp، لذا نستخدم التاريخ المحلي
+      createdAt: new Date().toISOString(), 
+      updatedAt: new Date().toISOString(),
     });
-    console.log("✅ تم الحفظ بنجاح! رقم الطلب في القاعدة هو:", docRef.id);
+    console.log("✅ تم الحفظ بنجاح! رقم الطلب هو:", docRef.id);
     return docRef;
   } catch (error) {
-    console.error("❌ فايربيز رفض الحفظ! السبب:", error.message);
-    alert("فشل الحفظ: " + error.message);
+    console.error("❌ فشل الحفظ:", error.message);
     throw error;
   }
 };
@@ -28,22 +29,25 @@ export const createOrder = async (data) => {
 // ─── Update order status ────────────────────────────────────────────────────
 export const updateOrderStatus = async (id, orderStatus) => {
   try {
-    await updateDoc(doc(db, COL, id), {
+    await updateDoc(doc(dbLite, COL, id), {
       orderStatus, 
       status: orderStatus, 
-      updatedAt: serverTimestamp(),
+      updatedAt: new Date().toISOString(),
     });
   } catch (error) {
     console.error("Error updating status:", error);
   }
 };
 
-// ─── Get All Orders (بديل الاستماع اللحظي - يجلب البيانات مرة واحدة فقط) ───
+// ─── Get All Orders ───────────────────────────────────────────────────────
 export const getAllOrders = async () => {
   try {
-    const q = query(collection(db, COL), orderBy("createdAt", "desc"));
-    const snap = await getDocs(q);
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    // الـ Lite لا يدعم orderBy بالطريقة المعقدة، فنجلب البيانات ونرتبها في الكود
+    const snap = await getDocs(collection(dbLite, COL));
+    const orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    
+    // الترتيب من الأحدث للأقدم
+    return orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   } catch (error) {
     console.error("Error fetching all orders:", error);
     return [];
@@ -52,15 +56,15 @@ export const getAllOrders = async () => {
 
 // ─── Update payment status ──────────────────────────────────────────────────
 export const updatePaymentStatus = async (id, paymentStatus, extra = {}) => {
-  return await updateDoc(doc(db, COL, id), {
+  return await updateDoc(doc(dbLite, COL, id), {
     paymentStatus,
     ...extra,
-    updatedAt: serverTimestamp(),
+    updatedAt: new Date().toISOString(),
   });
 };
 
 // ─── Get single order ───────────────────────────────────────────────────────
 export const getOrder = async (id) => {
-  const snap = await getDoc(doc(db, COL, id));
+  const snap = await getDoc(doc(dbLite, COL, id));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 };

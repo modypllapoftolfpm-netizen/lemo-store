@@ -4,9 +4,8 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/layout/Navbar";
 
-// استيراد دوال الـ Lite
+// 🛠️ استيراد دوال الـ Lite واستخدام dbLite
 import { collection, addDoc } from "firebase/firestore/lite";
-// استيراد dbLite
 import { dbLite } from "../firebase/config"; 
 
 export default function CheckoutPage() {
@@ -45,10 +44,6 @@ export default function CheckoutPage() {
     const generatedOrderId = Math.random().toString(36).substr(2, 8).toUpperCase();
     
     try {
-      // 🕵️‍♂️ سطور كاشفة: عشان نعرف إحنا بنكلم مين بالظبط
-      console.log("📍 بنحاول نبعت لمشروع ID:", dbLite.app.options.projectId);
-      console.log("📍 بنبعت لكوليكشن اسمه:", "orders");
-
       const orderData = {
         orderId: generatedOrderId, 
         userId: user?.uid || "guest",
@@ -70,6 +65,8 @@ export default function CheckoutPage() {
         createdAt: new Date().toISOString()
       };
 
+      console.log("⏳ جاري إرسال الطلب بالطريقة المباشرة (Lite)...");
+
       const docRef = await addDoc(collection(dbLite, "orders"), orderData);
       
       console.log("🔥 نجاح حقيقي 100%! الطلب وصل لـ ID:", docRef.id);
@@ -85,7 +82,6 @@ export default function CheckoutPage() {
     setLoading(false);
   };
 
-  // ... (باقي كود الـ JSX زي ما هو بالظبط)
   const inputClass = "w-full p-4 mb-4 bg-white text-black border-2 border-[#E8DDD0] rounded-xl focus:outline-none focus:border-[#C9A96E] font-bold text-lg transition-colors placeholder-gray-400";
   const whatsappMessage = `أهلاً Lemo Store، قمت بتسجيل طلب رقم #${orderId} باسم: ${formData.name} وأريد استكمال اللمسات الأخيرة لطلبي.\nالإجمالي: ${safeTotal} ج.م`;
   const whatsappLink = `https://wa.me/201009633100?text=${encodeURIComponent(whatsappMessage)}`;
@@ -93,6 +89,7 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-[#FAF8F5] pb-16 font-sans" dir="rtl">
       <Navbar />
+      
       <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .checkout-layout { display: flex; gap: 2rem; flex-direction: row-reverse; align-items: flex-start; }
@@ -109,6 +106,7 @@ export default function CheckoutPage() {
           .whatsapp-btn { width: 100%; box-sizing: border-box; font-size: 1rem; padding: 16px 20px; }
         }
       `}</style>
+
       <div className="max-w-5xl mx-auto mt-8 px-6">
         {step === 1 && (
           <div className="checkout-layout">
@@ -123,6 +121,7 @@ export default function CheckoutPage() {
                  ))}
               </div>
             </div>
+
             <div className="form-section">
                <h3 className="text-[#3D2B1F] mb-6 font-black text-xl">بيانات التوصيل</h3>
                <form onSubmit={handleOrder}>
@@ -136,10 +135,14 @@ export default function CheckoutPage() {
             </div>
           </div>
         )}
+
         {step === 2 && (
           <div className="success-box">
             <h2 className="text-[#3D2B1F] mb-4 text-3xl font-black">تم تسجيل طلبك بنجاح!</h2>
             <h3 className="text-[#C9A96E] mb-6 text-2xl font-bold">رقم طلبك: #{orderId}</h3>
+            <p className="text-gray-600 text-lg leading-relaxed mb-10 font-bold max-w-2xl mx-auto">
+              لأن كل قطعة في <strong className="text-[#3D2B1F]">Lemo Store</strong> صنعت خصيصاً لك برجاء التواصل معنا لاختيار تفاصيل طلبك.
+            </p>
             <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="whatsapp-btn">💬 تواصل معنا عبر الواتساب</a>
           </div>
         )}

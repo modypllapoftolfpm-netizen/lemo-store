@@ -9,7 +9,6 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // دالة جلب الطلبات (بتفتح اتصال سريع وتقفله فوراً لتجنب الحظر)
   const fetchOrders = async () => {
     setLoading(true);
     const data = await getAllOrders();
@@ -59,9 +58,11 @@ export default function AdminOrders() {
                       <p style={{ margin: "0", color: "#8B7355", fontSize: "0.95rem" }}>
                         📍 {order.address || order.shippingAddress || "بدون عنوان"}
                       </p>
-                      {order.createdAt && order.createdAt.toDate && (
+                      
+                      {/* 🛠️ التصليح هنا: التعامل مع التاريخ كنص وليس ككائن تايم ستامب */}
+                      {order.createdAt && (
                         <p style={{ margin: "4px 0 0", color: "#A89A8E", fontSize: "0.85rem" }}>
-                          🕒 {order.createdAt.toDate().toLocaleString('ar-EG')}
+                          🕒 {new Date(order.createdAt).toLocaleString('ar-EG')}
                         </p>
                       )}
                     </div>
@@ -74,7 +75,7 @@ export default function AdminOrders() {
                         value={currentStatus} 
                         onChange={async (e) => {
                           await updateOrderStatus(order.id, e.target.value);
-                          fetchOrders(); // تحديث القائمة بعد التغيير
+                          fetchOrders(); 
                         }} 
                         style={{
                           width: "100%", padding: "8px 12px", borderRadius: "10px",
