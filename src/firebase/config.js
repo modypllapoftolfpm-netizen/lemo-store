@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
-import { initializeFirestore } from "firebase/firestore"; // غيرنا الاستدعاء هنا
+// استيراد النسخة الـ Lite اللي بتمنع الكاش الوهمي وبتتخطى حظر شبكات النت
+import { getFirestore } from "firebase/firestore/lite"; 
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
@@ -14,11 +15,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// التعديل السحري: بنجبر الفايربيز يتواصل كـ HTTP عادي (Long Polling) عشان نتجنب البلوك والوهم بتاع الذاكرة المؤقتة
-export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-});
-
+// تفعيل الداتا بيز بالنسخة المباشرة
+export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 export default app;
