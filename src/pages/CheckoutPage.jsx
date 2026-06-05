@@ -4,9 +4,9 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/layout/Navbar";
 
-// 🛠️ استيراد دوال الـ Lite واستخدام dbLite
-import { collection, addDoc } from "firebase/firestore/lite";
-import { dbLite } from "../firebase/config"; 
+// ✅ التغيير هنا بس
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "../firebase/config"; 
 
 export default function CheckoutPage() {
   const { items: cartItems, clearCart } = useCart();
@@ -65,11 +65,10 @@ export default function CheckoutPage() {
         createdAt: new Date().toISOString()
       };
 
-      console.log("⏳ جاري إرسال الطلب بالطريقة المباشرة (Lite)...");
-
-      const docRef = await addDoc(collection(dbLite, "orders"), orderData);
+      // ✅ التغيير هنا بس
+      const docRef = await addDoc(collection(db, "orders"), orderData);
       
-      console.log("🔥 نجاح حقيقي 100%! الطلب وصل لـ ID:", docRef.id);
+      console.log("🔥 نجاح! الطلب وصل لـ ID:", docRef.id);
       setOrderId(generatedOrderId);
 
       if (clearCart) clearCart(); 
