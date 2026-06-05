@@ -1,6 +1,6 @@
 import { 
-  collection, doc, addDoc, updateDoc, onSnapshot, 
-  query, serverTimestamp, getDoc, orderBy 
+  collection, doc, addDoc, updateDoc, query, 
+  serverTimestamp, getDoc, getDocs, orderBy 
 } from "firebase/firestore";
 import { db } from "./config";
 
@@ -9,7 +9,6 @@ const COL = "orders";
 // ─── Create order ───────────────────────────────────────────────────────────
 export const createOrder = async (data) => {
   try {
-    console.log("⏳ بحاول أحفظ الطلب في فايربيز...");
     const docRef = await addDoc(collection(db, COL), {
       ...data,
       orderStatus: "pending",
@@ -36,17 +35,19 @@ export const updateOrderStatus = async (id, orderStatus) => {
     });
   } catch (error) {
     console.error("Error updating status:", error);
-    alert("حدث خطأ أثناء تعديل الحالة");
   }
 };
 
-// ─── Real-time — all orders (admin) - الدالة اللي Vercel كان بيدور عليها ───
-export const subscribeToAllOrders = (callback) => {
-  const q = query(collection(db, COL), orderBy("createdAt", "desc"));
-  return onSnapshot(q, (snap) => {
-    let orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    callback(orders);
-  });
+// ─── Get All Orders (بديل الاستماع اللحظي - يجلب البيانات مرة واحدة فقط) ───
+export const getAllOrders = async () => {
+  try {
+    const q = query(collection(db, COL), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    console.error("Error fetching all orders:", error);
+    return [];
+  }
 };
 
 // ─── Update payment status ──────────────────────────────────────────────────
