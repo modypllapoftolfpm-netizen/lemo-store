@@ -3,7 +3,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/layout/Navbar";
-import { createOrder } from "../firebase/orders"; 
+
+// 🛠️ التعديل الجذري: استيراد الفايربيز مباشرة هنا للتحكم الكامل في الطلب
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "../firebase/config"; 
 
 export default function CheckoutPage() {
   const { items: cartItems, clearCart } = useCart();
@@ -40,13 +43,12 @@ export default function CheckoutPage() {
     
     setLoading(true);
 
-    // 🛠️ الحل الجذري: توليد كود الطلب يدوياً قبل الإرسال لضمان وجوده
     const generatedOrderId = Math.random().toString(36).substr(2, 8).toUpperCase();
     setOrderId(generatedOrderId);
 
     try {
       const orderData = {
-        orderId: generatedOrderId, // تم حفظ الكود داخل فايربيز
+        orderId: generatedOrderId, 
         userId: user?.uid || "guest",
         userName: formData.name,
         userPhone: formData.phone,
@@ -66,21 +68,26 @@ export default function CheckoutPage() {
         createdAt: new Date()
       };
 
-      await createOrder(orderData); 
+      console.log("⏳ جاري إرسال الطلب لسيرفرات جوجل الحقيقية...");
+
+      // 🛠️ الإرسال المباشر الإجباري للسيرفر باستخدام addDoc
+      const docRef = await addDoc(collection(db, "orders"), orderData);
+      
+      console.log("🔥 نجاح تام! الطلب اتسجل بـ ID:", docRef.id);
 
       if (clearCart) clearCart(); 
       setStep(2); 
     } catch (err) {
-      console.error(err);
-      alert("حدث خطأ أثناء تسجيل الطلب، يرجى المحاولة مرة أخرى.");
+      // 🛠️ هنا الفخ: لو الفايربيز رفض، هيطبعلك السبب الأحمر فوراً بدل ما يضحك عليك
+      console.error("❌ السيرفر رفض الطلب. السبب الحقيقي:", err);
+      alert("حدث خطأ من السيرفر: " + err.message);
     }
+    
     setLoading(false);
   };
 
-  // 🛠️ الحل الجذري لمشكلة الألوان: كلاس Tailwind يجبر النص يكون أسود والخلفية بيضاء
   const inputClass = "w-full p-4 mb-4 bg-white text-black border-2 border-[#E8DDD0] rounded-xl focus:outline-none focus:border-[#C9A96E] font-bold text-lg transition-colors placeholder-gray-400";
 
-  // تجهيز رسالة الواتساب وتشفيرها لضمان عدم ظهور أخطاء في الرابط
   const whatsappMessage = `أهلاً Lemo Store، قمت بتسجيل طلب رقم #${orderId} باسم: ${formData.name} وأريد استكمال اللمسات الأخيرة لطلبي.\nالإجمالي: ${safeTotal} ج.م`;
   const whatsappLink = `https://wa.me/201009633100?text=${encodeURIComponent(whatsappMessage)}`;
 
