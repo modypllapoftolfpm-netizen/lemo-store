@@ -1,6 +1,8 @@
 import { initializeApp } from "firebase/app";
-// استيراد النسخة الـ Lite اللي بتمنع الكاش الوهمي وبتتخطى حظر شبكات النت
-import { getFirestore } from "firebase/firestore/lite"; 
+// استيراد النسخة العادية (للإدمن وباقي الموقع)
+import { getFirestore as getFirestoreStandard } from "firebase/firestore"; 
+// استيراد النسخة الـ Lite (للطلبات فقط لضمان الإرسال المباشر)
+import { getFirestore as getFirestoreLite } from "firebase/firestore/lite"; 
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
@@ -15,8 +17,12 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// تفعيل الداتا بيز بالنسخة المباشرة
-export const db = getFirestore(app);
+// 1. db العادية لباقي الموقع (المنتجات، الإدمن، إلخ)
+export const db = getFirestoreStandard(app);
+
+// 2. dbLite للطلبات فقط (عشان نضمن وصولها للسيرفر بعيداً عن حظر الشركات)
+export const dbLite = getFirestoreLite(app);
+
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 export default app;
