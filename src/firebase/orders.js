@@ -1,6 +1,6 @@
-import {
-  collection, doc, addDoc, updateDoc, onSnapshot,
-  query, serverTimestamp, getDoc,
+import { 
+  collection, doc, addDoc, updateDoc, onSnapshot, 
+  query, serverTimestamp, getDoc, getDocs, orderBy 
 } from "firebase/firestore";
 import { db } from "./config";
 
@@ -21,18 +21,17 @@ export const createOrder = async (data) => {
     return docRef;
   } catch (error) {
     console.error("❌ فايربيز رفض الحفظ! السبب:", error.message);
-    // ده اللي هيقولنا إيه اللي بيحصل
     alert("فشل الحفظ: " + error.message);
     throw error;
   }
 };
+
 // ─── Update order status ────────────────────────────────────────────────────
 export const updateOrderStatus = async (id, orderStatus) => {
   try {
-    // بنحدث حقل orderStatus اللي بيقرأ منه كود الأدمن الجديد
     await updateDoc(doc(db, COL, id), {
       orderStatus, 
-      status: orderStatus, // بنحدث الحقلين عشان نضمن التوافق
+      status: orderStatus, 
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
@@ -41,19 +40,16 @@ export const updateOrderStatus = async (id, orderStatus) => {
   }
 };
 
-// ─── Real-time — all orders (admin) ─────────────────────────────────────────
-export const subscribeToAllOrders = (callback) => {
-  const q = query(collection(db, COL));
-  return onSnapshot(q, (snap) => {
-    let orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    // ترتيب الطلبات برمجياً من الأحدث للأقدم
-    orders.sort((a, b) => {
-      const dateA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
-      const dateB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
-      return dateB - dateA;
-    });
-    callback(orders);
-  });
+// ─── Get All Orders (نسخة مستقرة لا تعتمد على الاتصال المفتوح) ─────────────
+export const getAllOrders = async () => {
+  try {
+    const q = query(collection(db, COL), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    console.error("Error fetching all orders:", error);
+    return [];
+  }
 };
 
 // ─── Update payment status ──────────────────────────────────────────────────

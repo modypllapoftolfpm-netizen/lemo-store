@@ -9,10 +9,12 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    // تشغيل الاشتراك مرة واحدة فقط عند فتح الصفحة لضمان استقرار الداتا
+    // تشغيل الاشتراك مرة واحدة فقط عند فتح الصفحة
     const unsub = subscribeToAllOrders((data) => {
       console.log("🔥 الداتا المستلمة:", data);
-      if (data) {
+      
+      // التعديل: نحدث الداتا بس لو جت داتا حقيقية، عشان نتجنب الـ Array(0) اللي بتطير البيانات
+      if (data && data.length > 0) {
         setOrders(data);
       }
     });
