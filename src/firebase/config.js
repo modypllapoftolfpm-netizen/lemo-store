@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
-// استيراد النسخة العادية (للإدمن وباقي الموقع)
+// استيراد النسخة العادية (لباقي الموقع والـ Admin)
 import { getFirestore as getFirestoreStandard } from "firebase/firestore"; 
-// استيراد النسخة الـ Lite (للطلبات فقط لضمان الإرسال المباشر)
+// استيراد نسخة الـ Lite (المخصصة لتخطي حظر الشبكات في صفحة الـ Checkout)
 import { getFirestore as getFirestoreLite } from "firebase/firestore/lite"; 
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
@@ -17,11 +17,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// 1. db العادية لباقي الموقع (المنتجات، الإدمن، إلخ)
-export const db = getFirestoreStandard(app);
-
-// 2. dbLite للطلبات فقط (عشان نضمن وصولها للسيرفر بعيداً عن حظر الشركات)
-export const dbLite = getFirestoreLite(app);
+// التصدير بالأسماء الجديدة المتوافقة
+export const db = getFirestoreStandard(app); 
+export const dbLite = getFirestoreLite(app); // 👈 دي اللي هتحل أزمة الكاش في الدفع
 
 export const auth = getAuth(app);
 export const storage = getStorage(app);

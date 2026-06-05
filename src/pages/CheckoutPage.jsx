@@ -4,9 +4,9 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/layout/Navbar";
 
-// 🛠️ الحل الجذري: استخدام /lite هنا بيمنع الحفظ الوهمي تماماً
+// 🛠️ استيراد دوال الـ Lite واستدعاء dbLite لتخطي الكاش الوهمي وحظر الراوتر
 import { collection, addDoc } from "firebase/firestore/lite";
-import { db } from "../firebase/config"; 
+import { dbLite } from "../firebase/config"; 
 
 export default function CheckoutPage() {
   const { items: cartItems, clearCart } = useCart();
@@ -68,8 +68,8 @@ export default function CheckoutPage() {
 
       console.log("⏳ جاري إرسال الطلب بالطريقة المباشرة (بدون كاش)...");
 
-      // 🚀 هنا الضربة القاضية: لو النت قاطع أو السيرفر رفض، هيضرب إيرور فوراً ومش هيحفظ وهمي
-      const docRef = await addDoc(collection(db, "orders"), orderData);
+      // 🚀 الحل النهائي هنا: تمرير كائن dbLite الصارم التابع للـ Lite لضمان الاتصال المباشر
+      const docRef = await addDoc(collection(dbLite, "orders"), orderData);
       
       console.log("🔥 نجاح حقيقي 100%! الطلب وصل لجوجل بـ ID:", docRef.id);
 
