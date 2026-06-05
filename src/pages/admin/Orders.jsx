@@ -59,10 +59,12 @@ export default function AdminOrders() {
                         📍 {order.address || order.shippingAddress || "بدون عنوان"}
                       </p>
                       
-                      {/* 🛠️ التصليح هنا: التعامل مع التاريخ كنص وليس ككائن تايم ستامب */}
+                      {/* 🛠️ الكود الذكي لتنسيق التاريخ */}
                       {order.createdAt && (
                         <p style={{ margin: "4px 0 0", color: "#A89A8E", fontSize: "0.85rem" }}>
-                          🕒 {new Date(order.createdAt).toLocaleString('ar-EG')}
+                          🕒 {order.createdAt.toDate 
+                               ? order.createdAt.toDate().toLocaleString('ar-EG') 
+                               : new Date(order.createdAt).toLocaleString('ar-EG')}
                         </p>
                       )}
                     </div>
