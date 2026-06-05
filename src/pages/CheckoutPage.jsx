@@ -4,7 +4,7 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/layout/Navbar";
 
-// 🛠️ استيراد دوال الـ Lite واستدعاء dbLite لتخطي الكاش الوهمي وحظر الراوتر
+// 🛠️ التعديل الجذري: استيراد الدالة من نسخة الـ Lite واستخدام dbLite
 import { collection, addDoc } from "firebase/firestore/lite";
 import { dbLite } from "../firebase/config"; 
 
@@ -63,12 +63,12 @@ export default function CheckoutPage() {
         isGift,
         giftNote,
         status: "pending",
-        createdAt: new Date()
+        createdAt: new Date().toISOString() // تحويل لتاريخ نصي لتجنب مشاكل الفهرسة
       };
 
-      console.log("⏳ جاري إرسال الطلب بالطريقة المباشرة (بدون كاش)...");
+      console.log("⏳ جاري إرسال الطلب بالطريقة المباشرة (Lite)...");
 
-      // 🚀 الحل النهائي هنا: تمرير كائن dbLite الصارم التابع للـ Lite لضمان الاتصال المباشر
+      // 🚀 الضربة القاضية: استخدام dbLite حصراً مع كوليكشن Lite
       const docRef = await addDoc(collection(dbLite, "orders"), orderData);
       
       console.log("🔥 نجاح حقيقي 100%! الطلب وصل لجوجل بـ ID:", docRef.id);
@@ -114,16 +114,12 @@ export default function CheckoutPage() {
             <div className="summary-section">
               <h3 className="text-[#3D2B1F] mb-6 text-center font-black text-xl">🛒 ملخص طلبك</h3>
               <div className="flex flex-col gap-3 text-sm">
-                 {actualItems.map((item, idx) => {
-                   const qty = Number(item.quantity || item.qty) || 1;
-                   const price = Number(item.price) || 0;
-                   return (
+                 {actualItems.map((item, idx) => (
                      <div key={idx} className="flex justify-between text-gray-700 font-bold pb-2 border-b border-dashed border-[#FAF8F5]">
-                       <span className="flex-1 pl-2">{item.nameAr || item.name} (x{qty})</span>
-                       <span className="text-[#C9A96E] whitespace-nowrap">{price * qty} ج.م</span>
+                       <span className="flex-1 pl-2">{item.nameAr || item.name} (x{Number(item.quantity || item.qty) || 1})</span>
+                       <span className="text-[#C9A96E] whitespace-nowrap">{(Number(item.price) || 0) * (Number(item.quantity || item.qty) || 1)} ج.م</span>
                      </div>
-                   );
-                 })}
+                 ))}
               </div>
               <div className="bg-[#FAF8F5] p-4 rounded-xl mt-4">
                 {discount > 0 && (
@@ -166,7 +162,7 @@ export default function CheckoutPage() {
             </h3>
             <div className="w-16 h-1 bg-[#C9A96E] mx-auto mb-6 rounded-full"></div>
             <p className="text-gray-600 text-lg leading-relaxed mb-10 font-bold max-w-2xl mx-auto">
-              لأن كل قطعة في <strong className="text-[#3D2B1F]">Lemo Store</strong> صنعت خصيصاً لك بلمسة فنية مميزة، يسعدنا التواصل معك لتنسيق كافة التفاصيل.
+              لأن كل قطعة في <strong className="text-[#3D2B1F]">Lemo Store</strong> صنعت خصيصاً لك بلمسة فنية مميزة، يسعدنا تواصلك معنا لتنسيق كافة التفاصيل.
             </p>
             <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="whatsapp-btn">
               <span className="text-2xl">💬</span> تواصلك معنا عبر الواتساب
