@@ -4,7 +4,6 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/layout/Navbar";
 
-// ✅ التغيير هنا بس
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../firebase/config"; 
 
@@ -65,7 +64,6 @@ export default function CheckoutPage() {
         createdAt: new Date().toISOString()
       };
 
-      // ✅ التغيير هنا بس
       const docRef = await addDoc(collection(db, "orders"), orderData);
       
       console.log("🔥 نجاح! الطلب وصل لـ ID:", docRef.id);
@@ -140,7 +138,7 @@ export default function CheckoutPage() {
             <h2 className="text-[#3D2B1F] mb-4 text-3xl font-black">تم تسجيل طلبك بنجاح!</h2>
             <h3 className="text-[#C9A96E] mb-6 text-2xl font-bold">رقم طلبك: #{orderId}</h3>
             <p className="text-gray-600 text-lg leading-relaxed mb-10 font-bold max-w-2xl mx-auto">
-              لأن كل قطعة في <strong className="text-[#3D2B1F]">Lemo Store</strong> صنعت خصيصاً لك برجاء التواصل معنا لاختيار تفاصيل طلبك.
+               يسعدنا تواصلك معنا، لتنسيق كافة التفاصيل وضمان أن طلبك سيكون تماماً كما تخيلته. تواصل معنا الآن لإتمام اللمسات الأخيرة لطلبك.
             </p>
             <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="whatsapp-btn">💬 تواصل معنا عبر الواتساب</a>
           </div>
