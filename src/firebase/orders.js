@@ -8,15 +8,24 @@ const COL = "orders";
 
 // ─── Create order ───────────────────────────────────────────────────────────
 export const createOrder = async (data) => {
-  return await addDoc(collection(db, COL), {
-    ...data,
-    orderStatus: "pending", // الحالة الافتراضية
-    paymentStatus: "pending",
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
+  try {
+    console.log("⏳ بحاول أحفظ الطلب في فايربيز...");
+    const docRef = await addDoc(collection(db, COL), {
+      ...data,
+      orderStatus: "pending",
+      paymentStatus: "pending",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    console.log("✅ تم الحفظ بنجاح! رقم الطلب في القاعدة هو:", docRef.id);
+    return docRef;
+  } catch (error) {
+    console.error("❌ فايربيز رفض الحفظ! السبب:", error.message);
+    // ده اللي هيقولنا إيه اللي بيحصل
+    alert("فشل الحفظ: " + error.message);
+    throw error;
+  }
 };
-
 // ─── Update order status ────────────────────────────────────────────────────
 export const updateOrderStatus = async (id, orderStatus) => {
   try {
