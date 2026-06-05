@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore } from "firebase/firestore"; // غيرنا الاستدعاء هنا
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
@@ -14,7 +14,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-export const db = getFirestore(app);
+// التعديل السحري: بنجبر الفايربيز يتواصل كـ HTTP عادي (Long Polling) عشان نتجنب البلوك والوهم بتاع الذاكرة المؤقتة
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+});
+
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 export default app;
