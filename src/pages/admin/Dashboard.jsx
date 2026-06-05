@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../../components/layout/Navbar";
-import { collection, getDocs, query, orderBy, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { 
   ResponsiveContainer, 
@@ -25,17 +25,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchAndCleanDashboard() {
+    async function fetchDashboard() {
       try {
-        const allOrdersSnap = await getDocs(collection(db, "orders"));
-        for (const orderDoc of allOrdersSnap.docs) {
-          const orderData = orderDoc.data();
-          const price = Number(orderData.totalPrice) || 0;
-          if (price === 0 || orderDoc.id === "TPs5Bzki" || orderDoc.id === "98rbJIlf" || orderDoc.id === "RSXNQvRV") {
-            await deleteDoc(doc(db, "orders", orderDoc.id));
-          }
-        }
-
         const prodSnap = await getDocs(collection(db, "products"));
         const productsCount = prodSnap.size;
 
@@ -58,12 +49,12 @@ export default function AdminDashboard() {
 
         orderSnap.forEach((doc) => {
           const data = doc.data();
-          const totalPrice = Number(data.totalPrice) || 0;
-          const status = data.status || "pending";
+          const totalPrice = Number(data.total) || Number(data.subtotal) || 0;
+          const status = data.status || data.orderStatus || "pending";
 
           ordersList.push({
             id: doc.id.slice(0, 8) + "#",
-            customer: data.customerName || data.customer?.name || "عميل LEMO",
+            customer: data.userName || data.customerName || data.customer?.name || "عميل LEMO",
             price: totalPrice,
             status: status
           });
@@ -97,12 +88,12 @@ export default function AdminDashboard() {
         setChartData(formattedChartData);
 
       } catch (e) {
-        console.error("Error cleaning and sync dashboard nodes:", e);
+        console.error("Error fetching dashboard:", e);
       }
       setLoading(false);
     }
     
-    fetchAndCleanDashboard();
+    fetchDashboard();
   }, []);
 
   if (loading) {
@@ -110,7 +101,7 @@ export default function AdminDashboard() {
       <div style={{ minHeight: "100vh", background: "#FAF8F5" }} dir="rtl">
         <Navbar />
         <div style={{ padding: "10rem 2rem", color: "#8B7355", textAlign: "center", fontSize: "1.2rem", fontWeight: "600" }}>
-          ⏳ جاري تنظيف الطلبات الوهمية وتحديث لوحة تحكم Lemo Store...
+          ⏳ جاري تحميل لوحة تحكم Lemo Store...
         </div>
       </div>
     );
@@ -154,7 +145,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* أزرار التنقل بدون التقييمات */}
+        {/* أزرار التنقل */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1.2rem", marginBottom: "3rem" }}>
           <Link to="/admin/products" style={navButtonStyle}>
             <span style={{ fontSize: "1.8rem" }}>📦</span> المنتجات
@@ -176,7 +167,7 @@ export default function AdminDashboard() {
           </Link>
         </div>
 
-        {/* الرسم البياني (Recharts) */}
+        {/* الرسم البياني */}
         <div style={{ background: "#fff", borderRadius: "24px", padding: "2rem", boxShadow: "0 4px 25px rgba(0,0,0,0.03)", border: "1px solid #E8DDD0", marginBottom: "2.5rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.5rem" }}>
             <span style={{ fontSize: "1.3rem" }}>📈</span>
@@ -201,7 +192,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* جدول آخر 5 طلبات الفخم */}
+        {/* جدول آخر 5 طلبات */}
         <div style={{ background: "#fff", borderRadius: "24px", padding: "2rem", boxShadow: "0 4px 25px rgba(0,0,0,0.03)", border: "1px solid #E8DDD0" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -247,7 +238,6 @@ export default function AdminDashboard() {
   );
 }
 
-// ستايل موحد للأزرار
 const navButtonStyle = {
   textDecoration: "none", 
   background: "#3D2B1F", 
